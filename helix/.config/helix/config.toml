@@ -1,0 +1,47 @@
+theme = "flatwhite"
+
+[editor]
+line-number = "relative"
+mouse = false
+bufferline = "multiple"
+rulers = [120]
+true-color = true
+
+[editor.cursor-shape]
+insert = "bar"
+normal = "block"
+select = "underline"
+
+[editor.lsp]
+# Show LSP messages in the status line
+display-messages = true
+
+[editor.soft-wrap]
+enable = true
+
+[editor.auto-save]
+focus-lost = true
+
+[editor.file-picker]
+hidden = true
+
+[keys.insert]
+j = { k = "normal_mode" }
+
+[editor.whitespace]
+render = "all"
+# or control each character
+# [editor.whitespace.render]
+# space = "all"
+# tab = "all"
+# nbsp = "none"
+# nnbsp = "none"
+# newline = "none"
+
+[editor.whitespace.characters]
+space = "·"
+nbsp = "⍽"
+nnbsp = "␣"
+tab = "→"
+newline = "⏎"
+tabpad = "·" # Tabs will look like "→···" (depending on tab width)
