@@ -1,11 +1,13 @@
-theme = "flatwhite"
+theme = "serika-light"
 
+# Editor
 [editor]
 line-number = "relative"
 mouse = false
 bufferline = "multiple"
 rulers = [120]
 true-color = true
+auto-pairs = false
 
 [editor.cursor-shape]
 insert = "bar"
@@ -16,6 +18,10 @@ select = "underline"
 # Show LSP messages in the status line
 display-messages = true
 
+[editor.statusline]
+left = ["mode", "spinner", "file-name"]
+right = ["read-only-indicator", "diagnostics", "position"]
+
 [editor.soft-wrap]
 enable = true
 
@@ -25,18 +31,24 @@ focus-lost = true
 [editor.file-picker]
 hidden = true
 
+# Keys
+[keys.normal]
+X = "extend_line_above"
 [keys.insert]
+A-h = "move_char_left"
+A-l = "move_char_right"
+# A-a = "goto_line_end_newline"
+# A-i = "goto_line_start"
+# A-j = "move_visual_line_down"
+# A-k = "move_visual_line_up"
 j = { k = "normal_mode" }
 
-[editor.whitespace]
-render = "all"
-# or control each character
-# [editor.whitespace.render]
-# space = "all"
-# tab = "all"
-# nbsp = "none"
-# nnbsp = "none"
-# newline = "none"
+
+[editor.gutters]
+layout = ["diff", "diagnostics", "spacer", "line-numbers", "spacer"]
+
+[editor.gutters.line-numbers]
+min-width = 1
 
 [editor.whitespace.characters]
 space = "·"
