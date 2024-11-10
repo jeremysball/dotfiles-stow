@@ -1,0 +1,57 @@
+[[hints.enabled]]
+command = "xdg-open"
+post_processing = true
+regex = "(ipfs:|ipns:|magnet:|mailto:|gemini:|gopher:|https:|http:|news:|file:|git:|ssh:|ftp:)[^\u0000-\u001F\u007F-<>\"\\s{-}\\^⟨⟩`]+"
+binding = { key = "U", mods = "Control|Shift" }
+mouse = { enabled = true, mods = "None" }
+
+[bell]
+animation = "EaseOutExpo"
+
+import = [
+  "$HOME/.config/alacritty/alacritty-themes/night_owlish_light.toml"
+]
+
+
+[cursor]
+blink_interval = 750
+unfocused_hollow = true
+vi_mode_style = "Beam"
+
+[cursor.style]
+blinking = "On"
+shape = "Underline"
+
+[font]
+size = 15
+
+[font.bold]
+family = "BlexMono Nerd Font Mono"
+style = "Bold"
+
+[font.bold_italic]
+family = "BlexMono Nerd Font Mono"
+style = "Italic"
+
+[font.italic]
+family = "BlexMono Nerd Font Mono"
+style = "Italic"
+
+[font.normal]
+family = "BlexMono Nerd Font Mono"
+style = "Regular"
+
+[scrolling]
+history = 15000
+multiplier = 3
+
+[terminal.shell]
+program = "/bin/zsh"
+
+[window]
+opacity = 0.8
+
+[general]
+live_config_reload = true
+
+[terminal]

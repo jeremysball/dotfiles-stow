@@ -7,3 +7,6 @@
 [submodule "zsh/.zsh/custom/themes/powerlevel10k"]
 	path = zsh/.zsh/custom/themes/powerlevel10k
 	url = https://github.com/romkatv/powerlevel10k
+[submodule "alacritty/.config/alacritty/alacritty-theme"]
+	path = alacritty/.config/alacritty/alacritty-theme
+	url = https://github.com/alacritty/alacritty-theme.git
