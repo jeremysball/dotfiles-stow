@@ -1,17 +1,45 @@
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+export ZSH=$HOME/.zsh
+export SSH_AUTH_SOCK=$XDG_RUNTIME_DIR/gcr/ssh
+export PATH=$HOME/.cargo/bin:/sbin:/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin\
+:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:$HOME/.local/bin:$HOME/go/bin
+export TERMINAL=alacritty
+export TERM=xterm-256color
+export LANG=en_US.UTF-8
+
+# Preferred editor for local and remote sessions
+if [[ -n $SSH_CONNECTION ]]; then
+    export EDITOR='vim'
+else
+    export EDITOR='nvim'
 fi
 
-export ZSH=$HOME/.zsh
+if [[ $(hostnamectl hostname) = "gaman" ]]; then 
+  export DESKTOP=true 
+else 
+  export DESKTOP=false 
+fi
+
+# Enable color support for ls
+if [ -x /usr/bin/dircolors ]; then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    alias ls='ls --color=auto'
+    alias dir='dir --color=auto'
+    alias vdir='vdir --color=auto'
+    
+    # Additional color aliases
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
+fi
+# Caps-lock becomes ctrl
+setxkbmap -option caps:ctrl_modifier
+
 # Uncomment the following line to use case-sensitive completion.
-# CASE_SENSITIVE="true"
+CASE_SENSITIVE="true"
 
 # Uncomment the following line to use hyphen-insensitive completion.
 # Case-sensitive completion must be off. _ and - will be interchangeable.
-# HYPHEN_INSENSITIVE="true"
+HYPHEN_INSENSITIVE="true"
 
 # Uncomment the following line if pasting URLs and other text is messed up.
 # DISABLE_MAGIC_FUNCTIONS="true"
@@ -60,20 +88,6 @@ for p in "${plugins[@]}"
 do 
   source "$ZSH/custom/plugins/$p/$p.zsh"
 done
-# User configuration
-
-# export MANPATH="/usr/local/man:$MANPATH"
-
-export TERMINAL=alacritty
-export TERM=xterm-256color
-export LANG=en_US.UTF-8
-
-# Preferred editor for local and remote sessions
- if [[ -n $SSH_CONNECTION ]]; then
-   export EDITOR='vim'
- else
-   export EDITOR='nvim'
-fi
 
 # Import functions
 fpath=(
@@ -81,7 +95,6 @@ fpath=(
 	"${fpath[@]}"
 )
 
-#autoload -Uz ~/.zsh/functions/e
 source ~/.zsh/aliases
 source /usr/share/fzf/key-bindings.zsh
 
@@ -89,47 +102,18 @@ autoload -Uz compinit promptinit
 
 zstyle ':completion::complete:*' use-cache 1
 
-if (( $+commands[luarocks] )); then
-    eval `luarocks path --bin`
-fi
 
-eval "$(zoxide init --hook prompt zsh)"
 
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f $HOME/.p10k.zsh ]] || source $HOME/.p10k.zsh
-
-PATH=$PATH:$HOME/.local/bin:$HOME/go/bin
 # export MANPAGER='nvim +Man!' 
+# to force the same theme between qt and gtk?
 export QT_QPA_PLATFORMTHEME=qt5ct
-
-if [[ $(hostnamectl hostname) = "gaman" ]]; then 
-  export DESKTOP=true 
-else 
-  export DESKTOP=false 
-fi
 
 
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+# [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-# __conda_setup="$('/home/jeremy/.config/anaconda/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
-# if [ $? -eq 0 ]; then
-#     eval "$__conda_setup"
-# else
-#     if [ -f "/home/jeremy/.config/anaconda/etc/profile.d/conda.sh" ]; then
-#         . "/home/jeremy/.config/anaconda/etc/profile.d/conda.sh"
-#     else
-#         export PATH="/home/jeremy/.config/anaconda/bin:$PATH"
-#     fi
-# fi
-# unset __conda_setup
-# <<< conda initialize <<<
-
-export PATH=$HOME/.cargo/bin:/sbin:/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:$HOME/.local/bin:$HOME/go/bin
 
 # >>> mamba initialize >>>
 # !! Contents within this block are managed by 'micromamba shell init' !!
@@ -144,6 +128,7 @@ fi
 unset __mamba_setup
 # <<< mamba initialize <<<
 
-setxkbmap -option caps:ctrl_modifier
-source $ZSH/custom/themes/powerlevel10k/powerlevel10k.zsh-theme
-export SSH_AUTH_SOCK=$XDG_RUNTIME_DIR/gcr/ssh
+if (( $+commands[luarocks] )); then
+    eval `luarocks path --bin`
+fi
+eval "$(zoxide init --hook prompt zsh)"

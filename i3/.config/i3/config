@@ -9,7 +9,7 @@
 #
 # Please see https://i3wm.org/docs/userguide.html for a complete reference!
 
-set $mod Mod4
+set $mod Mod1
 
 # Font for window titles. Will also be used by the bar unless a different font
 # is used in the bar {} block below.
@@ -20,7 +20,8 @@ set $mod Mod4
 font pango:SauceCodePro NFP SemiBold 8
 
 # Disables window titlebars
-default_border pixel 4
+for_window [class=".*"] border pixel 4
+
 default_floating_border pixel 1
 gaps inner 4
 #gaps outer 10
@@ -62,7 +63,7 @@ bindsym $mod+Shift+q kill
 
 
 # Rofi
-bindcode $mod+40 exec "rofi -show drun"
+# bindcode $mod+40 exec "rofi -show drun"
 
 # change focus
 bindsym $mod+j focus left
@@ -190,3 +191,10 @@ bindsym $mod+r mode "resize"
 # finds out, if available)
 # exec /bin/sh ~/polybar-themes/bitmap/hack/launch.sh
 exec xfce4-panel -d
+for_window [window_role="About"] floating enable 
+for_window [window_role="pop-up"] floating enable 
+for_window [window_role="task_dialog"] floating enable 
+for_window [window_type="dialog"] floating enable 
+for_window [window_type="menu"] floating enable 
+for_window [class="Xfce4-appfinder"] floating enable 
+

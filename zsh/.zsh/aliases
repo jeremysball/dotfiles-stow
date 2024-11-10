@@ -1,0 +1,46 @@
+#!/bin/sh
+# Don't try to use ~ for home in conf alias 
+# alias conf='/usr/bin/git --git-dir=$HOME/.cfg/.git/ --work-tree=$HOME'
+alias cd='z'
+
+# Core commands with colored output
+alias ls='ls --color=auto'
+alias dir='dir --color=auto'
+alias vdir='vdir --color=auto'
+alias grep='grep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
+alias diff='diff --color=auto'
+alias ip='ip --color=auto'
+
+
+# Colored output for various commands
+alias tree='tree -C'
+alias watch='watch --color'
+alias dmesg='dmesg --color=always'
+alias gcc='gcc -fdiagnostics-color=always'
+alias g++='g++ -fdiagnostics-color=always'
+alias make='make -s --color=always'
+
+# Add color to ping output
+alias ping='ping -c 5'
+
+if command -v grc &> /dev/null; then
+    alias ping='grc ping'
+    alias traceroute='grc traceroute'
+    alias gcc='grc gcc'
+    alias make='grc make'
+    alias netstat='grc netstat'
+    alias diff='grc diff'
+    alias tail='grc tail'
+    alias head='grc head'
+    alias ps='grc ps'
+else
+  echo "grrr. no colors :(. install grc!!!"
+fi
+
+alias cat='bat --style=plain'
+alias ls='exa --color=auto --icons'
+alias find='fd'
+alias grep='rg --color=auto'
+alias lsl='ls -l'
