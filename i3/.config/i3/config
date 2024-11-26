@@ -24,7 +24,7 @@ for_window [class=".*"] border pixel 4
 
 default_floating_border pixel 1
 gaps inner 4
-#gaps outer 10
+gaps outer 4
 
 # Start XDG autostart .desktop files using dex. See also
 # https://wiki.archlinux.org/index.php/XDG_Autostart
@@ -80,27 +80,20 @@ bindsym $mod+Shift+h move left
 # enter fullscreen mode for the focused container
 bindsym $mod+f fullscreen toggle
 
-# split in horizontal, vertical orientation
-# bindsym $mod+Shift+h split h
-# bindsym $mod+Shift+v split v
-
 # change container layout (stacked, tabbed, toggle split)
 bindsym $mod+Shift+s layout stacking
 bindsym $mod+Shift+t layout tabbed
 bindsym $mod+t layout toggle split
 
+bindsym $mod+Ctrl+v split vertical 
+bindsym $mod+Ctrl+h split horizontal
 # toggle tiling / floating
 bindsym $mod+Shift+space floating toggle
 
 # change focus between tiling / floating windows
 bindsym $mod+space focus mode_toggle
 
-# focus the parent container
-bindsym $mod+a focus parent
-
-# focus the child container
-#bindsym $mod+d focus child
-
+#======== WORKSPACES ========  
 # Define names for default workspaces for which we configure key bindings later on.
 # We use variables to avoid repeating the names in multiple places.
 set $ws1 "1"
@@ -137,16 +130,10 @@ bindsym $mod+Shift+7 move container to workspace number $ws7
 bindsym $mod+Shift+8 move container to workspace number $ws8
 bindsym $mod+Shift+9 move container to workspace number $ws9
 bindsym $mod+Shift+0 move container to workspace number $ws10
+# ======== END OF WORKSPACES ========  
 
-# reload the configuration file
-bindsym $mod+Shift+c reload
-# restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
-bindsym $mod+Shift+r restart
-# exit i3 (logs you out of your X session)
-bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -B 'Yes, exit i3' 'i3-msg exit'"
 
-# resize window (you can also use the mouse for that)
-
+# ======== RESIZE MODE =========
 mode "resize" {
         # These bindings trigger as soon as you enter the resize mode
 
@@ -173,10 +160,19 @@ mode "resize" {
 
 bindsym $mod+r mode "resize"
 
-# Start i3bar to display a workspace bar (plus the system information i3status
-# finds out, if available)
-# exec /bin/sh ~/polybar-themes/bitmap/hack/launch.sh
+bindsym $mod+Shift+c reload
+# restart, preserves layout/session, can be used to upgrade i3
+bindsym $mod+Shift+r restart
+# exit
+bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -B 'Yes, exit i3' 'i3-msg exit'"
+
+# ===== END OF BINDS ======
+
+# ===== EXEC PROGRAMS ======
 exec xfce4-panel -d
+exec feh 
+
+# ===== WINDOW RULES ========
 for_window [window_role="About"] floating enable 
 for_window [window_role="pop-up"] floating enable 
 for_window [window_role="task_dialog"] floating enable 
@@ -184,3 +180,5 @@ for_window [window_type="dialog"] floating enable
 for_window [window_type="menu"] floating enable 
 for_window [class="Xfce4-appfinder"] floating enable 
 for_window [class="Thunar"] floating enable
+for_window [class="gnome-calculator"] floating enable
+for_window [class="pavucontrol"] floating enable
