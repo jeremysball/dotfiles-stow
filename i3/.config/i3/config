@@ -170,7 +170,7 @@ bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcu
 
 # ===== EXEC PROGRAMS ======
 exec xfce4-panel -d
-feh --bg-fill $HOME/Pictures/wallpaper.png
+exec feh --bg-fill $HOME/Pictures/wallpaper.png
 
 # ===== WINDOW RULES ========
 for_window [window_role="About"] floating enable 
