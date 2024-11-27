@@ -143,8 +143,8 @@ mode "resize" {
         # Pressing down will grow the window’s height.
         bindsym k resize grow height 10 px or 10 ppt
         bindsym j resize shrink height 10 px or 10 ppt
-        bindsym h resize grow width 10 px or 10 ppt
-        bindsym l resize shrink width 10 px or 10 ppt
+        bindsym l resize grow width 10 px or 10 ppt
+        bindsym h resize shrink width 10 px or 10 ppt
 
         # same bindings, but for the arrow keys
         bindsym Left resize shrink width 10 px or 10 ppt
@@ -170,7 +170,7 @@ bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcu
 
 # ===== EXEC PROGRAMS ======
 exec xfce4-panel -d
-exec feh 
+feh --bg-fill $HOME/Pictures/wallpaper.png
 
 # ===== WINDOW RULES ========
 for_window [window_role="About"] floating enable 

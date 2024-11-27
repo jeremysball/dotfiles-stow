@@ -1,0 +1,2 @@
+#!/bin/bash
+g++ -ggdb -Wall -Wextra -Wuninitialized

@@ -12,3 +12,15 @@ language-servers = [ "clangd" ]
 indent = { tab-width = 8, unit = "\t" }
 auto-format = true
 formatter = { command = "clang-format" }
+
+[[language]]
+name = "cpp"
+scope = "source.c"
+injection-regex = "cpp"
+file-types = ["cpp", "hh"]
+shebangs = ["cpp"]
+comment-token = "//"
+language-servers = [ "clangd" ]
+indent = { tab-width = 8, unit = "\t" }
+auto-format = true
+formatter = { command = "clang-format" }

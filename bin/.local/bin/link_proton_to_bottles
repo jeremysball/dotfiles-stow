@@ -1,0 +1,14 @@
+#!/bin/sh
+# https://github.com/bottlesdevs/Bottles/issues/2773#issuecomment-1509823793
+# Links proton experimental to the bottles runners directory 
+sourceRoot="$(echo ~/.local/share/Steam/steamapps/common/Proton\ -\ Experimental)";
+runnerDir="$(echo ~/.var/app/com.usebottles.bottles/data/bottles/runners)";
+root="$runnerDir/Proton-Experimental";
+
+mkdir -p "$root";
+find "$sourceRoot" -type f -exec bash -c '
+    relativeFile="$(realpath --relative-to "'"$sourceRoot"'" "{}")";
+    cd "'"$root"'";
+    dir="$(dirname "$relativeFile")";
+    [ ! -d "$dir" ] && echo "Creating dir $dir" && mkdir -p "$dir";
+    echo "linking file $relativeFile" && ln "{}" "$relativeFile"' \;

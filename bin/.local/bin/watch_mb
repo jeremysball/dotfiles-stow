@@ -1,0 +1,6 @@
+run() {
+  size=$(stat --format="%s" $1)
+  echo $(bc -l <<< "$size / $(( 1000 * 1000 ))")
+}
+
+watch echo $(run $1)
