@@ -1,0 +1,79 @@
+mkdir -p $HOME/.local/bin
+wget "https://github.com/helix-editor/helix/releases/download/24.07/helix-24.07-x86_64-linux.tar.xz" -O /tmp/hx.tar.xz 
+pushd $HOME/.local/bin
+tar xvf /tmp/hx.tar.xz 
+mv helix-*/hx . 
+rm -r helix-*
+chmod +x ./hx
+echo "export PATH=$PATH:$HOME/.local/bin" >> $HOME/.bashrc
+source $HOME/.bashrc
+popd
+
+mkdir -p $HOME/.config/helix/ 
+
+cat > $HOME/.config/helix/config.toml << 'EOF'
+theme = "serika-light"
+
+# Editor
+[editor]
+line-number = "relative"
+mouse = false
+bufferline = "multiple"
+rulers = [120]
+true-color = true
+
+[editor.auto-pairs]
+'(' = ')'
+'{' = '}'
+'[' = ']'
+'`' = '`'
+
+[editor.cursor-shape]
+insert = "bar"
+normal = "block"
+select = "underline"
+
+[editor.lsp]
+# Show LSP messages in the status line
+display-messages = true
+
+[editor.statusline]
+left = ["mode", "spinner", "file-name"]
+right = ["read-only-indicator", "diagnostics", "position"]
+
+[editor.soft-wrap]
+enable = true
+
+[editor.auto-save]
+focus-lost = true
+
+[editor.file-picker]
+hidden = true
+
+# Keys
+[keys.normal]
+X = "extend_line_above"
+[keys.insert]
+C-h = "move_char_left"
+C-l = "move_char_right"
+# A-a = "goto_line_end_newline"
+# A-i = "goto_line_start"
+# A-j = "move_visual_line_down"
+# A-k = "move_visual_line_up"
+j = { k = "normal_mode" }
+
+
+[editor.gutters]
+layout = ["diff", "diagnostics", "spacer", "line-numbers", "spacer"]
+
+[editor.gutters.line-numbers]
+min-width = 1
+
+[editor.whitespace.characters]
+space = "·"
+nbsp = "⍽"
+nnbsp = "␣"
+tab = "→"
+newline = "⏎"
+tabpad = "·" # Tabs will look like "→···" (depending on tab width)
+EOF
