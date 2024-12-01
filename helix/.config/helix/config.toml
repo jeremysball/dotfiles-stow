@@ -5,7 +5,7 @@ theme = "serika-light"
 line-number = "relative"
 mouse = false
 bufferline = "multiple"
-rulers = [120]
+rulers = [80]
 true-color = true
 
 [editor.auto-pairs]
@@ -39,6 +39,11 @@ hidden = true
 # Keys
 [keys.normal]
 X = "extend_line_above"
+
+[keys.normal.space]
+z = ":pipe-to hepl.sh send"
+Z.p = ":run-shell-command hepl.sh spawn python3"
+
 [keys.insert]
 C-h = "move_char_left"
 C-l = "move_char_right"
