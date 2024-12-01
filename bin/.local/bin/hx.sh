@@ -3,6 +3,7 @@ wget "https://github.com/helix-editor/helix/releases/download/24.07/helix-24.07-
 pushd $HOME/.local/bin
 tar xvf /tmp/hx.tar.xz 
 mv helix-*/hx . 
+mv helix-*/runtime .
 rm -r helix-*
 chmod +x ./hx
 echo "export PATH=$PATH:$HOME/.local/bin" >> $HOME/.bashrc
