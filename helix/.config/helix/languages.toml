@@ -25,22 +25,34 @@ indent = { tab-width = 8, unit = "\t" }
 auto-format = true
 formatter = { command = "clang-format" }
 
+# [[language]]
+# name = "python"
+# # If you want to use pylsp for other features like type checking, keep this
+# language-servers = ["pylsp"]
+
+# # https://github.com/helix-editor/helix/discussions/8567#discussioncomment-7808366
+# # includes a list of dependencies that need to be installed
+# # python-black python-isort python-jedi python-pyflakes python-pylint python-pyls-isort python-python-lsp-black python-python-lsp-server[rope,pylint] python-rope
+# [language-server.pylsp.config.pylsp]
+# plugins.black.enabled = true
+# plugins.pylint.enabled = true
+# plugins.pyflakes.enabled = false
+# plugins.pyls_mypy.enabled = true
+# plugins.pyls_mypy.live_mode = false
+# plugins.isort.enabled = true
+# plugins.rope_autoimport.enabled = true
 [[language]]
 name = "python"
-# If you want to use pylsp for other features like type checking, keep this
-language-servers = ["pylsp"]
+file-types = ["py"]
+roots = ["pyproject.toml", "setup.py", ".git"]  # Project root markers
+language-servers = ["pyright"]
+# formatter = { command = "yapf" }
+auto-format = true
+
+[language-server.pyright]
+command = "pyright-langserver"
+args = ["--stdio"]
 
 [language.formatter]
 command = "black"
 args = ["--line-length", "88", "--quiet", "-"]
-# https://github.com/helix-editor/helix/discussions/8567#discussioncomment-7808366
-# includes a list of dependencies that need to be installed
-# python-black python-isort python-jedi python-pyflakes python-pylint python-pyls-isort python-python-lsp-black python-python-lsp-server[rope,pylint] python-rope
-[language-server.pylsp.config.pylsp]
-plugins.black.enabled = true
-plugins.pylint.enabled = true
-plugins.pyflakes.enabled = false
-plugins.pyls_mypy.enabled = true
-plugins.pyls_mypy.live_mode = false
-plugins.isort.enabled = true
-plugins.rope_autoimport.enabled = true
