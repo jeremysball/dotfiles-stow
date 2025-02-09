@@ -38,8 +38,11 @@ if [ -x /usr/bin/dircolors ]; then
     alias fgrep='fgrep --color=auto'
     alias egrep='egrep --color=auto'
 fi
+
 # Caps-lock becomes ctrl
-setxkbmap -option caps:ctrl_modifier
+if [[ ! -n $WSLENV ]]; then
+  setxkbmap -option caps:ctrl_modifier
+fi
 
 # Uncomment the following line to use case-sensitive completion.
 CASE_SENSITIVE="false"
