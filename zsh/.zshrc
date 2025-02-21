@@ -13,6 +13,9 @@ export TERMINAL=alacritty
 export TERM=xterm-256color
 export LANG=en_US.UTF-8
 
+bindkey "^[[1;5D" backward-word
+bindkey "^[[1;5C" forward-word
+
 # Preferred editor for local and remote sessions
 if [[ -n $SSH_CONNECTION ]]; then
     export EDITOR='vim'
@@ -109,6 +112,13 @@ source ~/.zsh/aliases
 source /usr/share/fzf/key-bindings.zsh
 
 autoload -Uz compinit promptinit
+compinit
+
+# Enable arrow-key driven interface
+zstyle ':completion:*' menu select
+
+# Enable privileged completion
+zstyle ':completion::complete:*' gain-privileges 1
 
 zstyle ':completion::complete:*' use-cache 1
 
