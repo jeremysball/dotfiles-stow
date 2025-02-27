@@ -15,6 +15,7 @@ export LANG=en_US.UTF-8
 
 bindkey "^[[1;5D" backward-word
 bindkey "^[[1;5C" forward-word
+bindkey "^[[3~" delete-char
 
 # Preferred editor for local and remote sessions
 if [[ -n $SSH_CONNECTION ]]; then
@@ -84,6 +85,11 @@ DISABLE_UNTRACKED_FILES_DIRTY="true"
 # or set a custom format using the strftime function format specifications,
 # see 'man strftime' for details.
 HIST_STAMPS="mm/dd/yyyy"
+
+HISTFILE=~/.zsh_history
+HISTSIZE=10000
+SAVEHIST=10000
+setopt appendhistory
 
 # Would you like to use another custom folder than $ZSH/custom?
 ZSH_CUSTOM=$HOME/.zsh/custom
