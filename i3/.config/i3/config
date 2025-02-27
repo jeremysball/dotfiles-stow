@@ -62,8 +62,7 @@ bindsym $mod+Return exec alacritty
 bindsym $mod+Shift+q kill
 
 
-# Rofi
-# bindcode $mod+40 exec "rofi -show drun"
+bindsym $mod+p exec "xfce4-appfinder"
 
 # change focus
 bindsym $mod+j focus down
@@ -169,8 +168,13 @@ bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcu
 # ===== END OF BINDS ======
 
 # ===== EXEC PROGRAMS ======
+exec xfce4-session
 exec xfce4-panel -d
-exec feh --bg-fill $HOME/Pictures/wallpaper.png
+exec feh --bg-fill $HOME/Pictures/wallpaper.*
+exec nm-applet
+exec pasystray
+exec qbittorrent
+exec $HOME/.local/bin/sisyphus.sh
 
 # ===== WINDOW RULES ========
 for_window [window_role="About"] floating enable 
