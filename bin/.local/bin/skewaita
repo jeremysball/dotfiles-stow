@@ -1,0 +1,8 @@
+#!/bin/bash
+
+pushd $HOME/.themes/skewaita/source/templates/
+source use_scheme.sh $(basename $1)
+pushd ..
+source compile.sh $2
+popd
+popd
