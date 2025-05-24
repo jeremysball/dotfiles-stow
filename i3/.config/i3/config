@@ -172,7 +172,6 @@ exec xfce4-session
 exec xfce4-panel -d
 exec feh --bg-fill $HOME/Pictures/wallpaper.*
 exec nm-applet
-exec pasystray
 exec qbittorrent
 exec $HOME/.local/bin/sisyphus.sh
 
