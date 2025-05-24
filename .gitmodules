@@ -1,12 +1,24 @@
-[submodule "zsh/.zsh/custom/themes/powerlevel10k"]
-	path = zsh/.zsh/custom/themes/powerlevel10k
-	url = https://github.com/romkatv/powerlevel10k
 [submodule "alacritty/.config/alacritty/alacritty-theme"]
 	path = alacritty/.config/alacritty/alacritty-theme
 	url = https://github.com/alacritty/alacritty-theme.git
-[submodule "zsh/.zsh/custom/plugins/zsh-syntax-highlighting"]
-	path = zsh/.zsh/custom/plugins/zsh-syntax-highlighting
-	url = git@github.com:zsh-users/zsh-syntax-highlighting.git
+[submodule "zsh/.zsh/zsh-autosuggestions"]
+	path = zsh/.zsh/zsh-autosuggestions
+	url = https://github.com/zsh-users/zsh-autosuggestions.git
+[submodule "zsh/.zsh/plugins/zsh-autosuggestions"]
+	path = zsh/.zsh/plugins/zsh-autosuggestions
+	url = https://github.com/zsh-users/zsh-autosuggestions.git
+[submodule "zsh/.zsh/plugins/zsh-syntax-highlighting"]
+	path = zsh/.zsh/plugins/zsh-syntax-highlighting
+	url = https://github.com/zsh-users/zsh-syntax-highlighting.git
+[submodule "zsh/.zsh/themes/powerlevel10k"]
+	path = zsh/.zsh/themes/powerlevel10k
+	url = https://github.com/romkatv/powerlevel10k.git
+[submodule "zsh/.zsh/custom/themes/powerlevel10k"]
+	path = zsh/.zsh/custom/themes/powerlevel10k
+	url = https://github.com/romkatv/powerlevel10k.git
 [submodule "zsh/.zsh/custom/plugins/zsh-autosuggestions"]
 	path = zsh/.zsh/custom/plugins/zsh-autosuggestions
-	url = git@github.com:zsh-users/zsh-autosuggestions.git
+	url = https://github.com/zsh-users/zsh-autosuggestions.git
+[submodule "zsh/.zsh/custom/plugins/zsh-syntax-highlighting"]
+	path = zsh/.zsh/custom/plugins/zsh-syntax-highlighting
+	url = https://github.com/zsh-users/zsh-syntax-highlighting.git
