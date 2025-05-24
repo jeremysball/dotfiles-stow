@@ -1,4 +1,4 @@
-theme = "serika-light"
+theme = "yellowed"
 
 # Editor
 [editor]
@@ -34,7 +34,8 @@ enable = true
 focus-lost = true
 
 [editor.file-picker]
-hidden = true
+git-ignore = true
+ignore = true
 
 # Keys
 [keys.normal]

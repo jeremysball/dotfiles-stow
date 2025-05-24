@@ -56,3 +56,8 @@ args = ["--stdio"]
 [language.formatter]
 command = "black"
 args = ["--line-length", "88", "--quiet", "-"]
+
+# [[language]]
+# name = "python"
+# formatter = { command = "ruff", args = ["format", "--line-length", "80", "-"] }
+# auto-format = true

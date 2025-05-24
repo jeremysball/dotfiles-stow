@@ -49,5 +49,7 @@ opacity = 1
 [general]
 live_config_reload = true
 import = [
-  "~/.config/alacritty/alacritty-theme/themes/noctis_lux.toml"
+  # "~/.config/alacritty/alacritty-theme/themes/noctis_lux.toml"
+  "alacritty-theme/themes/dracula.toml"
+  # "alacritty-theme/themes/dracula_plus.toml"
 ]
