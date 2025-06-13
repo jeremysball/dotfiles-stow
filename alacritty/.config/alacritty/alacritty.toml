@@ -53,3 +53,6 @@ import = [
   "alacritty-theme/themes/dracula.toml"
   # "alacritty-theme/themes/dracula_plus.toml"
 ]
+
+[env]
+WINIT_X11_SCALE_FACTOR = "1.9"
