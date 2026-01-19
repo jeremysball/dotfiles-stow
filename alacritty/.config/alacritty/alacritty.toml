@@ -18,7 +18,7 @@ blinking = "On"
 shape = "Underline"
 
 [font]
-size = 15
+size = 9.5
 
 [font.bold]
 family = "BlexMono Nerd Font Mono"
@@ -41,7 +41,7 @@ history = 15000
 multiplier = 3
 
 [terminal.shell]
-program = "/bin/zsh"
+program = "/usr/bin/fish"
 
 [window]
 opacity = 1
@@ -55,4 +55,4 @@ import = [
 ]
 
 [env]
-WINIT_X11_SCALE_FACTOR = "1.9"
+WINIT_X11_SCALE_FACTOR = "2"
