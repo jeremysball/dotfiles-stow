@@ -61,3 +61,54 @@ args = ["--line-length", "88", "--quiet", "-"]
 # name = "python"
 # formatter = { command = "ruff", args = ["format", "--line-length", "80", "-"] }
 # auto-format = true
+
+# [[language]]
+# name = "arm"
+# scope = "source.arm"
+# injection-regex = "arm"
+# file-types = ["s"]
+# comment-tokens = "@"
+# # indent = { tab-width = 4, unit = " "}
+# language-servers = [ "asm-lsp" ]
+
+# [[grammar]]
+# name = "arm"
+# source = { git = "https://github.com/RubixDev/tree-sitter-asm", rev = "839741fef4dab5128952334624905c82b40c7133" }
+
+# [[language]]
+# name = "arm"
+# scope = "source.arm"
+# file-types = ["d"]
+# injection-regex = "arm"
+# comment-token = "@"
+# indent = { tab-width = 8, unit = "        " }
+# language-servers = ["asm-lsp"]
+# grammar = "arm"
+
+# [[language]]
+# name = "arm"
+# scope = "source.gas"
+# file-types = ["d"]
+# injection-regex = "gas"
+# comment-token = "@"
+# indent = { tab-width = 8, unit = "        " }
+# language-servers = ["asm-lsp"]
+# grammar = "gas"
+
+[[grammar]]
+name = "arm"
+source = { git = "https://github.com/SethBarberee/tree-sitter-asm", rev = "eee056ff31ea758eaa0ff00f0ec335f156cc5ebe" }
+
+[[language]]
+name = "arm"
+scope = "source.arm"
+file-types = ["s"]
+injection-regex = "arm"
+comment-token = "@"
+indent = { tab-width = 8, unit = "        " }
+language-servers = ["asm-lsp"]
+grammar = "arm"
+
+# [[grammar]]
+# name = "arm"
+# source = { git = "https://github.com/SethBarberee/tree-sitter-asm", rev = "eee056ff31ea758eaa0ff00f0ec335f156cc5ebe" }

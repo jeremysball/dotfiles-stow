@@ -1,5 +1,8 @@
-theme = "gruber-darker"
-
+# theme = "nyxvamp-obsidian"
+# theme = "serika-dark"
+# theme = "dark-synthwave"
+# theme = "zenburn"
+theme = "starlight"
 # Editor
 [editor]
 line-number = "relative"
@@ -25,8 +28,8 @@ right = ["read-only-indicator", "diagnostics", "position"]
 [editor.soft-wrap]
 enable = true
 
-[editor.auto-save]
-focus-lost = true
+# [editor.auto-save]
+# focus-lost = true
 
 [editor.file-picker]
 git-ignore = true
@@ -35,6 +38,7 @@ ignore = true
 # Keys
 [keys.normal]
 X = "extend_line_above"
+C-p = ["move_line_down", "paste_before"]
 
 [keys.normal.space]
 z = ":pipe-to hepl.sh send"
