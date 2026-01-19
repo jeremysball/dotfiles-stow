@@ -4,7 +4,6 @@
 alias cd='z'
 
 # Core commands with colored output
-alias ls='ls --color=auto'
 alias dir='dir --color=auto'
 alias vdir='vdir --color=auto'
 alias grep='grep --color=auto'
@@ -43,5 +42,8 @@ alias cat='bat --style=plain'
 alias ls='exa --color=auto --icons'
 alias find='fd'
 alias grep='rg --color=auto'
-alias lsl='ls -l'
+
+alias ll='ls -al'
 alias hx='helix'
+alias nv='nvim'
+alias iso="if [[ \"$#\" == 1 ]]; then; d=$(mktemp -d) && fuseiso $1 ${d} && pushd ${d}; fi"
