@@ -16,7 +16,7 @@ font pango:SauceCodePro NFP SemiBold 8
 for_window [class=".*"] border pixel 4
 
 default_floating_border pixel 1
-gaps inner 4
+gaps inner 1
 gaps outer 0
 
 # https://wiki.archlinux.org/index.php/XDG_Autostart
@@ -36,7 +36,7 @@ floating_modifier $mod
 tiling_drag modifier titlebar
 
 # start a terminal
-bindsym $mod+Return exec alacritty  
+bindsym $mod+Return exec ~/.local/bin/alacritty-with-cwd
 
 # kill focused window
 bindsym $mod+Shift+q kill
