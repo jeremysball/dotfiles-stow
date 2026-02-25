@@ -10,18 +10,18 @@ workspace_auto_back_and_forth yes
 
 # This font is widely installed, provides lots of unicode glyphs, right-to-left
 # text rendering and scalability on retina/hidpi displays (thanks to pango).
-font pango:SauceCodePro NFP SemiBold 8
+font pango:Source Serif Pro 12
 
 # Disables window titlebars
 for_window [class=".*"] border pixel 4
 
 default_floating_border pixel 1
-gaps inner 1
-gaps outer 0
+gaps inner 7
+gaps outer 7
+
 
 # https://wiki.archlinux.org/index.php/XDG_Autostart
 # exec --no-startup-id dex --autostart --environment i3
-
 set $volctl $HOME/.bin/volctl
 bindsym XF86AudioRaiseVolume exec --no-startup-id $volctl up
 bindsym XF86AudioLowerVolume exec --no-startup-id $volctl down
@@ -36,13 +36,18 @@ floating_modifier $mod
 tiling_drag modifier titlebar
 
 # start a terminal
-bindsym $mod+Return exec ~/.local/bin/alacritty-with-cwd
+bindsym $mod+Return exec ~/.local/bin/kitty-with-cwd 
 
 # kill focused window
 bindsym $mod+Shift+q kill
 
 
 bindsym $mod+p exec "xfce4-appfinder"
+
+
+bindsym $mod+grave scratchpad show 
+bindsym $mod+minus move scratchpad 
+
 
 # change focus
 bindsym $mod+j focus down
@@ -67,7 +72,7 @@ bindsym $mod+t layout toggle split
 bindsym $mod+Ctrl+v split vertical 
 bindsym $mod+Ctrl+h split horizontal
 # toggle tiling / floating
-bindsym $mod+Shift+space floating toggle
+bindsym $mod+Tab floating toggle
 
 # change focus between tiling / floating windows
 bindsym $mod+space focus mode_toggle
@@ -154,6 +159,7 @@ exec feh --bg-fill $HOME/Pictures/wallpaper.*
 # exec nm-applet
 # exec qbittorrent
 # exec $HOME/.local/bin/sisyphus.sh
+exec i3-layouts 
 
 # ===== WINDOW RULES ========
 for_window [window_role="About"] floating enable 
@@ -166,3 +172,16 @@ for_window [class="Thunar"] floating enable
 for_window [class="gnome-calculator"] floating enable
 for_window [class="pavucontrol"] floating enable
 for_window [title="Panel Preferences"] floating enable
+
+# ===== LAYOUT RULES =======
+set $i3l autosplit to workspace $ws1
+set $i3l autosplit to workspace $ws2
+set $i3l autosplit to workspace $ws3
+set $i3l autosplit to workspace $ws4
+set $i3l autosplit to workspace $ws5
+set $i3l autosplit to workspace $ws6
+set $i3l autosplit to workspace $ws1
+
+bar {
+  status_command i3status
+}

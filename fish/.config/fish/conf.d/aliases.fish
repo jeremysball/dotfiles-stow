@@ -8,5 +8,5 @@ abbr grep rg --color=auto
 
 #abbr hx helix
 abbr nv nvim
-abbr ls eza -al --git --color=auto --icons auto
+abbr ls eza -al --color=auto --icons auto
 # alias iso="if [[ \"$#\" == 1 ]]; then; d=$(mktemp -d) && fuseiso $1 ${d} && pushd ${d}; fi"

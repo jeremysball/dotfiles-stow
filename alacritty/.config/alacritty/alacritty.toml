@@ -18,22 +18,38 @@ blinking = "On"
 shape = "Underline"
 
 [font]
-size = 9.5
+size = 14
+
+# [font.bold]
+# family = "BlexMono Nerd Font Mono"
+# style = "Bold"
+#
+# [font.bold_italic]
+# family = "BlexMono Nerd Font Mono"
+# style = "Italic"
+#
+# [font.italic]
+# family = "BlexMono Nerd Font Mono"
+# style = "Italic"
+#
+# [font.normal]
+# family = "BlexMono Nerd Font Mono"
+# style = "Regular"
 
 [font.bold]
-family = "BlexMono Nerd Font Mono"
+family = "IBM Plex Mono"
 style = "Bold"
 
 [font.bold_italic]
-family = "BlexMono Nerd Font Mono"
+family = "IBM Plex Mono"
 style = "Italic"
 
 [font.italic]
-family = "BlexMono Nerd Font Mono"
+family = "IBM Plex Mono"
 style = "Italic"
 
 [font.normal]
-family = "BlexMono Nerd Font Mono"
+family = "IBM Plex Mono"
 style = "Regular"
 
 [scrolling]
@@ -44,7 +60,7 @@ multiplier = 3
 program = "/usr/bin/fish"
 
 [window]
-opacity = 1
+opacity = 0.7
 
 [general]
 live_config_reload = true
@@ -53,6 +69,7 @@ import = [
   "alacritty-theme/themes/dracula.toml"
   # "alacritty-theme/themes/dracula_plus.toml"
 ]
-
-[env]
-WINIT_X11_SCALE_FACTOR = "2"
+# [keyboard]
+# bindings = [
+#   { key = "Back",     mods = "Alt",     chars = "\\x1b\\x7f"                   }
+# ]
