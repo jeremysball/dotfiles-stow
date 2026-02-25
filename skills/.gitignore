@@ -1,20 +1,80 @@
-# API Keys and Secrets
-*.key
-*.pem
-.env
-.env.local
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# OS files
-.DS_Store
-Thumbs.db
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv
 
-# Editor files
+# IDEs
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+.DS_Store
 
-# Node
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+
+# Database
+*.db
+*.sqlite3
+
+# Local development
+local/
+
+# Data files (runtime generated)
+data/
+
+# User-specific files (auto-created from templates)
+USER.md
+SOUL.md
+TOOLS.md
+MEMORY.md
+
+# Scraped reference files (not for repo)
+.scraped/
+
+# Node.js (pi extensions)
 node_modules/
-package-lock.json
+.pi/
+
+# Screenshots from interactive terminal testing
+screenshots/
