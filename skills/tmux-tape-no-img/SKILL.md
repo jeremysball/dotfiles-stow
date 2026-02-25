@@ -1,11 +1,11 @@
 ---
 name: tmux-tape-no-img
-description: Control terminal sessions via tyd + tmux with pixel-perfect screenshots. Use for E2E testing of TUI applications, CLI interactions, and asyncio apps. Use the tmux_tool.py module for terminal control, browser-based screenshots, and text extraction.
+description: Control terminal sessions via tmux for E2E testing of TUI applications, CLI interactions, and asyncio apps.
 ---
 
 # tmux-tape Skill
 
-Run terminal sessions programmatically tmux (session control).
+Run terminal sessions programmatically with tmux (session control).
 
 ## Overview
 
@@ -35,12 +35,12 @@ cp .pi/skills/tmux-tape/tmux_tool.py /tmp/pi-tmux/
 #!/usr/bin/env python3
 from tmux_tool import TerminalSession
 
-with TerminalSession("test", port=7681) as s:
+with TerminalSession("test") as s:
     s.send("echo hello")
     s.send_key("Enter")
     s.sleep(1)
     
-    result = s.capture()  # upload=False by default
+    result = s.capture()
     print(result)
 ```
 
@@ -71,7 +71,7 @@ uv run python script.py
 
 ### Start Alfred (asyncio app)
 ```python
-with TerminalSession("alfred", port=7681) as s:
+with TerminalSession("alfred") as s:
     s.send("bash")
     s.send_key("Enter")
     s.sleep(0.3)
@@ -80,8 +80,8 @@ with TerminalSession("alfred", port=7681) as s:
     s.send_key("Enter")
     s.sleep(3)
     
-    result = s.capture("startup.png")
-    print(result["text"])
+    result = s.capture()
+    print(result)
 ```
 
 ### Send Message and Capture Response
@@ -90,14 +90,8 @@ s.send("what is 2+2?")
 s.send_key("Enter")
 s.sleep(12)  # LLM needs time
 
-result = s.capture("response.png")
-print(result["text"])
-```
-
-### Upload Screenshots for Sharing
-```python
-result = s.capture("important.png", upload=True)
-print(f"Screenshot URL: {result['url']}")  # https://0x0.st/xxx.png
+result = s.capture()
+print(result)
 ```
 
 ### Clean Exit
@@ -131,6 +125,7 @@ uv run python script.py
 ### 4. Check Results
 - Text output printed to stdout
 
+### 5. Persist USEFUL scripts into .agents folder near other tests (i.e. tests/)
 ---
 
 ## Error Handling
@@ -175,7 +170,7 @@ from tmux_tool import TerminalSession
 def main():
     print("=== Alfred Test ===\n")
     
-    with TerminalSession("alfred", port=7681) as s:
+    with TerminalSession("alfred") as s:
         print("Starting Alfred...")
         s.send("bash")
         s.send_key("Enter")
@@ -183,14 +178,16 @@ def main():
         s.send_key("Enter")
         s.sleep(3)
         
-        print(result["text"])
+        result = s.capture()
+        print(result)
         
         print("\nSending message...")
         s.send("what is 2+2?")
         s.send_key("Enter")
         s.sleep(12)
         
-        print(result["text"])
+        result = s.capture()
+        print(result)
         
         s.send_key("C-c")
         s.send("exit")
@@ -208,7 +205,6 @@ if __name__ == "__main__":
 ## Tips
 
 1. **Use `uv run`** — Always run scripts with `uv run python script.py`
-2. **Unique ports** — Use different ports for concurrent sessions (7681, 7682, etc.)
-3. **Estimate waits** — LLM responses need 10s+
-4. **Use bash** — Avoid fish/shell compatibility issues
+2. **Estimate waits** — LLM responses need 10s+
+3. **Use bash** — Avoid fish/shell compatibility issues
 
