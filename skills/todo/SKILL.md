@@ -1,6 +1,6 @@
 ---
 name: todo
-description: TDD task lists. Format: Test → Implement → Commit. Test first is the default.
+description: TDD task lists. Test first, then implement, then commit.
 ---
 
 # Todo Skill - Test First
