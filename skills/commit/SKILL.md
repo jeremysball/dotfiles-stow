@@ -10,8 +10,10 @@ description: Make atomic commits with conventional commit format. Commit early a
 ## The Cadence
 
 ```
-Write change → Run tests → git add -p → Commit → Repeat
+Write test → Implement → Run tests → git add -p → Commit → Repeat
 ```
+
+See [todo skill](/workspace/.pi/skills/todo/SKILL.md) for test-first workflow.
 
 ## Rules
 
