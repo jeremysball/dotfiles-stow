@@ -92,17 +92,31 @@ feat(pypitui): enable markdown rendering for user messages
 feat(pypitui): enable markdown rendering for assistant messages
 ```
 
-## Recovery: git add -p
+## Recovery: git add -p with tmux
 
-Use when you have multiple uncommitted changes to separate. See [tmux skill](/workspace/.pi/skills/tmux/SKILL.md) for session management.
+Use when you have multiple uncommitted changes to separate.
 
 ```bash
+# Start tmux session for interactive staging
 tmux new-session -s commit
-git add -p src/file.py          # y = stage, n = skip, s = split
-git diff --cached               # Verify staged
-git commit -m "feat: description"
-git status                      # Repeat until clean
+
+# Stage hunks interactively
+git add -p src/file.py          # y = stage, n = skip, s = split, e = edit, ? = help
+
+# Verify staged changes
+git diff --cached
+
+# Commit
+git commit -m "feat(scope): description"
+
+# Check status, repeat until clean
+git status
+
+# Exit tmux
+tmux detach                     # or: tmux kill-session -t commit
 ```
+
+See [tmux skill](/workspace/.pi/skills/tmux/SKILL.md) for full session management.
 
 ## Verify
 
