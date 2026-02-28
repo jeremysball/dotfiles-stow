@@ -1,43 +1,31 @@
 ---
 name: tmux
-description: Terminal multiplexer for persistent sessions and automation.
+description: USE THIS SKILL for terminal automation. Required for any interactive CLI testing or TUI automation.
 ---
 
-# tmux
+# tmux — USE THIS SKILL
 
-## Start
+**REQUIRED for:** Any CLI automation, TUI testing, or interactive command capture.
 
-```bash
-tmux new-session -d -s name "cmd"       # Detached
-tmux new-session -s name                # Attached
-```
-
-## Send Input
+## Automation Only
 
 ```bash
-tmux send-keys -t name "cmd" Enter      # Send command
-tmux send-keys -t name C-c              # Ctrl+C
-```
+# Start detached (ALWAYS use -d for automation)
+tmux new-session -d -s name "cmd"
 
-**Never:** `echo "cmd" | tmux` — runs in new shell, not the session.
+# Send commands (NEVER use echo | tmux)
+tmux send-keys -t name "cmd" Enter
+tmux send-keys -t name C-c
 
-## Capture Output
-
-```bash
-tmux capture-pane -t name -p            # To stdout
+# Capture output
+tmux capture-pane -t name -p
 tmux capture-pane -t name -p -S -100    # Last 100 lines
-```
 
-## Manage
-
-```bash
-tmux ls
-tmux attach -t name
+# Cleanup
 tmux kill-session -t name
-tmux kill-server
 ```
 
-## Automation
+## Full Pattern
 
 ```bash
 tmux new-session -d -s test "uv run app"
@@ -47,4 +35,4 @@ OUTPUT=$(tmux capture-pane -t test -p)
 tmux kill-session -t test
 ```
 
-**Interactive:** `Ctrl+b d` to detach, `Ctrl+b [` to scroll.
+**Never:** `echo "cmd" | tmux` — runs in new shell, not the session.

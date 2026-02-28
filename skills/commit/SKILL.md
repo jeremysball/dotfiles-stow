@@ -92,31 +92,31 @@ feat(pypitui): enable markdown rendering for user messages
 feat(pypitui): enable markdown rendering for assistant messages
 ```
 
-## Recovery: git add -p with tmux
+## Recovery: Automate git add -p with tmux
 
-Use when you have multiple uncommitted changes to separate.
+Use when you have multiple uncommitted changes to separate. Automate with tmux send-keys.
 
 ```bash
-# Start tmux session for interactive staging
-tmux new-session -s commit
+# Start detached session
+tmux new-session -d -s commit
 
-# Stage hunks interactively
-git add -p src/file.py          # y = stage, n = skip, s = split, e = edit, ? = help
+# Automate git add -p (send 'y' for yes, 'n' for no, 's' for split)
+tmux send-keys -t commit "git add -p src/file.py" Enter
 
-# Verify staged changes
-git diff --cached
+# Example: stage first hunk, skip second
+tmux send-keys -t commit "y" Enter    # Stage this hunk
+tmux send-keys -t commit "n" Enter    # Skip next hunk
 
-# Commit
-git commit -m "feat(scope): description"
+# Verify and commit
+tmux send-keys -t commit "git diff --cached" Enter
+OUTPUT=$(tmux capture-pane -t commit -p)
+tmux send-keys -t commit "git commit -m 'feat(scope): description'" Enter
 
-# Check status, repeat until clean
-git status
-
-# Exit tmux
-tmux detach                     # or: tmux kill-session -t commit
+# Cleanup
+tmux kill-session -t commit
 ```
 
-See [tmux skill](/workspace/.pi/skills/tmux/SKILL.md) for full session management.
+See [tmux skill](/workspace/.pi/skills/tmux/SKILL.md) for automation patterns.
 
 ## Verify
 
