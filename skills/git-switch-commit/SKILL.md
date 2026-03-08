@@ -36,15 +36,27 @@ git stash push -m "switch-commit-temp" -u
 
 This captures ALL uncommitted changes (including untracked files) into a named stash.
 
-### Step 3: Switch to Target Branch
+### Step 3: Confirm Target Branch
 
-```bash
-git checkout main  # or user-specified branch
+**ALWAYS confirm the target branch with the user.** Never assume.
+
+```
+Current branch: <current-branch>
+Target branch for commit: [main] ?
 ```
 
-Default is `main`. Ask user if they want a different branch.
+- Press Enter to use `main`
+- Or type a different branch name
 
-### Step 4: Extract Only Selected Files from Stash
+Wait for explicit user confirmation before proceeding.
+
+### Step 4: Switch to Target Branch
+
+```bash
+git checkout <confirmed-branch>
+```
+
+### Step 5: Extract Only Selected Files from Stash
 
 ```bash
 git checkout stash@{0} -- <file1> <file2> ...
@@ -52,7 +64,7 @@ git checkout stash@{0} -- <file1> <file2> ...
 
 **Important**: Use `checkout` not `pop` - this extracts specific files without removing the stash.
 
-### Step 5: Infer Commit Message and Confirm
+### Step 6: Infer Commit Message and Confirm
 
 Read the diffs of the selected files:
 
@@ -74,7 +86,7 @@ Generate a conventional commit message based on the changes. Present to user:
 - **n**: Prompt user to enter a custom message
 - **edit**: Let user type a modified message
 
-### Step 6: Commit and Push
+### Step 7: Commit and Push
 
 ```bash
 git add <files>
@@ -82,13 +94,13 @@ git commit -m "<message>"
 git push origin <branch>
 ```
 
-### Step 7: Switch Back to Original Branch
+### Step 8: Switch Back to Original Branch
 
 ```bash
 git checkout <original-branch>
 ```
 
-### Step 8: Pop Stash
+### Step 9: Pop Stash
 
 ```bash
 git stash pop
@@ -96,7 +108,7 @@ git stash pop
 
 This restores all your work-in-progress.
 
-### Step 9: Cleanup (if needed)
+### Step 10: Cleanup (if needed)
 
 If the stash wasn't fully popped (conflict or partial extraction):
 
