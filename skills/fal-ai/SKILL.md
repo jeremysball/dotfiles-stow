@@ -7,6 +7,37 @@ description: Interactive TUI for generating images with fal.ai. Fuzzy model sear
 
 You are an interactive TUI for fal.ai image generation. Guide the user through model selection with fuzzy search, then generate their image.
 
+## 🚨 CRITICAL: NEVER GENERATE WITHOUT EXPLICIT PERMISSION
+
+**UNDER NO CIRCUMSTANCES should you generate images without the user's EXPLICIT confirmation.**
+
+**REQUIRED:** Before executing ANY generation command, you MUST:
+1. Display the EXACT prompt, model, and all settings that will be used
+2. Show the estimated cost
+3. Ask for explicit confirmation with a [Y/n] prompt
+4. WAIT for the user to confirm with "Y", "yes", or similar affirmative
+5. If the user does not confirm, do NOT proceed
+
+**FORBIDDEN:**
+- NEVER auto-generate even if the user provides a prompt directly
+- NEVER infer intent and skip confirmation
+- NEVER execute `generate_image.py` without waiting for explicit "Y" response
+- NEVER batch generate or assume permission for multiple images
+- NEVER proceed if the user gives ambiguous responses like "ok", "sure", "go ahead" without the explicit settings confirmation
+
+**Example confirmation flow:**
+```
+I will generate an image with these settings:
+  Prompt: "a red logo with mountains"
+  Model: recraft-v4
+  Size: 1024x1024
+  Estimated cost: $0.04
+
+Proceed? [Y/n]: 
+```
+
+Only after the user types "Y" or "yes" should you execute the generation command.
+
 ## Mode Selection
 
 ```
@@ -23,14 +54,37 @@ You are an interactive TUI for fal.ai image generation. Guide the user through m
 
 Ask the user which mode, or if they provide a prompt directly, infer their intent.
 
+**⚠️ REMINDER: ALL modes require explicit "Y" confirmation before ANY generation. Never skip confirmation.**
+
 ---
 
 ## Mode 1: Quick Generate
 
-Use sensible defaults:
-- Model: `recraft-v4` for logos/text, `flux-dev` for art
-- Aspect: `1:1` (square)
-- Size: default
+**REQUIREMENT: Even for "Quick Generate", you MUST get explicit confirmation before generating.**
+
+Present the planned settings and WAIT for explicit "Y" confirmation:
+
+```
+╔═══════════════════════════════════════════════════════════════╗
+║  ⚡ QUICK GENERATE - CONFIRMATION REQUIRED                    ║
+╠═══════════════════════════════════════════════════════════════╣
+║                                                               ║
+║  I will generate with these settings:                         ║
+║                                                               ║
+║  Prompt: "<user's prompt>"                                    ║
+║  Model: recraft-v4 (inferred for logos/text)                  ║
+║        or flux-dev (inferred for art)                         ║
+║  Aspect: 1:1 (square)                                         ║
+║  Estimated Cost: ~$0.04                                       ║
+║                                                               ║
+║  Proceed? [Y/n]:                                              ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+```
+
+**DO NOT execute the command until the user explicitly types "Y" or "yes".**
+
+After confirmation:
 
 ```bash
 cd /workspace/.pi/skills/fal-ai
@@ -163,7 +217,9 @@ Search results guide:
 
 ## Generation Flow
 
-Once model is selected, gather:
+Once model is selected, gather settings, then **MANDATORY: Show confirmation dialog and WAIT for explicit "Y" response.**
+
+### Step 1: Gather Settings
 
 ```
 ╔═══════════════════════════════════════════════════════════════╗
@@ -186,9 +242,47 @@ Once model is selected, gather:
 ╚═══════════════════════════════════════════════════════════════╝
 ```
 
+### Step 2: MANDATORY CONFIRMATION (CRITICAL - NEVER SKIP)
+
+After settings are gathered, you MUST display this confirmation and WAIT for "Y":
+
+```
+╔═══════════════════════════════════════════════════════════════╗
+║  ⚠️  CONFIRM GENERATION - EXPLICIT APPROVAL REQUIRED          ║
+╠═══════════════════════════════════════════════════════════════╣
+║                                                               ║
+║  I will generate with these EXACT settings:                   ║
+║                                                               ║
+║  Prompt:    "<full prompt>"                                   ║
+║  Model:     <model_name>                                      ║
+║  Aspect:    <aspect_ratio>                                    ║
+║  Size:      <WxH or default>                                  ║
+║  Images:    <count>                                           ║
+║  Seed:      <seed or random>                                  ║
+║  ────────────────────────────────────────                     ║
+║  Estimated Cost: $<cost>                                      ║
+║                                                               ║
+║  ⚠️  Type "Y" or "yes" to proceed, anything else to cancel   ║
+║                                                               ║
+║  Proceed? [Y/n]:                                              ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+```
+
+**ABSOLUTE REQUIREMENTS:**
+- WAIT for the user to explicitly type "Y" or "yes"
+- If user types anything else ("ok", "sure", "go", etc.), ask again for explicit "Y"
+- If user does not respond with "Y"/"yes", CANCEL the operation
+- NEVER proceed with generation without this confirmation
+- NEVER assume approval from context or previous interactions
+
 ---
 
-## Execute Generation
+## Execute Generation (ONLY AFTER EXPLICIT "Y" CONFIRMATION)
+
+**⚠️ DO NOT execute this section until the user has explicitly typed "Y" or "yes" in the confirmation step above.**
+
+Once explicit confirmation is received:
 
 ```bash
 cd /workspace/.pi/skills/fal-ai
@@ -300,11 +394,17 @@ uv run generate_image.py --refresh-prices
 
 ## Quick Commands
 
-User can also bypass TUI with direct commands:
+**⚠️ EVEN "QUICK" COMMANDS REQUIRE EXPLICIT CONFIRMATION**
 
-- `fal logo <prompt>` → recraft-v4, square
-- `fal banner <prompt>` → recraft-v4, 16:9
-- `fal art <prompt>` → flux-dev, default aspect
-- `fal vector <prompt>` → recraft-vector, SVG
-- `fal cheap <prompt>` → flux2-klein
-- `fal pro <prompt>` → flux-pro
+User can use these shortcuts, BUT you MUST still show settings and WAIT for "Y" confirmation:
+
+| Command | Planned Settings | Your Action |
+|---------|-----------------|-------------|
+| `fal logo <prompt>` | recraft-v4, square | Show settings, WAIT for "Y" |
+| `fal banner <prompt>` | recraft-v4, 16:9 | Show settings, WAIT for "Y" |
+| `fal art <prompt>` | flux-dev, default | Show settings, WAIT for "Y" |
+| `fal vector <prompt>` | recraft-vector, SVG | Show settings, WAIT for "Y" |
+| `fal cheap <prompt>` | flux2-klein | Show settings, WAIT for "Y" |
+| `fal pro <prompt>` | flux-pro | Show settings, WAIT for "Y" |
+
+**NEVER execute generation commands without the explicit confirmation dialog and "Y" response.**
