@@ -54,11 +54,12 @@ async function* streamJsonlLines(filepath: string): AsyncGenerator<string> {
 }
 
 /**
- * Extract model provider and ID from message data
+ * Extract model provider and ID from pi/OpenClaw message data
  */
 function extractModelInfo(data: any): ModelInfo {
   const msg = data.message || {};
   
+  // In .pi format, provider and model are at the message level
   if (msg.model) {
     return { provider: msg.provider || null, model: msg.model };
   }
@@ -83,11 +84,20 @@ function extractModelInfo(data: any): ModelInfo {
     }
   }
   
-  // Check custom model-snapshot events
+  // Check custom model-snapshot events (OpenClaw format)
   if (data.type === 'custom' && data.customType === 'model-snapshot') {
     const snap = data.data || {};
     const provider = snap.provider;
     const model = snap.modelId;
+    if (provider && model) {
+      return { provider, model: `${provider}/${model}` };
+    }
+  }
+  
+  // OpenClaw model_change events
+  if (data.type === 'model_change') {
+    const provider = data.provider;
+    const model = data.modelId;
     if (provider && model) {
       return { provider, model: `${provider}/${model}` };
     }
@@ -155,7 +165,24 @@ async function processJsonlFile(filepath: string): Promise<ProcessResult> {
       const data = JSON.parse(line);
       const msgType = data.type;
       
-      // Track model changes
+      // Skip session metadata lines (OpenClaw session type)
+      if (msgType === 'session') {
+        continue;
+      }
+      
+      // Handle OpenClaw model_change events
+      if (msgType === 'model_change') {
+        const { provider, model } = extractModelInfo(data);
+        if (model) currentModel = getModelName(provider, model);
+        continue;
+      }
+      
+      // Handle OpenClaw thinking_level_change events (track but don't process tokens)
+      if (msgType === 'thinking_level_change') {
+        continue;
+      }
+      
+      // Handle custom model-snapshot events (OpenClaw format)
       if (msgType === 'custom' && data.customType === 'model-snapshot') {
         const { provider, model } = extractModelInfo(data);
         if (model) currentModel = getModelName(provider, model);

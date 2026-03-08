@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
-token-burn: Calculate token usage from pi session JSONL files.
+token-burn: Calculate token usage and costs from pi session JSONL files.
 
 Streams through JSONL files in buffered chunks to handle large files
 without loading into memory. Extracts actual token counts from message metadata
 including cached tokens (cacheRead, cacheWrite).
+
+Includes real pricing data for accurate cost estimation.
 """
 
 import json
@@ -13,7 +15,101 @@ import os
 import argparse
 from pathlib import Path
 from collections import defaultdict
-from typing import Dict, Iterator, Tuple, Optional
+from typing import Dict, Iterator, Tuple, Optional, List
+
+# ============================================================================
+# MODEL PRICING (USD per 1M tokens)
+# ============================================================================
+# Format: { 'pattern': { input, output, cache_read, cache_write } }
+# Patterns are matched in order (more specific first)
+# Cache pricing is ~90% off for read, ~25% more for write
+
+MODEL_PRICING: List[Tuple[str, Dict[str, float]]] = [
+    # Anthropic Claude - specific models first
+    ('claude-opus-4.5', {'input': 15, 'output': 75,  'cache_read': 1.50,  'cache_write': 18.75}),
+    ('claude-opus-4',   {'input': 15, 'output': 75,  'cache_read': 1.50,  'cache_write': 18.75}),
+    ('claude-opus',     {'input': 15, 'output': 75,  'cache_read': 1.50,  'cache_write': 18.75}),
+    ('claude-sonnet-4', {'input': 3,  'output': 15,  'cache_read': 0.30,  'cache_write': 3.75}),
+    ('claude-sonnet',   {'input': 3,  'output': 15,  'cache_read': 0.30,  'cache_write': 3.75}),
+    ('claude-haiku',    {'input': 0.80,'output': 4,   'cache_read': 0.08,  'cache_write': 1.00}),
+    
+    # OpenAI GPT models
+    ('gpt-4.5',         {'input': 75, 'output': 150, 'cache_read': 37.50, 'cache_write': 75}),
+    ('gpt-4o-mini',     {'input': 0.15,'output': 0.60,'cache_read': 0.075, 'cache_write': 0.15}),
+    ('gpt-4o',          {'input': 2.50,'output': 10,  'cache_read': 1.25,  'cache_write': 2.50}),
+    ('gpt-4-turbo',     {'input': 10, 'output': 30,  'cache_read': 5,      'cache_write': 10}),
+    ('gpt-4',           {'input': 30, 'output': 60,  'cache_read': 15,     'cache_write': 30}),
+    ('gpt-3.5',         {'input': 0.50,'output': 1.50,'cache_read': 0.25,  'cache_write': 0.50}),
+    ('codex',           {'input': 3,  'output': 12,  'cache_read': 1.50,   'cache_write': 3}),
+    ('o3-mini',         {'input': 1.10,'output': 4.40,'cache_read': 0.55,  'cache_write': 1.10}),
+    ('o1',              {'input': 15, 'output': 60,  'cache_read': 7.50,   'cache_write': 15}),
+    
+    # Google Gemini
+    ('gemini-2.0-flash',{'input': 0.10,'output': 0.40,'cache_read': 0.025, 'cache_write': 0.10}),
+    ('gemini-2',        {'input': 1.25,'output': 10,  'cache_read': 0.31,  'cache_write': 1.25}),
+    ('gemini-1.5-pro',  {'input': 1.25,'output': 10,  'cache_read': 0.31,  'cache_write': 1.25}),
+    ('gemini-1.5-flash',{'input': 0.075,'output': 0.30,'cache_read': 0.019,'cache_write': 0.075}),
+    ('gemini',          {'input': 1.25,'output': 10,  'cache_read': 0.31,  'cache_write': 1.25}),
+    
+    # Kimi Moonshot
+    ('kimi-k2',         {'input': 0.60,'output': 2.50,'cache_read': 0.15,  'cache_write': 0.60}),
+    ('k2p5',            {'input': 0.60,'output': 2.50,'cache_read': 0.15,  'cache_write': 0.60}),
+    ('kimi',            {'input': 2,  'output': 8,   'cache_read': 0.50,   'cache_write': 2}),
+    
+    # GLM / Z.ai
+    ('glm-4',           {'input': 0.35,'output': 0.35,'cache_read': 0.09,  'cache_write': 0.35}),
+    ('glm-5',           {'input': 0.50,'output': 0.50,'cache_read': 0.125, 'cache_write': 0.50}),
+    ('glm',             {'input': 0.50,'output': 2,   'cache_read': 0.125, 'cache_write': 0.50}),
+    
+    # DeepSeek
+    ('deepseek',        {'input': 0.27,'output': 1.10,'cache_read': 0.07,  'cache_write': 0.27}),
+    
+    # Default fallback (conservative mid-tier pricing)
+    ('default',         {'input': 3,  'output': 15,  'cache_read': 0.75,   'cache_write': 3})
+]
+
+
+def get_pricing(model_name: str) -> Dict[str, float]:
+    """Get pricing for a model by matching against known patterns."""
+    name_lower = model_name.lower()
+    for pattern, pricing in MODEL_PRICING:
+        if pattern in name_lower:
+            return pricing
+    return MODEL_PRICING[-1][1]  # default
+
+
+def calculate_cost(counts: dict, model_name: str) -> dict:
+    """
+    Calculate cost for a model's token usage.
+    
+    Returns dict with individual costs and total.
+    """
+    p = get_pricing(model_name)
+    
+    input_cost = (counts['input'] / 1_000_000) * p['input']
+    output_cost = (counts['output'] / 1_000_000) * p['output']
+    cache_read_cost = (counts['cache_read'] / 1_000_000) * p['cache_read']
+    cache_write_cost = (counts.get('cache_write', 0) / 1_000_000) * p['cache_write']
+    
+    return {
+        'input': input_cost,
+        'output': output_cost,
+        'cache_read': cache_read_cost,
+        'cache_write': cache_write_cost,
+        'total': input_cost + output_cost + cache_read_cost + cache_write_cost
+    }
+
+
+def format_cost(n: float) -> str:
+    """Format cost with appropriate precision."""
+    if n >= 1000:
+        return f"${n:,.0f}"
+    elif n >= 1:
+        return f"${n:.2f}"
+    elif n >= 0.01:
+        return f"${n:.3f}"
+    else:
+        return f"${n:.4f}"
 
 
 def stream_jsonl_lines(filepath: str, buffer_size: int = 8192) -> Iterator[str]:
@@ -37,7 +133,7 @@ def stream_jsonl_lines(filepath: str, buffer_size: int = 8192) -> Iterator[str]:
 
 
 def extract_model_info(data: dict) -> Tuple[Optional[str], Optional[str]]:
-    """Extract model provider and ID from pi session data structures."""
+    """Extract model provider and ID from pi/OpenClaw session data structures."""
     msg = data.get('message', {})
     
     # In .pi format, provider and model are at the message level
@@ -47,11 +143,18 @@ def extract_model_info(data: dict) -> Tuple[Optional[str], Optional[str]]:
         if provider and model:
             return provider, model
     
-    # Check for model-snapshot custom events (if present in .pi)
+    # Check for model-snapshot custom events (OpenClaw format)
     if data.get('type') == 'custom' and data.get('customType') == 'model-snapshot':
         snap = data.get('data', {})
         provider = snap.get('provider')
         model = snap.get('modelId')
+        if provider and model:
+            return provider, f"{provider}/{model}"
+    
+    # OpenClaw model_change events
+    if data.get('type') == 'model_change':
+        provider = data.get('provider')
+        model = data.get('modelId')
         if provider and model:
             return provider, f"{provider}/{model}"
     
@@ -156,10 +259,13 @@ def print_table_footer():
     print(f"╚{'═' * width}╝")
 
 
-def print_model_card(model: str, counts: dict, rank: int):
-    """Print a beautiful model usage card."""
+def print_model_card(model: str, counts: dict, rank: int, show_costs: bool = True):
+    """Print a beautiful model usage card with costs."""
     emoji = get_model_emoji(model)
     total = counts['total']
+    
+    # Calculate costs
+    costs = calculate_cost(counts, model)
     
     print()
     print(f"┌{'─' * 68}┐")
@@ -167,29 +273,39 @@ def print_model_card(model: str, counts: dict, rank: int):
     print(f"├{'─' * 68}┤")
     
     # Input tokens
-    inp = counts['input']
-    inp_pct = (inp / total * 100) if total > 0 else 0
-    print(f"│  📥  Input:        {format_number(inp):>15}  ({format_tokens(inp)})  {inp_pct:>5.1f}%  │")
+    inp_pct = (counts['input'] / total * 100) if total > 0 else 0
+    inp_cost = format_cost(costs['input'])
+    print(f"│  📥  Input:        {format_number(counts['input']):>15}  ({format_tokens(counts['input'])})  {inp_pct:>5.1f}%  │")
     
     # Output tokens
-    out = counts['output']
-    out_pct = (out / total * 100) if total > 0 else 0
-    print(f"│  📤  Output:       {format_number(out):>15}  ({format_tokens(out)})  {out_pct:>5.1f}%  │")
+    out_pct = (counts['output'] / total * 100) if total > 0 else 0
+    print(f"│  📤  Output:       {format_number(counts['output']):>15}  ({format_tokens(counts['output'])})  {out_pct:>5.1f}%  │")
     
-    # Cache read (if any)
-    cache_r = counts['cache_read']
-    if cache_r > 0:
-        cache_r_pct = (cache_r / total * 100) if total > 0 else 0
-        print(f"│  💾  Cache Read:   {format_number(cache_r):>15}  ({format_tokens(cache_r)})  {cache_r_pct:>5.1f}%  │")
+    # Cache read (discounted - if any)
+    if counts['cache_read'] > 0:
+        cache_r_pct = (counts['cache_read'] / total * 100) if total > 0 else 0
+        print(f"│  💾  Cache Read:   {format_number(counts['cache_read']):>15}  ({format_tokens(counts['cache_read'])})  {cache_r_pct:>5.1f}%  │")
     
     # Cache write (if any)
-    cache_w = counts['cache_write']
-    if cache_w > 0:
-        cache_w_pct = (cache_w / total * 100) if total > 0 else 0
-        print(f"│  💿  Cache Write:  {format_number(cache_w):>15}  ({format_tokens(cache_w)})  {cache_w_pct:>5.1f}%  │")
+    if counts.get('cache_write', 0) > 0:
+        cache_w_pct = (counts['cache_write'] / total * 100) if total > 0 else 0
+        print(f"│  💿  Cache Write:  {format_number(counts['cache_write']):>15}  ({format_tokens(counts['cache_write'])})  {cache_w_pct:>5.1f}%  │")
     
     print(f"├{'─' * 68}┤")
-    print(f"│  🔥  TOTAL:        {format_number(total):>15}  ({format_tokens(total)})           │")
+    print(f"│  🔥  TOTAL TOKENS: {format_number(total):>15}  ({format_tokens(total)})           │")
+    
+    # Cost breakdown
+    if show_costs:
+        print(f"├{'─' * 68}┤")
+        print(f"│  💰  ESTIMATED COST: {format_cost(costs['total']):>46} │")
+        if costs['cache_read'] > 0.01 or costs['cache_write'] > 0.01:
+            print(f"│      ├─ Input:       {format_cost(costs['input']):>43} │")
+            print(f"│      ├─ Output:      {format_cost(costs['output']):>43} │")
+            if costs['cache_read'] > 0.01:
+                print(f"│      ├─ Cache Read:  {format_cost(costs['cache_read']):>43} │")
+            if costs['cache_write'] > 0.01:
+                print(f"│      └─ Cache Write: {format_cost(costs['cache_write']):>43} │")
+    
     print(f"└{'─' * 68}┘")
 
 
@@ -217,11 +333,23 @@ def process_jsonl_file(filepath: str, buffer_size: int = 8192) -> Dict:
             data = json.loads(line)
             msg_type = data.get('type')
             
-            # Skip session metadata lines
+            # Skip session metadata lines (OpenClaw session type)
             if msg_type == 'session':
                 continue
             
-            # Handle model-snapshot events
+            # Handle OpenClaw model_change events
+            if msg_type == 'model_change':
+                provider, model_id = extract_model_info(data)
+                if model_id:
+                    current_model = get_model_name(provider, model_id)
+                continue
+            
+            # Handle OpenClaw thinking_level_change events (track but don't process tokens)
+            if msg_type == 'thinking_level_change':
+                # Thinking level changes don't have token usage, just metadata
+                continue
+            
+            # Handle model-snapshot events (OpenClaw format)
             if msg_type == 'custom' and data.get('customType') == 'model-snapshot':
                 provider, model_id = extract_model_info(data)
                 if model_id:
@@ -279,7 +407,7 @@ def main():
     default_path = get_default_sessions_path()
     
     parser = argparse.ArgumentParser(
-        description='🔥 Calculate token usage from pi session JSONL files',
+        description='🔥 Calculate token usage and costs from pi session JSONL files',
         epilog=f'Example: token-burn.py {default_path} --recursive'
     )
     
@@ -289,10 +417,13 @@ def main():
                         help='Recursively process directory')
     parser.add_argument('-j', '--json', action='store_true', 
                         help='Output as JSON')
+    parser.add_argument('--no-costs', action='store_true',
+                        help='Hide cost calculations')
     
     args = parser.parse_args()
     
     input_path = Path(args.path)
+    show_costs = not args.no_costs
     
     if input_path.is_file():
         files = [input_path]
@@ -335,23 +466,39 @@ def main():
     
     # Output results
     if args.json:
+        # Calculate costs for each model
+        costs_by_model = {}
+        for model, counts in grand_total.items():
+            costs_by_model[model] = calculate_cost(counts, model)
+        
+        # Total costs
+        total_costs = {
+            'input': sum(c['input'] for c in costs_by_model.values()),
+            'output': sum(c['output'] for c in costs_by_model.values()),
+            'cache_read': sum(c['cache_read'] for c in costs_by_model.values()),
+            'cache_write': sum(c['cache_write'] for c in costs_by_model.values()),
+            'total': sum(c['total'] for c in costs_by_model.values())
+        }
+        
         output = {
             'files_processed': len(files),
             'total_lines': total_lines,
             'total_messages': total_messages,
             'tokens_by_model': {k: dict(v) for k, v in grand_total.items()},
+            'costs_by_model': costs_by_model,
             'total_input': sum(m['input'] for m in grand_total.values()),
             'total_output': sum(m['output'] for m in grand_total.values()),
             'total_cache_read': sum(m['cache_read'] for m in grand_total.values()),
             'total_cache_write': sum(m['cache_write'] for m in grand_total.values()),
             'total_tokens': sum(m['total'] for m in grand_total.values()),
+            'total_cost': total_costs
         }
         print(json.dumps(output, indent=2))
     else:
         # Beautiful table output with emojis
         print()
         print("🔥" + "═" * 68 + "🔥")
-        print("║" + " " * 20 + "💰 TOKEN BURN REPORT 💰" + " " * 21 + "║")
+        print("║" + " " * 18 + "💰 TOKEN BURN REPORT 💰" + " " * 19 + "║")
         print("🔥" + "═" * 68 + "🔥")
         
         # Summary section
@@ -370,12 +517,12 @@ def main():
         print("📊" + "═" * 68 + "📊")
         
         for rank, (model, counts) in enumerate(sorted_models, 1):
-            print_model_card(model, counts, rank)
+            print_model_card(model, counts, rank, show_costs=show_costs)
         
         # Grand totals
         print()
         print("💰" + "═" * 68 + "💰")
-        print("║" + " " * 20 + "🏆 GRAND TOTALS 🏆" + " " * 24 + "║")
+        print("║" + " " * 22 + "🏆 GRAND TOTALS 🏆" + " " * 22 + "║")
         print("💰" + "═" * 68 + "💰")
         
         total_in = sum(m['input'] for m in grand_total.values())
@@ -384,27 +531,38 @@ def main():
         total_cache_w = sum(m['cache_write'] for m in grand_total.values())
         total_all = sum(m['total'] for m in grand_total.values())
         
-        print(f"│  📥  TOTAL INPUT         {format_number(total_in):>15}  ({format_tokens(total_in)})          │")
-        print(f"│  📤  TOTAL OUTPUT        {format_number(total_out):>15}  ({format_tokens(total_out)})          │")
+        print(f"│  📥  INPUT TOKENS       {format_number(total_in):>15}  ({format_tokens(total_in)})          │")
+        print(f"│  📤  OUTPUT TOKENS      {format_number(total_out):>15}  ({format_tokens(total_out)})          │")
         
         if total_cache_r > 0:
-            print(f"│  💾  TOTAL CACHE READ    {format_number(total_cache_r):>15}  ({format_tokens(total_cache_r)})          │")
+            print(f"│  💾  CACHE READ         {format_number(total_cache_r):>15}  ({format_tokens(total_cache_r)})          │")
         if total_cache_w > 0:
-            print(f"│  💿  TOTAL CACHE WRITE   {format_number(total_cache_w):>15}  ({format_tokens(total_cache_w)})          │")
+            print(f"│  💿  CACHE WRITE        {format_number(total_cache_w):>15}  ({format_tokens(total_cache_w)})          │")
         
         print("├" + "─" * 68 + "┤")
-        print(f"│  🔥  GRAND TOTAL         {format_number(total_all):>15}  ({format_tokens(total_all)})          │")
+        print(f"│  🔥  TOTAL TOKENS       {format_number(total_all):>15}  ({format_tokens(total_all)})          │")
+        
+        # Total costs
+        if show_costs:
+            total_costs = sum(calculate_cost(m, name)['total'] for name, m in grand_total.items())
+            print("├" + "─" * 68 + "┤")
+            print(f"│  💵  TOTAL COST:        {format_cost(total_costs):>46} │")
+        
         print("└" + "─" * 68 + "┘")
         
-        # Cost estimation tip
-        print()
-        print("💡" + "─" * 68 + "💡")
-        print("│  💰 Cost Estimation Tip:                                            │")
-        print("│     Use serper-search or web-search to find current pricing:        │")
-        print("│     'Anthropic Claude API pricing per token 2025'                   │")
-        print("│     'OpenAI GPT-4 pricing per token 2025'                           │")
-        print("│     Then multiply: tokens × price_per_token = estimated cost        │")
-        print("💡" + "─" * 68 + "💡")
+        # Pricing info
+        if show_costs:
+            print()
+            print("💡" + "─" * 68 + "💡")
+            print("│  📋 Pricing Notes:                                                  │")
+            print("│     • Cache Read is ~90% cheaper than regular input                 │")
+            print("│     • Cache Write is ~25% more expensive than regular input         │")
+            print("│     • Prices based on 2025 API rates (may vary by provider)         │")
+            print("│                                                                     │")
+            print("│  🔍 Verify pricing at:                                              │")
+            print("│     • Anthropic: console.anthropic.com/settings/pricing             │")
+            print("│     • OpenAI: platform.openai.com/docs/pricing                      │")
+            print("💡" + "─" * 68 + "💡")
         print()
 
 

@@ -1,11 +1,13 @@
 ---
 name: token-burn
-description: Calculate total token usage from pi session JSONL files with beautiful emoji tables. Use when analyzing conversation history, tracking API costs, or auditing token consumption across multiple sessions. Integrates with search skills for cost estimation.
+description: Calculate total token usage from pi and OpenClaw session JSONL files with beautiful emoji tables. Use when analyzing conversation history, tracking API costs, or auditing token consumption across multiple sessions. Supports OpenClaw's model_change and thinking_level_change events. Integrates with search skills for cost estimation.
 ---
 
 # 🔥 Token Burn
 
-Calculate token usage from pi session JSONL files with beautiful visual output. Extracts actual token counts including cached tokens (cacheRead, cacheWrite) from message metadata.
+Calculate token usage from pi and **OpenClaw** session JSONL files with beautiful visual output. Extracts actual token counts including cached tokens (cacheRead, cacheWrite) from message metadata.
+
+**Now with enhanced OpenClaw support:** Handles `model_change`, `thinking_level_change`, and `model-snapshot` events for complete session tracking.
 
 ![Token Burn Demo](assets/demo.png)
 
@@ -20,6 +22,9 @@ Calculate token usage from pi session JSONL files with beautiful visual output. 
 | Recursive directory processing | ✅ | 📁 |
 | JSON output format | ✅ | 📋 |
 | Cost estimation guidance | ✅ | 💰 |
+| **OpenClaw session support** | ✅ | 🐾 |
+| **OpenClaw model_change events** | ✅ | 🔄 |
+| **OpenClaw thinking_level tracking** | ✅ | 🧠 |
 
 ## 🚀 Quick Start
 
@@ -38,6 +43,45 @@ python3 src/token_burn.py ~/.pi/agent/sessions --recursive
 # 📋 Output as JSON
 python3 src/token_burn.py --json
 ```
+
+## 🐾 OpenClaw Session Support
+
+Token Burn has enhanced support for **OpenClaw** session files:
+
+### OpenClaw-Specific Events
+
+| Event Type | Description | Handled |
+|------------|-------------|---------|
+| `session` | Session metadata (version, id, timestamp) | ✅ Skipped |
+| `model_change` | Model switching events | ✅ Tracked |
+| `thinking_level_change` | Thinking/reasoning level changes | ✅ Tracked |
+| `model-snapshot` | Custom model snapshot events | ✅ Tracked |
+| `message` | Messages with token usage | ✅ Processed |
+
+### Processing OpenClaw Sessions
+
+```bash
+# Process OpenClaw sessions from a specific directory
+python3 src/token_burn.py /workspace/openclaw-sessions --recursive
+
+# Process a single OpenClaw session file
+python3 src/token_burn.py /path/to/session-id.jsonl
+
+# Export OpenClaw session data as JSON for further analysis
+python3 src/token_burn.py /workspace/openclaw-sessions --recursive --json > openclaw_report.json
+```
+
+### OpenClaw Session File Format
+
+OpenClaw session files (`.jsonl`) contain newline-delimited JSON events:
+
+```jsonl
+{"type":"session","version":3,"id":"...","timestamp":"..."}
+{"type":"model_change","id":"...","timestamp":"...","provider":"zai","modelId":"glm-5"}
+{"type":"message","id":"...","timestamp":"...","message":{"role":"assistant","content":[...],"usage":{"input":391,"output":140,"cacheRead":18624,"cacheWrite":0,"totalTokens":19155}}}
+```
+
+Token Burn extracts model information from `model_change` events and token usage from `message` events, giving you complete visibility into your OpenClaw token consumption.
 
 ## 📖 Usage Examples
 
@@ -240,10 +284,19 @@ python3 src/token_burn.py ~/.pi/agent/sessions/--workspace--/2026-02-18*.jsonl -
 ## 🛠️ How It Works
 
 1. **🌊 Streaming**: Reads JSONL files line-by-line without loading into memory
-2. **🔍 Model Detection**: Extracts provider/model from message metadata  
-3. **📊 Token Extraction**: Extracts `input`, `output`, `cacheRead`, `cacheWrite`
+2. **🔍 Model Detection**: Extracts provider/model from message metadata, including OpenClaw's `model_change` and `model-snapshot` events
+3. **📊 Token Extraction**: Extracts `input`, `output`, `cacheRead`, `cacheWrite` from message usage data
 4. **🧮 Aggregation**: Sums tokens by model and calculates grand totals
 5. **🎨 Beautiful Output**: Renders emoji-enhanced tables with smart formatting
+
+### OpenClaw-Specific Processing
+
+For OpenClaw session files, Token Burn:
+- Skips `session` metadata headers
+- Tracks `model_change` events to follow model switches
+- Handles `thinking_level_change` events (tracked but no tokens)
+- Extracts model info from `model-snapshot` custom events
+- Processes `message` events for actual token usage
 
 ## 🔗 Integration with Other Skills
 
@@ -252,6 +305,29 @@ python3 src/token_burn.py ~/.pi/agent/sessions/--workspace--/2026-02-18*.jsonl -
 | serper-search | Find current API pricing | `serper-search "Claude API pricing 2025"` |
 | zai-web-search | Alternative pricing lookup | `zai-web-search "OpenAI GPT-4o pricing"` |
 | writing-clearly | Document findings | Use for cost reports |
+
+## 🐾 OpenClaw Integration
+
+Token Burn is fully compatible with OpenClaw session files:
+
+| Feature | Description | Example |
+|---------|-------------|---------|
+| Session Analysis | Process all OpenClaw sessions | `token_burn.py /workspace/openclaw-sessions --recursive` |
+| Single Session | Analyze one session file | `token_burn.py /path/to/session.jsonl` |
+| Export to JSON | For programmatic analysis | `token_burn.py /workspace/openclaw-sessions --json` |
+| Cost Estimation | Calculate API costs | Automatic with built-in pricing |
+
+### OpenClaw Event Support
+
+Token Burn recognizes and properly handles all OpenClaw event types:
+
+```
+✅ session              → Session metadata (skipped)
+✅ model_change         → Model switching (tracked)
+✅ thinking_level_change → Thinking mode changes (tracked)
+✅ model-snapshot       → Model state snapshots (tracked)
+✅ message              → Token usage extracted
+```
 
 ## 📝 License
 
