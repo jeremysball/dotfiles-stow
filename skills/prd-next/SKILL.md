@@ -15,11 +15,12 @@ You are helping analyze an existing Product Requirements Document (PRD) to sugge
 1. **Check Context Clarity** - Determine if PRD is obvious from recent conversation
 2. **Auto-Detect Target PRD** - If context unclear, intelligently determine which PRD to analyze
 3. **Analyze Current Implementation** - Understand what's implemented vs what's missing (skip if recent context available)
-4. **Identify the Single Best Next Task** - Find the one task that should be worked on next
-5. **Present Recommendation** - Give clear rationale and wait for confirmation
-6. **Design Discussion** - If confirmed, dive into implementation design details
-7. **Implementation** - User implements the task
-8. **Update Progress** - Prompt user to run /prd-update-progress
+4. **Check for Execution Plan** - Determine if granular execution planning is needed
+5. **Identify the Single Best Next Task** - Find the one task that should be worked on next
+6. **Present Recommendation** - Give clear rationale and wait for confirmation
+7. **Design Discussion** - If confirmed, dive into implementation design details
+8. **Implementation** - User implements the task
+9. **Update Progress** - Prompt user to run /prd-update-progress
 
 ## Step 0: Context Awareness Check
 
@@ -32,12 +33,12 @@ You are helping analyze an existing Product Requirements Document (PRD) to sugge
 - **Clear work context** - Discussion of specific features, tasks, or requirements for a known PRD
 
 **If context is clear:**
-- Skip to Step 6 (Single Task Recommendation) using the known PRD 
+- Skip to Step 4 (Check for Execution Plan) using the known PRD 
 - Use conversation history to understand current state and recent progress
 - Proceed directly with task recommendation based on known PRD status
 
 **If context is unclear:**
-- Continue to Step 1 (PRD Detection) for full analysis
+- Continue to Step 1 (PRD Detection)
 
 ## Step 1: Smart PRD Detection (Only if Context Unclear)
 
@@ -143,7 +144,87 @@ Review requirement categories:
 - **Dependencies**: External requirements
 - **Risk Mitigation**: Risk management progress
 
-## Step 4: Dependency Analysis (Only if Context Unclear)
+## Step 4: Check for Execution Plan
+
+**Check if granular execution planning is needed:**
+
+### Look for Existing Plan
+Check for execution plan files:
+- `prds/execution-plan-[prd-id].md`
+- `prds/execution-plan-[prd-id]-[phase].md`
+- `prds/execution-plan-[milestone-name].md`
+
+**If execution plan exists:**
+- Parse current progress
+- Show next uncompleted task from plan
+- Suggest continuing with execution plan workflow
+- Skip to Step 6 with execution plan context
+
+### Determine if Execution Plan Needed
+
+**Create execution plan when:**
+- ✅ Milestone has >3 implementation steps
+- ✅ Multiple files need modification
+- ✅ Tests need to be written first
+- ✅ Current PRD checkboxes are too broad ("Add throbber" vs "Throbber initializes at tick 0")
+- ✅ No existing execution plan found
+
+**Skip execution plan when:**
+- ❌ Single, well-defined task
+- ❌ Pure documentation update
+- ❌ Simple bug fix with clear scope
+- ❌ Milestone already has granular checkboxes
+
+### Execution Plan Recommendation
+
+If execution plan is needed, present:
+
+```markdown
+# Next Task Recommendation: [Feature Name]
+
+## Recommended Task: [Milestone/Phase Name]
+
+**Why this task**: [2-3 sentences explaining priority]
+
+**What it unlocks**: [What becomes possible after completing this]
+
+**Dependencies**: [What's already complete]
+
+**Success criteria**: [How you'll know it's done]
+
+---
+
+⚠️  **This milestone needs granular execution planning.**
+
+The PRD has high-level milestones but needs atomic, test-first tasks.
+
+**Recommended next step:**
+Run `/prd-exec [prd-id]` to create a granular execution plan with:
+- Test-first task breakdown
+- Atomic implementation steps
+- Verification commands for each task
+
+**Example output:**
+```
+### Throbber
+
+- [ ] Test: `test_init_starts_at_zero()`
+- [ ] Implement: `Throbber.__init__` sets `self._tick = 0`
+- [ ] Run: `uv run pytest tests/test_throbber.py::test_init_starts_at_zero -v`
+```
+
+---
+
+**Would you like to:**
+1. **Create execution plan** (recommended) → Run `/prd-exec [prd-id]`
+2. **Work without plan** → I'll recommend the next high-level task
+
+Your choice:
+```
+
+If user chooses option 2, continue to Step 5.
+
+## Step 5: Dependency Analysis (Only if Context Unclear)
 
 ### Identify Critical Path Items
 Look for items that:
@@ -166,7 +247,7 @@ Look for items that:
 - **Test dependencies** - Tests that require certain infrastructure or mocks
 - **Build/deployment** - Configuration changes that affect multiple components
 
-## Step 5: Strategic Value Assessment (Only if Context Unclear)
+## Step 6: Strategic Value Assessment (Only if Context Unclear)
 
 ### High-Value Next Steps
 Prioritize items that:
@@ -183,7 +264,7 @@ Identify items that:
 - **Are optimization-focused** - Improve existing working features
 - **Require external dependencies** - Waiting on others
 
-## Step 6: Single Task Recommendation
+## Step 7: Single Task Recommendation
 
 **Note**: If you arrived here from Step 0 (clear context), use the conversation history and known PRD state to make your recommendation. If you came through the full analysis, use your detailed findings.
 
@@ -209,7 +290,7 @@ Present findings in this focused format:
 If yes, I'll help you design the implementation approach. If no, let me know what you'd prefer to work on instead.
 ```
 
-## Step 7: Design Discussion (If Confirmed)
+## Step 8: Design Discussion (If Confirmed)
 
 If the user confirms they want to work on the recommended task, then dive into:
 
@@ -240,13 +321,14 @@ If the user confirms they want to work on the recommended task, then dive into:
 
 This command should:
 - ✅ Identify the single highest-value task to work on next based on current PRD state
+- ✅ Check for and suggest execution plans when milestones need granular breakdown
 - ✅ Provide clear, compelling rationale for why this specific task should be prioritized
 - ✅ Wait for user confirmation before proceeding
 - ✅ If confirmed, provide detailed implementation design guidance
 - ✅ Keep teams focused on the most important work rather than overwhelming them with options
 - ✅ Enable immediate action by transitioning from recommendation to design discussion
 
-## Step 8: Update Progress After Completion
+## Step 9: Update Progress After Completion
 
 **CRITICAL: Do NOT update the PRD yourself. Do NOT edit PRD files directly. Your job is to prompt the user to run the update command.**
 
