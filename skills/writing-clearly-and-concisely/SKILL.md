@@ -78,6 +78,10 @@ The rules above are summarized from Strunk's original text. For complete explana
 
 LLMs regress to statistical means, producing generic, puffy prose. Avoid:
 
+- **Dashes as crutches:** Using " - " (space-hyphen-space) for asides instead of proper punctuation.
+  - Weak: "Alfred remembers - truly remembers - everything"
+  - Better: "Alfred remembers everything. He truly remembers."
+  - Use commas, periods, or parentheses instead
 - **Puffery:** pivotal, crucial, vital, testament, enduring legacy
 - **Empty "-ing" phrases:** ensuring reliability, showcasing features, highlighting capabilities
 - **Promotional adjectives:** groundbreaking, seamless, robust, cutting-edge
