@@ -1,0 +1,43 @@
+# Global mise config. Stowed to ~/.config/mise/config.toml
+#
+# Scope: everything user-space. Pacman keeps only system packages and the
+# two exceptions noted below.
+#
+# Deliberately NOT here:
+#   fish     - login shell, must live in /etc/shells
+#   ripgrep  - hard dependency of the pacman `opencode` package
+#   opencode - pulls ripgrep with it; the two move together or not at all
+#   grc      - ships /etc/grc.fish, which config.fish sources by absolute path
+#   ghc/cabal/hls - ghcup already manages these well, and manages six GHC
+#                   versions side by side. mise installs ghcup, not the toolchain.
+
+[tools]
+# core CLI, referenced by fish abbrs and aliases
+eza    = "latest"
+bat    = "latest"
+fd     = "latest"
+zoxide = "latest"
+fzf    = "latest"
+jq     = "latest"
+yq     = "latest"
+
+# editors
+neovim = "latest"
+
+# git
+gh      = "latest"
+lazygit = "latest"
+delta   = "latest"
+
+# runtimes. Pin these per machine in ~/.config/mise/conf.d/ if they need to differ.
+node   = "latest"
+go     = "latest"
+python = "latest"
+uv     = "latest"
+
+# haskell: manage the manager, not the toolchain
+ghcup = "latest"
+
+[settings]
+# Read .nvmrc / .python-version / .go-version in repos that never heard of mise
+idiomatic_version_file_enable_tools = ["node", "python", "go"]
