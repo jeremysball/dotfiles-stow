@@ -1,0 +1,5 @@
+- source .venv/bin/activate.fish on cd 
+- source .env on cd 
+- need a good lightweight fish prompt
+- need to work with zoxide and fish 
+- add tmux config 

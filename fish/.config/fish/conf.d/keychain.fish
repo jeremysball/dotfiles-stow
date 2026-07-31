@@ -1,4 +1,4 @@
-# ssh-agent via keychain. Desktop-only: the server hosts use gpg-agent instead.
+# ssh-agent via keychain. Guarded because only the graphical hosts install it.
 if status is-interactive; and command -q keychain
     if status is-login
         eval (keychain --eval ~/.ssh/id_ed25519)
