@@ -1,24 +1,54 @@
 # This repo tracks only the fish_plugins manifest next to this file, not the
-# function and completion files fisher installs from it. On a machine without
-# fisher, load fisher into memory and let `fisher update` install everything
-# the manifest lists.
+# function and completion files fisher installs from it. On a machine that is
+# missing any plugin the manifest lists, install them.
 #
-# Do not call `fisher install jorgebucaran/fisher` here. That rewrites
-# fish_plugins, and since the manifest is a symlink into this repo, it
-# overwrites the tracked file with whatever fisher happens to know about.
-# `fisher update` reads the manifest instead of rewriting it.
+# Two things about fisher and this manifest, both verified by reading
+# functions/fisher.fish rather than assumed:
 #
-# This runs once per machine, not once per shell: the `functions -q fisher`
-# guard holds only until the first successful install.
+# 1. EVERY fisher subcommand that changes state (install, update, remove,
+#    uninstall) rewrites fish_plugins. It writes the set that is actually
+#    installed, not the set the file listed. Since stow symlinks the manifest
+#    into this repo, that write lands on tracked content.
 #
-# On a fresh box the prompt stays plain fish default until this finishes.
+#    So `fisher install <x>` after a failed tide install rewrites the manifest
+#    to just <x>, silently dropping tide. That happened. `fisher update` is
+#    safe only because it installs the manifest's contents first, making the
+#    rewrite a no-op. Do not swap it for `fisher install`.
+#
+# 2. `fisher remove` of the last remaining plugin runs `rm -f $fish_plugins`,
+#    which deletes the stow symlink. The repo file survives; the link does not.
+#    Re-stow to repair it.
+#
+# The guard below checks that every plugin in the manifest is actually
+# installed, not merely that fisher exists. Guarding on `functions -q fisher`
+# alone leaves a permanent hole: fisher writes its own function to disk before
+# installing the rest, so an install that dies partway satisfies the guard
+# forever and the remaining plugins never get retried.
 
-if status is-interactive; and not functions -q fisher
+function __fisher_bootstrap_needed
+    functions -q fisher; or return 0
+
+    set -l manifest $__fish_config_dir/fish_plugins
+    test -r $manifest; or return 1
+
+    for plugin in (string trim < $manifest | string match -rv '^\s*(#|$)')
+        contains -- (string lower -- $plugin) (string lower -- $_fisher_plugins); or return 0
+    end
+    return 1
+end
+
+if status is-interactive; and __fisher_bootstrap_needed
     if command -q curl
-        echo "fisher not found, installing plugins from fish_plugins..."
-        curl -fsSL --max-time 15 https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
-        and fisher update
+        echo "installing fish plugins from fish_plugins..."
+        if functions -q fisher
+            fisher update
+        else
+            curl -fsSL --max-time 15 https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
+            and fisher update
+        end
     else
-        echo "fisher bootstrap needs curl. Install curl, then restart the shell."
+        echo "fish plugin bootstrap needs curl. Install curl, then restart the shell."
     end
 end
+
+functions -e __fisher_bootstrap_needed

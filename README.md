@@ -79,15 +79,34 @@ function files are not. There used to be 85 of them checked in, and stowing
 the package installed one machine's prompt onto every other machine as a side
 effect.
 
-On a machine without fisher, `conf.d/fisher-bootstrap.fish` fetches fisher,
-sources it, and runs `fisher update`, which installs everything the manifest
-lists. It guards on `functions -q fisher`, so it runs once per machine rather
-than once per shell. The prompt stays plain fish default until it finishes.
+On a machine missing anything the manifest lists, `conf.d/fisher-bootstrap.fish`
+fetches fisher, sources it, and runs `fisher update`. The prompt stays plain
+fish default until it finishes.
 
-Do not change that to `fisher install jorgebucaran/fisher`. That call rewrites
-`fish_plugins`, and since the manifest is symlinked into this repo, it
-overwrites the tracked file with whatever fisher knows about at that moment. It
-already ate `ilancosman/tide@v6` once.
+The guard checks that every plugin in the manifest is installed, not only that
+fisher exists. Guarding on fisher alone leaves a hole: fisher writes its own
+function to disk before installing the rest, so an install that dies partway
+satisfies the guard permanently and the missing plugins never get retried.
+
+### fisher writes to fish_plugins, and stow points that at this repo
+
+Every fisher subcommand that changes state (`install`, `update`, `remove`,
+`uninstall`) rewrites `fish_plugins`. It writes **the set that is
+installed**, not the set the file listed. That is `functions/fisher.fish` line
+221, inside the block shared by all four subcommands.
+
+Since stow symlinks the manifest into this repo, that write lands on tracked
+content. Consequences worth knowing:
+
+- Running `fisher install <x>` when tide is broken rewrites the manifest to
+  only `<x>` and drops tide. This is why the bootstrap calls `fisher update`
+  instead: update installs the manifest's contents first, so the rewrite is a
+  no-op. It is not that update avoids writing, because it does not.
+- `fisher remove` of the last remaining plugin runs `rm -f $fish_plugins`,
+  which deletes the stow symlink. The repo file survives. Re-stow to repair.
+- Any `fisher install` you run by hand dirties the repo. That is fine and
+  arguably correct, since the manifest should track what you have. Expect
+  `git status` to show it.
 
 Also be careful adding files to `functions/`. If tide ships a function by the
 same name, its install fails on the collision and you get a broken prompt with
