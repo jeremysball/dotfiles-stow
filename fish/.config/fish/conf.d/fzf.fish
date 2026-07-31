@@ -1,4 +1,4 @@
-if status is-interactive
+if status is-interactive; and command -q fzf
     set -gx FZF_DEFAULT_OPTS "--height 40% --layout=reverse --border --info=inline --cycle"
 
     # Ctrl-T: preview the first lines of the selected file

@@ -16,7 +16,7 @@
 if status is-interactive; and not functions -q fisher
     if command -q curl
         echo "fisher not found, installing plugins from fish_plugins..."
-        curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
+        curl -fsSL --max-time 15 https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
         and fisher update
     else
         echo "fisher bootstrap needs curl. Install curl, then restart the shell."
