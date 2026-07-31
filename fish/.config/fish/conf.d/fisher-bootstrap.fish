@@ -37,15 +37,19 @@ function __fisher_bootstrap_needed
     return 1
 end
 
+# 3. fisher runs in a non-interactive child shell. Plugin install events gate
+#    their prompts on `status is-interactive` — tide's _tide_init_install asks
+#    "Configure tide prompt? [Y/n]" and launches a multi-step wizard on y OR
+#    on empty input (so piping stdin in makes it worse, not better). In a
+#    non-interactive child that whole branch is skipped: tide loads its lean
+#    defaults silently, and `tide configure` stays available on demand.
+
 if status is-interactive; and __fisher_bootstrap_needed
     if command -q curl
         echo "installing fish plugins from fish_plugins..."
-        if functions -q fisher
-            fisher update
-        else
-            curl -fsSL --max-time 15 https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
-            and fisher update
-        end
+        fish -c 'functions -q fisher
+            or curl -fsSL --max-time 15 https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
+            and fisher update'
     else
         echo "fish plugin bootstrap needs curl. Install curl, then restart the shell."
     end
