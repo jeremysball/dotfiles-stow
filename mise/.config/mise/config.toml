@@ -42,6 +42,9 @@ ghcup = "latest"
 # that completions won't work
 usage = "latest"
 
+# fun
+cowsay = "latest"
+
 [settings]
 # Read .nvmrc / .python-version / .go-version in repos that never heard of mise
 idiomatic_version_file_enable_tools = ["node", "python", "go"]
