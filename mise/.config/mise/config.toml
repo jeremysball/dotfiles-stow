@@ -38,6 +38,10 @@ uv     = "latest"
 # haskell: manage the manager, not the toolchain
 ghcup = "latest"
 
+# mise's own shell-completion generator; without it mise prints a warning
+# that completions won't work
+usage = "latest"
+
 [settings]
 # Read .nvmrc / .python-version / .go-version in repos that never heard of mise
 idiomatic_version_file_enable_tools = ["node", "python", "go"]
