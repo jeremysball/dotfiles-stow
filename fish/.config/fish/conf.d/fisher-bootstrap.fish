@@ -47,9 +47,14 @@ end
 if status is-interactive; and __fisher_bootstrap_needed
     if command -q curl
         echo "installing fish plugins from fish_plugins..."
-        fish -c 'functions -q fisher
-            or curl -fsSL --max-time 15 https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
-            and fisher update'
+        fish -c '
+            if functions -q fisher
+                fisher update
+            else
+                curl -fsSL --max-time 15 https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
+                and fisher update
+            end
+        '
     else
         echo "fish plugin bootstrap needs curl. Install curl, then restart the shell."
     end
