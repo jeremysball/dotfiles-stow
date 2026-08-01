@@ -42,6 +42,10 @@ ghcup = "latest"
 # that completions won't work
 usage = "latest"
 
+# generic multi-shell completion generator; provides fish completions for
+# hundreds of CLIs that don't ship their own
+carapace = "latest"
+
 # fun
 cowsay = "latest"
 
