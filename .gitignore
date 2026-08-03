@@ -18,3 +18,11 @@ fish/.config/fish/conf.d/_tide_init.fish
 
 # Local worktrees
 .worktrees/
+
+# Credentials. gh writes OAuth tokens into hosts.yml in the same directory
+# as the tracked config.yml, so an unfolded stow puts it right next to
+# tracked content. Never commit it.
+gh/.config/gh/hosts.yml
+
+# superfile ships its own theme/ directory; nothing in it is hand-edited.
+superfile/.config/superfile/theme/

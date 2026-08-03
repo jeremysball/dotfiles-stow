@@ -56,6 +56,24 @@ Current machines:
 - `doom` Doom Emacs config, the three files in `~/.config/doom`
 - `bin` scripts that live in `~/.local/bin`
 - `fonts`
+- `bash` `~/.bashrc`, for the shells that are not fish
+- `git` `~/.gitconfig` and the global ignore file
+- `gh` GitHub CLI config and the PAT switcher `.bashrc` sources
+- `systemd` user units and timers
+- `zellij`, `htop`, `superfile`, `himalaya`, `alfred`, `taskferry`, `mcporter`
+
+### What is deliberately not tracked
+
+`hosts.yml` under `gh` holds OAuth tokens and is gitignored. So is
+`superfile/theme/`, which superfile ships itself.
+
+`.config/rclone/rclone.conf`, `.config/msmtp/`, and `.config/protonmail/`
+hold credentials and stay out entirely. `himalaya` is here only because its
+config fetches the bridge password from `pass` at runtime rather than
+storing it.
+
+`abs` and `abs.service` are not here either. They belong to the
+`always-be-sessioning` repo, which installs them itself.
 
 From an older graphical workstation, kept for whenever I set one back up:
 

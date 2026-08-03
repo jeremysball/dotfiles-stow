@@ -1,0 +1,73 @@
+# Superfile — minimal config
+#
+# Hard floor (cannot be lowered via config, defined in
+# src/internal/common/predefined_variable.go in superfile v1.6.0):
+#     MinimumWidth  = 60
+#     MinimumHeight = 24
+# Any terminal smaller than that shows "Terminal size too small" and
+# refuses to start. The 51 you saw was a layout-fallback artifact from a
+# broken config, not the real floor.
+#
+# With this config on a 60-col terminal: file panel ≈ 30 cols, preview
+# panel ≈ 30 cols (preview is off but still gets its half of the width).
+# On wider terminals both halves scale up.
+
+# --- editor / behaviour ---
+editor = ""
+dir_editor = ""
+auto_check_update = false
+cd_on_quit = false
+default_open_file_preview = false
+show_image_preview = false
+show_panel_footer_info = false
+default_directory = "."
+file_size_use_si = false
+default_sort_type = 0
+sort_order_reversed = false
+case_sensitive_sort = false
+shell_close_on_success = false
+page_scroll_size = 0
+debug = false
+ignore_missing_fields = true
+
+# --- file panel ---
+# name takes 100% of the panel; no extra size/date/perm columns
+file_panel_extra_columns = 0
+file_panel_name_percent = 100
+
+# --- style ---
+theme = "catppuccin-mocha"
+code_previewer = ""
+nerdfont = true
+show_select_icons = true
+transparent_background = false
+
+# preview pane gets half the terminal (file_preview_width=2 → 1/2).
+# This is what makes the file list ~30 cols on a 60-col terminal.
+# Border is off and the panel is closed by default, so the half it owns
+# just shows as empty space.
+file_preview_width = 2
+enable_file_preview_border = false
+
+# sidebar is gone
+sidebar_width = 0
+sidebar_sections = ["home"]
+
+# borderless — 1 col saved on every edge
+border_top = ' '
+border_bottom = ' '
+border_left = ' '
+border_right = ' '
+border_top_left = ' '
+border_top_right = ' '
+border_bottom_left = ' '
+border_bottom_right = ' '
+border_middle_left = ' '
+border_middle_right = ' '
+
+# --- plugins ---
+metadata = false
+enable_md5_checksum = false
+zoxide_support = false
+
+[open_with]

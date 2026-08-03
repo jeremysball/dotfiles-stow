@@ -1,0 +1,26 @@
+# OS cruft
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor swap/backup files
+*.swp
+*.swo
+*.sw?
+*~
+.idea/
+
+# VS Code: ignore local workspace state, allow shared team config
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Agent-tool state (Claude Code, superpowers, taskferry, playwright-mcp, pi)
+**/.claude/settings.local.json
+**/.claude/worktrees/
+**/.superpowers/*
+**/.worktrees/
+**/.playwright-mcp/
+**/.pi/

@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+# bumblebee-nightly — nightly read-only supply-chain scan with alerting.
+# State lives under $XDG_STATE_HOME/bumblebee; pending alerts are shown on
+# bash login (see ~/.bashrc). Failures alert loudly, never silently.
+set -euo pipefail
+
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/bumblebee"
+BUMBLEBEE="${BUMBLEBEE_BIN:-$HOME/go/bin/bumblebee}"
+KEEP=14
+TODAY="$(date +%Y%m%d)"
+NOW="$(date '+%Y-%m-%d %H:%M:%S %Z')"
+
+INVENTORIES="$STATE_DIR/inventories"
+LOGS="$STATE_DIR/logs"
+ALERT="$STATE_DIR/ALERT"
+HISTORY="$STATE_DIR/history.tsv"
+CURRENT="$STATE_DIR/inventory.ndjson"
+CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/bumblebee-nightly/config"
+
+[ -f "$CONFIG" ] && . "$CONFIG"
+
+mkdir -p "$INVENTORIES" "$LOGS"
+
+# --- overlap lock (mkdir is atomic; no flock dependency) -------------------
+LOCK="$STATE_DIR/.lock"
+if ! mkdir "$LOCK" 2>/dev/null; then
+  if [ -n "$(find "$LOCK" -maxdepth 0 -mmin +30 2>/dev/null)" ]; then
+    echo "bumblebee-nightly: stealing stale lock (>30 min old)" >&2
+    rmdir "$LOCK"
+    mkdir "$LOCK"
+  else
+    echo "bumblebee-nightly: another run in progress, skipping" >&2
+    exit 0
+  fi
+fi
+trap 'rmdir "$LOCK"' EXIT
+
+LOG="$LOGS/scan-$TODAY.log"
+NEW="$INVENTORIES/.new-$TODAY.ndjson"
+
+push_notify() { # push_notify "subject" "priority" "tags" "body"
+  [ -n "${NTFY_URL:-}" ] || return 0
+  local code
+  code="$(curl -sS -m 15 -o /dev/null -w '%{http_code}' \
+    -H "Title: bumblebee: $1" -H "Priority: $2" -H "Tags: $3" \
+    -d "$4" "$NTFY_URL" 2>&1)" || code="curl-failed"
+  case "$code" in
+    2*) : ;;
+    *) echo "bumblebee-nightly: ntfy push failed ($code); login alert still active" >&2 ;;
+  esac
+}
+
+alert() { # alert "subject" "detail" "priority" "tags"
+  {
+    echo "BUMBLEBEE ALERT: $1 ($NOW)"
+    echo "$2"
+    echo "inventory: $CURRENT  log: $LOG"
+  } > "$ALERT"
+  push_notify "$1" "$3" "$4" "$1 -- host $(hostname). full details in $ALERT"
+}
+
+# --- scan (fail fast: a broken scan is an alert, not silence) --------------
+if ! "$BUMBLEBEE" scan --profile baseline > "$NEW" 2> "$LOG"; then
+  alert "SCAN FAILED" "bumblebee exited non-zero. Last log lines:
+$(tail -5 "$LOG" 2>/dev/null || echo '(no log)')" 4 "rotating_light"
+  rm -f "$NEW"
+  exit 1
+fi
+
+SUMMARY="$(jq -c 'select(.record_type=="scan_summary")' "$NEW" | tail -1)"
+if [ -z "$SUMMARY" ]; then
+  alert "SCAN FAILED" "no scan_summary record in output -- truncated or crashed run." 4 "rotating_light"
+  exit 1
+fi
+
+FINDINGS="$(jq -r '.counts.finding // 0' <<<"$SUMMARY")"
+PACKAGES="$(jq -r '.counts.package // 0' <<<"$SUMMARY")"
+STATUS="$(jq -r '.status' <<<"$SUMMARY")"
+TIMED_OUT="$(jq -r '.timed_out' <<<"$SUMMARY")"
+
+[ -f "$HISTORY" ] || printf 'date\tfindings\tpackages\tstatus\ttimed_out\n' > "$HISTORY"
+printf '%s\t%s\t%s\t%s\t%s\n' "$NOW" "$FINDINGS" "$PACKAGES" "$STATUS" "$TIMED_OUT" >> "$HISTORY"
+
+# --- alert or clear ---------------------------------------------------------
+if [ "$STATUS" != "complete" ] || [ "$TIMED_OUT" = "true" ]; then
+  alert "SCAN INCOMPLETE" "status=$STATUS timed_out=$TIMED_OUT -- treat this as NOT clean. See $LOG" 4 "warning"
+elif [ "$FINDINGS" -gt 0 ]; then
+  DETAILS="$(jq -c 'select(.record_type=="finding")' "$NEW" | head -20)"
+  alert "$FINDINGS supply-chain finding(s)" "${DETAILS:-(finding records not extractable; inspect $NEW with jq)}" 5 "shield"
+else
+  rm -f "$ALERT"
+fi
+
+# --- rotate: keep $KEEP inventories/logs, publish latest as $CURRENT --------
+mv "$NEW" "$INVENTORIES/inventory-$TODAY.ndjson"
+ln -sf "inventories/inventory-$TODAY.ndjson" "$CURRENT"
+ls -1t "$INVENTORIES"/inventory-*.ndjson 2>/dev/null | tail -n +$((KEEP + 1)) | xargs -r rm -f
+ls -1t "$LOGS"/scan-*.log 2>/dev/null | tail -n +$((KEEP + 1)) | xargs -r rm -f
+
+echo "bumblebee-nightly: $NOW findings=$FINDINGS packages=$PACKAGES status=$STATUS"
