@@ -16,7 +16,8 @@ stow --no-folding --target="$HOME" fish mise nvim
 exec fish
 ```
 
-Then `mise install` to pull down the tools.
+Then `mise install` to pull down the tools. `init.sh` runs those two steps for
+you.
 
 Two flags matter here and neither is optional.
 
@@ -80,6 +81,37 @@ From an older graphical workstation, kept for whenever I set one back up:
 - `i3`, `xorg`, `picom`, `alacritty`, `helix`, `zsh`, `tmux`
 
 Nothing forces you to stow all of them. Stow the packages the machine needs.
+
+## Secrets
+
+Global secrets (`OPENROUTER_API_KEY`, `ANTHROPIC_API_KEY`, and the like) don't
+live in this repo at all, plaintext or otherwise. `pass` is the source of
+truth, holding one entry, `global/env`, in dotenv format. A separate
+`secret-management` repo owns the machinery around it and installs itself
+straight into `$HOME` rather than through stow:
+
+- `secrets-unlock` runs `pass show global/env` from a real terminal (the one
+  interactive pinentry prompt required per boot) and writes the result to
+  `$XDG_RUNTIME_DIR/secrets/global.env`, mode 600. That path is tmpfs, so the
+  decrypted file never touches persistent disk and is gone on reboot.
+- `~/.gnupg/gpg-agent.conf` sets a long cache TTL, which is what makes `pass`
+  usable from non-interactive/spawned shells after the first unlock instead of
+  failing with `Inappropriate ioctl for device`.
+- `~/.config/fish/conf.d/secrets.fish` sources `global.env` unconditionally on
+  every new shell, so it no longer matters whether the shell was opened under
+  a particular directory.
+
+What this repo does contain is the consumer side: `fish_greeting`
+(`fish/.config/fish/functions/fish_greeting.fish`) checks whether
+`global.env` exists and nags `secrets are locked! run secrets-unlock` if not,
+instead of a fortune. Two narrower cases don't go through `pass show
+global/env` at all:
+
+- `himalaya`'s config fetches its bridge password from `pass` directly at
+  runtime, which is the only reason that package is stowed here instead of
+  excluded like the other credential-holding configs above.
+- `gh`'s `hosts.yml` holds OAuth tokens directly, not via `pass`, and stays
+  gitignored rather than routed through the global-secrets flow.
 
 ## fish
 
