@@ -53,6 +53,7 @@ Current machines:
 - `fish` shell config, one package covering every host
 - `mise` tool and runtime versions
 - `nvim` LazyVim config, including `lazy-lock.json`
+- `doom` Doom Emacs config, the three files in `~/.config/doom`
 - `bin` scripts that live in `~/.local/bin`
 - `fonts`
 
@@ -143,3 +144,11 @@ That creates the venv if it is missing, puts `.venv/bin` on PATH, sets
 `VIRTUAL_ENV`, and loads `.env`. You have to run `mise trust` in the directory
 once before mise will read the file, since otherwise any repo you clone could
 set environment variables on you the moment you cd into it.
+
+## doom
+
+Doom Emacs config: `config.el`, `init.el`, `packages.el`. Doom keeps user
+config in `~/.config/doom` and the framework itself in `~/.config/emacs`,
+which is a clone of doomemacs and is not tracked here. On a fresh machine,
+install Doom first, then stow this package over the top of the config files
+its installer generates.
