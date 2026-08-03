@@ -10,6 +10,9 @@
 #   grc      - ships /etc/grc.fish, which config.fish sources by absolute path
 #   ghc/cabal/hls - ghcup already manages these well, and manages six GHC
 #                   versions side by side. mise installs ghcup, not the toolchain.
+#   ttf-nerd-fonts-symbols-mono, discount, texlive-plaingeneric - Doom Emacs
+#     deps with no mise backend at all (fonts, a TeX Live package group, a
+#     non-registry CLI). Reproduce via `mise run doom-emacs-extras`.
 
 [tools]
 # core CLI, referenced by fish abbrs and aliases
@@ -48,6 +51,10 @@ carapace = "latest"
 
 # fun
 cowsay = "latest"
+
+[tasks.doom-emacs-extras]
+description = "System packages Doom Emacs needs that mise has no backend for (fonts, TeX Live groups, non-registry CLIs)"
+run = "sudo pacman -S --needed ttf-nerd-fonts-symbols-mono discount texlive-plaingeneric"
 
 [settings]
 # Read .nvmrc / .python-version / .go-version in repos that never heard of mise
