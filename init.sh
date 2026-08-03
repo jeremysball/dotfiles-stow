@@ -3,12 +3,18 @@ set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-stow --no-folding --target="$HOME" --dir="$REPO_DIR" fish mise nvim
+# mise's dotfiles.root setting defaults to ~/.dotfiles. Pointing it at
+# REPO_DIR explicitly means this script still works if the repo is cloned
+# somewhere else.
+export MISE_DOTFILES_ROOT="$REPO_DIR"
 
-if command -v mise > /dev/null 2>&1; then
-    mise install
-else
-    echo "init.sh: mise not installed yet, run 'mise install' after installing it" >&2
+if ! command -v mise > /dev/null 2>&1; then
+    echo "init.sh: mise is not installed yet; install it first, then re-run this script" >&2
+    exit 1
 fi
+
+mise bootstrap dotfiles apply --yes
+
+mise install
 
 echo "init.sh: done, run 'exec fish' to switch shells"

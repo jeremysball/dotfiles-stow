@@ -1,67 +1,111 @@
-# dotfiles-stow
+# dotfiles
 
-My dotfiles, managed with [GNU stow](https://www.gnu.org/software/stow/).
+My dotfiles, managed with [mise](https://mise.jdx.dev/)'s built-in dotfiles
+feature (`mise bootstrap dotfiles`).
 
-Each top-level directory is a stow package. Inside it, the layout mirrors
-`$HOME`, so `fish/.config/fish/config.fish` ends up symlinked at
-`~/.config/fish/config.fish`. Stowing a package creates the symlinks. That is
-the whole idea.
+The repo root mirrors `$HOME` directly: `.config/fish/config.fish` in this
+repo ends up symlinked at `~/.config/fish/config.fish`. Every managed target
+is declared as its own entry in the `[dotfiles]` table at the bottom of
+`.config/mise/config.toml`. `mise bootstrap dotfiles apply` reads that table
+and creates the symlinks. That is the whole idea.
 
 ## Setting up a fresh machine
 
 ```fish
-git clone https://github.com/jeremysball/dotfiles-stow ~/src/dotfiles-stow
-cd ~/src/dotfiles-stow
-stow --no-folding --target="$HOME" fish mise nvim
+git clone https://github.com/jeremysball/dotfiles ~/.dotfiles
+cd ~/.dotfiles
+./init.sh
 exec fish
 ```
 
-Then `mise install` to pull down the tools. `init.sh` runs those two steps for
-you.
+`init.sh` runs `mise bootstrap dotfiles apply` (creates the symlinks) and
+then `mise install` (pulls down the tools).
 
-Two flags matter here and neither is optional.
+`~/.dotfiles` is not an arbitrary choice: it is `dotfiles.root`'s default, the
+setting mise consults to find where dotfile sources live. `init.sh` also
+exports `MISE_DOTFILES_ROOT` pointing at wherever it actually lives, so
+cloning somewhere else still works, but `~/.dotfiles` is the path with zero
+extra configuration.
 
-`--target="$HOME"` is required because stow defaults to the parent of the
-current directory. If the repo lives at `/workspace/dotfiles-stow`, plain
-`stow fish` writes into `/workspace`, not your home directory.
+Two things about `mise bootstrap dotfiles apply` matter here and neither is
+optional.
 
-`--no-folding` forces stow to symlink individual files instead of whole
-directories. Without it, `~/.config/fish/functions` becomes a single symlink
-pointing into this repo, and then anything that writes into that directory is
-writing into git. fish drops `fish_variables` there, and fisher installs its
-plugin files there. Neither belongs in the repo.
+Every target in `[dotfiles]` is an individual file, not a whole directory.
+Symlinking a whole directory (`~/.config/fish` as one symlink into the repo)
+means anything that later writes into that directory is writing into git.
+fish drops `fish_variables` there, and fisher installs its plugin files
+there. Neither belongs in the repo, so `fish/functions` and `fish/conf.d` (and
+every other target) get per-file entries instead: the real directory stays a
+real directory, mise only symlinks the files it's tracking, and fisher's
+generated files land next to those symlinks as plain, gitignored files. The
+only whole-directory entries are the three git submodules (`alacritty-theme`,
+`zsh-autosuggestions`, `zsh-syntax-highlighting`) and `powerlevel10k`, since
+nothing writes into an external theme/plugin checkout at runtime.
 
-If a file already exists where stow wants to put a symlink, it refuses and
-tells you which files collided. That is a feature. To pull the existing file
-into the repo instead, add `--adopt`, but understand what it does first: it
-moves the live file INTO the repo, overwriting the repo's copy, then symlinks
-back. Your repo content is what is at risk, not the live file. So run it on a
-clean tree and look at the diff:
+If a live file already exists where `apply` wants to put a symlink and its
+content doesn't match the tracked source, it refuses and tells you which
+targets conflict. That is a feature. `--force` overwrites the live file with
+the repo's version; that is the only direction `--force` goes. To pull an
+existing live file into the repo instead (the opposite direction), use
+`mise bootstrap dotfiles add <target>`, understanding what it does first: for
+a target that isn't managed yet, it moves the live file into the repo as the
+new source and symlinks back, so nothing is lost either direction. For a
+target that's already managed, it instead overwrites the repo's tracked
+source with whatever is currently live at that path — so run it on a clean
+tree and check `git diff` before committing.
+
+Simulate anything before you run it with `mise bootstrap dotfiles apply --dry-run`.
+It prints every symlink it would create and touches nothing.
+
+### `apply` is all-or-nothing
+
+`mise bootstrap dotfiles apply` with no target arguments applies every entry
+in `[dotfiles]` in one batch, and if any one target's source doesn't resolve,
+the whole run fails before touching anything. `.local/bin/gf2`,
+`.local/bin/libregate`, `.local/bin/pico8`, and `.local/bin/speedcat` are
+checked-in symlinks to absolute paths on the machine those tools actually
+live on (`/home/jeremy/tools/gf/gf2` and similar). On any other machine those
+targets don't resolve, so a plain `mise bootstrap dotfiles apply` (what
+`init.sh` runs) fails outright there.
+
+Two ways around it on a machine missing those tools:
 
 ```fish
-stow --adopt --no-folding --target="$HOME" fish
-git diff                # what the machine had that the repo did not
-git checkout -- .       # keep the repo version, symlinks stay in place
+# apply everything except the dangling ones, listing every other target by hand
+mise bootstrap dotfiles apply --yes -- ~/.bashrc ~/.config/fish/config.fish ...
+
+# or comment out / delete the offending lines from [dotfiles] locally first
+mise bootstrap dotfiles edit ~/.config/mise/config.toml
+mise bootstrap dotfiles apply --yes
 ```
 
-Simulate anything before you run it with `stow -nv --no-folding --target="$HOME" <package>`.
-It prints every link it would make and touches nothing.
+Neither is a one-liner today. If this becomes a recurring annoyance, revisit
+whether those four symlinks belong in git at all.
 
-## Packages
+## `[dotfiles]`
 
-Current machines:
+All ~100 tracked targets live in one table in `.config/mise/config.toml`,
+grouped by comment header to match what used to be separate stow packages:
 
-- `fish` shell config, one package covering every host
-- `mise` tool and runtime versions
+- `fish` shell config, one set of entries covering every host
+- `mise` this file itself
 - `nvim` LazyVim config, including `lazy-lock.json`
 - `doom` Doom Emacs config, the three files in `~/.config/doom`
-- `bin` scripts that live in `~/.local/bin`
+- bin scripts that live in `~/.local/bin`
 - `fonts`
 - `bash` `~/.bashrc`, for the shells that are not fish
 - `git` `~/.gitconfig` and the global ignore file
 - `gh` GitHub CLI config and the PAT switcher `.bashrc` sources
 - `systemd` user units and timers
 - `zellij`, `htop`, `superfile`, `himalaya`, `alfred`, `taskferry`, `mcporter`
+- an older graphical workstation section (`i3`, `xorg`, `picom`, `alacritty`,
+  `helix`, `zsh`, `tmux`), kept for whenever I set one back up
+
+There's no package concept anymore, so "only stow what a machine needs" is
+now "only pass the targets a machine needs to `apply`," or just apply
+everything and let the unused symlinks (an `i3` config on a machine with no
+`i3`, say) sit there unused. They're harmless clutter, not a functional
+problem.
 
 ### What is deliberately not tracked
 
@@ -76,19 +120,13 @@ storing it.
 `abs` and `abs.service` are not here either. They belong to the
 `always-be-sessioning` repo, which installs them itself.
 
-From an older graphical workstation, kept for whenever I set one back up:
-
-- `i3`, `xorg`, `picom`, `alacritty`, `helix`, `zsh`, `tmux`
-
-Nothing forces you to stow all of them. Stow the packages the machine needs.
-
 ## Secrets
 
 Global secrets (`OPENROUTER_API_KEY`, `ANTHROPIC_API_KEY`, and the like) don't
 live in this repo at all, plaintext or otherwise. `pass` is the source of
 truth, holding one entry, `global/env`, in dotenv format. A separate
 `secret-management` repo owns the machinery around it and installs itself
-straight into `$HOME` rather than through stow:
+straight into `$HOME` rather than through mise's dotfiles:
 
 - `secrets-unlock` runs `pass show global/env` from a real terminal (the one
   interactive pinentry prompt required per boot) and writes the result to
@@ -102,22 +140,21 @@ straight into `$HOME` rather than through stow:
   a particular directory.
 
 What this repo does contain is the consumer side: `fish_greeting`
-(`fish/.config/fish/functions/fish_greeting.fish`) checks whether
-`global.env` exists and nags `secrets are locked! run secrets-unlock` if not,
-instead of a fortune. Two narrower cases don't go through `pass show
-global/env` at all:
+(`.config/fish/functions/fish_greeting.fish`) checks whether `global.env`
+exists and nags `secrets are locked! run secrets-unlock` if not, instead of a
+fortune. Two narrower cases don't go through `pass show global/env` at all:
 
 - `himalaya`'s config fetches its bridge password from `pass` directly at
-  runtime, which is the only reason that package is stowed here instead of
+  runtime, which is the only reason that config is tracked here instead of
   excluded like the other credential-holding configs above.
 - `gh`'s `hosts.yml` holds OAuth tokens directly, not via `pass`, and stays
   gitignored rather than routed through the global-secrets flow.
 
 ## fish
 
-One package covers every machine. Anything a given host might not have is
-guarded on the command it needs, so `conf.d/keychain.fish` does nothing on a
-box without keychain installed and does not print an error either.
+One set of entries covers every machine. Anything a given host might not have
+is guarded on the command it needs, so `conf.d/keychain.fish` does nothing on
+a box without keychain installed and does not print an error either.
 
 Host-specific setup goes in `conf.d/`, not in `config.fish`. fish sources
 every `conf.d/*.fish` before `config.fish` runs, which is why `config.fish`
@@ -126,9 +163,9 @@ here is two lines of comment and nothing else.
 ### Plugins are not tracked here
 
 Only `fish_plugins`, the manifest, is in git. The actual tide and fisher
-function files are not. There used to be 85 of them checked in, and stowing
-the package installed one machine's prompt onto every other machine as a side
-effect.
+function files are not. There used to be 85 of them checked in, and applying
+the whole directory installed one machine's prompt onto every other machine
+as a side effect (see the whole-directory-vs-per-file note at the top).
 
 On a machine missing anything the manifest lists, `conf.d/fisher-bootstrap.fish`
 fetches fisher, sources it, and runs `fisher update`. The prompt stays plain
@@ -139,14 +176,14 @@ fisher exists. Guarding on fisher alone leaves a hole: fisher writes its own
 function to disk before installing the rest, so an install that dies partway
 satisfies the guard permanently and the missing plugins never get retried.
 
-### fisher writes to fish_plugins, and stow points that at this repo
+### fisher writes to fish_plugins, and mise points that at this repo
 
 Every fisher subcommand that changes state (`install`, `update`, `remove`,
 `uninstall`) rewrites `fish_plugins`. It writes **the set that is
 installed**, not the set the file listed. That is `functions/fisher.fish` line
 221, inside the block shared by all four subcommands.
 
-Since stow symlinks the manifest into this repo, that write lands on tracked
+Since mise symlinks the manifest into this repo, that write lands on tracked
 content. Consequences worth knowing:
 
 - Running `fisher install <x>` when tide is broken rewrites the manifest to
@@ -154,7 +191,8 @@ content. Consequences worth knowing:
   instead: update installs the manifest's contents first, so the rewrite is a
   no-op. It is not that update avoids writing, because it does not.
 - `fisher remove` of the last remaining plugin runs `rm -f $fish_plugins`,
-  which deletes the stow symlink. The repo file survives. Re-stow to repair.
+  which deletes the mise-managed symlink. The repo file survives.
+  `mise bootstrap dotfiles apply ~/.config/fish/fish_plugins` to repair.
 - Any `fisher install` you run by hand dirties the repo. That is fine and
   arguably correct, since the manifest should track what you have. Expect
   `git status` to show it.
@@ -166,10 +204,11 @@ a confusing error. That happened with `fish_mode_prompt.fish`.
 ## mise
 
 [mise](https://mise.jdx.dev/) manages user-space CLI tools and language
-runtimes from `mise/.config/mise/config.toml`. `mise install` reads it and
-installs everything listed. It resolves tools through its own registry, then
-aqua, then ubi, then asdf plugins, so most things work by bare name, and
-anything with a GitHub release binary works via `ubi:owner/repo`.
+runtimes from `.config/mise/config.toml`, the same file that holds the
+`[dotfiles]` table. `mise install` reads its `[tools]` table and installs
+everything listed. It resolves tools through its own registry, then aqua,
+then ubi, then asdf plugins, so most things work by bare name, and anything
+with a GitHub release binary works via `ubi:owner/repo`.
 
 Some things stay on pacman on purpose, and the config comments say why:
 
@@ -200,5 +239,5 @@ set environment variables on you the moment you cd into it.
 Doom Emacs config: `config.el`, `init.el`, `packages.el`. Doom keeps user
 config in `~/.config/doom` and the framework itself in `~/.config/emacs`,
 which is a clone of doomemacs and is not tracked here. On a fresh machine,
-install Doom first, then stow this package over the top of the config files
-its installer generates.
+install Doom first, then run `mise bootstrap dotfiles apply` for the `doom`
+targets over the top of the config files its installer generates.

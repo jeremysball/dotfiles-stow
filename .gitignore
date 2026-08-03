@@ -3,26 +3,26 @@ fish_variables*
 # Fisher-managed plugin output. Only the fish_plugins manifest is tracked;
 # conf.d/fisher-bootstrap.fish reinstalls these from it on a fresh machine.
 #
-# With `stow --no-folding` these land in the real ~/.config/fish/ and never
-# reach the repo. These rules are the safety net for a folded stow,
-# where ~/.config/fish/functions is a symlink pointing back in here.
-fish/.config/fish/functions/_tide_*.fish
-fish/.config/fish/functions/tide/
-fish/.config/fish/functions/tide.fish
-fish/.config/fish/functions/fisher.fish
-fish/.config/fish/functions/fish_prompt.fish
-fish/.config/fish/functions/fish_right_prompt.fish
-fish/.config/fish/completions/tide.fish
-fish/.config/fish/completions/fisher.fish
-fish/.config/fish/conf.d/_tide_init.fish
+# mise dotfiles symlinks each file individually rather than the whole
+# directory (the equivalent of stow's --no-folding), so these land as plain
+# files in the real ~/.config/fish/ and never reach the repo. These rules are
+# the safety net in case a target ever gets added as a whole-directory entry.
+.config/fish/functions/_tide_*.fish
+.config/fish/functions/tide/
+.config/fish/functions/tide.fish
+.config/fish/functions/fisher.fish
+.config/fish/functions/fish_prompt.fish
+.config/fish/functions/fish_right_prompt.fish
+.config/fish/completions/tide.fish
+.config/fish/completions/fisher.fish
+.config/fish/conf.d/_tide_init.fish
 
 # Local worktrees
 .worktrees/
 
 # Credentials. gh writes OAuth tokens into hosts.yml in the same directory
-# as the tracked config.yml, so an unfolded stow puts it right next to
-# tracked content. Never commit it.
-gh/.config/gh/hosts.yml
+# as the tracked config.yml. Never commit it.
+.config/gh/hosts.yml
 
 # superfile ships its own theme/ directory; nothing in it is hand-edited.
-superfile/.config/superfile/theme/
+.config/superfile/theme/

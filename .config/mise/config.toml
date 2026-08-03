@@ -1,0 +1,203 @@
+# Global mise config, symlinked to ~/.config/mise/config.toml by mise's own
+# dotfiles feature (see the [dotfiles] table below).
+#
+# Scope: everything user-space. Pacman keeps only system packages and the
+# two exceptions noted below.
+#
+# Deliberately NOT here:
+#   fish     - login shell, must live in /etc/shells
+#   ripgrep  - hard dependency of the pacman `opencode` package
+#   opencode - pulls ripgrep with it; the two move together or not at all
+#   grc      - ships /etc/grc.fish, which config.fish sources by absolute path
+#   ghc/cabal/hls - ghcup already manages these well, and manages six GHC
+#                   versions side by side. mise installs ghcup, not the toolchain.
+#   ttf-nerd-fonts-symbols-mono, discount, texlive-plaingeneric - Doom Emacs
+#     deps with no mise backend at all (fonts, a TeX Live package group, a
+#     non-registry CLI). Reproduce via `mise run doom-emacs-extras`.
+
+[tools]
+# core CLI, referenced by fish abbrs and aliases
+eza    = "latest"
+bat    = "latest"
+fd     = "latest"
+zoxide = "latest"
+fzf    = "latest"
+jq     = "latest"
+yq     = "latest"
+
+# editors
+neovim = "latest"
+
+# git
+gh      = "latest"
+lazygit = "latest"
+delta   = "latest"
+
+# runtimes. Pin these per machine in ~/.config/mise/conf.d/ if they need to differ.
+node   = "latest"
+go     = "latest"
+python = "latest"
+uv     = "latest"
+
+# haskell: manage the manager, not the toolchain
+ghcup = "latest"
+
+# mise's own shell-completion generator; without it mise prints a warning
+# that completions won't work
+usage = "latest"
+
+# generic multi-shell completion generator; provides fish completions for
+# hundreds of CLIs that don't ship their own
+carapace = "latest"
+
+# fun
+cowsay = "latest"
+
+[tasks.doom-emacs-extras]
+description = "System packages Doom Emacs needs that mise has no backend for (fonts, TeX Live groups, non-registry CLIs)"
+run = "sudo pacman -S --needed ttf-nerd-fonts-symbols-mono discount texlive-plaingeneric"
+
+[settings]
+# Read .nvmrc / .python-version / .go-version in repos that never heard of mise
+idiomatic_version_file_enable_tools = ["node", "python", "go"]
+
+# Every file this repo manages, symlinked from ~/.dotfiles (the default
+# dotfiles.root) into place by `mise bootstrap dotfiles apply`. Each entry
+# is a single file, not a whole directory, so tools that write into these
+# same directories at runtime (fisher/tide in fish/functions and fish/conf.d
+# above all) never write into the repo by accident. The three submodule
+# directories are the only whole-directory entries, since nothing writes
+# into them at runtime.
+#
+# A machine that does not want a given target (the graphical-workstation
+# section below, for instance) just does not need those entries applied --
+# either strip them locally before applying, or leave them: an unapplied
+# entry with no source machine state does nothing until you `mise bootstrap
+# dotfiles add` it for real.
+[dotfiles]
+# fish
+"~/.config/fish/completions/alfred.fish" = {}
+"~/.config/fish/completions/dlv.fish" = {}
+"~/.config/fish/completions/peon.fish" = {}
+"~/.config/fish/conf.d/00-mise.fish" = {}
+"~/.config/fish/conf.d/_cloudflare_warp_completions.fish" = {}
+"~/.config/fish/conf.d/abbr-agents.fish" = {}
+"~/.config/fish/conf.d/aliases.fish" = {}
+"~/.config/fish/conf.d/carapace.fish" = {}
+"~/.config/fish/conf.d/fish_frozen_theme.fish" = {}
+"~/.config/fish/conf.d/fisher-bootstrap.fish" = {}
+"~/.config/fish/conf.d/fzf.fish" = {}
+"~/.config/fish/conf.d/gpg-agent.fish" = {}
+"~/.config/fish/conf.d/grc.fish" = {}
+"~/.config/fish/conf.d/keybindings.fish" = {}
+"~/.config/fish/conf.d/keychain.fish" = {}
+"~/.config/fish/conf.d/path.fish" = {}
+"~/.config/fish/conf.d/zoxide.fish" = {}
+"~/.config/fish/config.fish" = {}
+"~/.config/fish/fish_plugins" = {}
+"~/.config/fish/functions/claude.fish" = {}
+"~/.config/fish/functions/fan-down.fish" = {}
+"~/.config/fish/functions/fan-up.fish" = {}
+"~/.config/fish/functions/fish_greeting.fish" = {}
+"~/.config/fish/functions/fish_mode_prompt.fish" = {}
+"~/.config/fish/functions/refresh_xfce_panel.fish" = {}
+"~/.config/fish/functions/timed_print.fish" = {}
+"~/.config/fish/functions/what_is_my_ip.fish" = {}
+
+# mise (this file too)
+"~/.config/mise/config.toml" = {}
+
+# nvim
+"~/.config/nvim/.gitignore" = {}
+"~/.config/nvim/.neoconf.json" = {}
+"~/.config/nvim/LICENSE" = {}
+"~/.config/nvim/README.md" = {}
+"~/.config/nvim/init.lua" = {}
+"~/.config/nvim/lazy-lock.json" = {}
+"~/.config/nvim/lazyvim.json" = {}
+"~/.config/nvim/lua/config/autocmds.lua" = {}
+"~/.config/nvim/lua/config/keymaps.lua" = {}
+"~/.config/nvim/lua/config/lazy.lua" = {}
+"~/.config/nvim/lua/config/options.lua" = {}
+"~/.config/nvim/lua/plugins/99.lua" = {}
+"~/.config/nvim/lua/plugins/example.lua" = {}
+"~/.config/nvim/stylua.toml" = {}
+
+# doom
+"~/.config/doom/config.el" = {}
+"~/.config/doom/init.el" = {}
+"~/.config/doom/packages.el" = {}
+
+# bin scripts
+"~/.local/bin/alacritty-with-cwd" = {}
+"~/.local/bin/ascii-table" = {}
+"~/.local/bin/bumblebee-nightly" = {}
+"~/.local/bin/catbow" = {}
+"~/.local/bin/dg++" = {}
+"~/.local/bin/electorrent" = {}
+"~/.local/bin/gf2" = {}
+"~/.local/bin/hepl.sh" = {}
+"~/.local/bin/hx.sh" = {}
+"~/.local/bin/kitty-with-cwd" = {}
+"~/.local/bin/libregate" = {}
+"~/.local/bin/link_proton_to_bottles" = {}
+"~/.local/bin/myluakit" = {}
+"~/.local/bin/omen-fan-ctrl" = {}
+"~/.local/bin/pico8" = {}
+"~/.local/bin/sisyphus.sh" = {}
+"~/.local/bin/skewaita" = {}
+"~/.local/bin/speedcat" = {}
+"~/.local/bin/tablet-mode.sh" = {}
+"~/.local/bin/volctl" = {}
+"~/.local/bin/watch_mb" = {}
+
+# fonts
+"~/.config/fontconfig/fonts.conf" = {}
+
+# bash
+"~/.bashrc" = {}
+
+# git
+"~/.config/git/ignore" = {}
+"~/.gitconfig" = {}
+
+# gh
+"~/.config/gh/config.yml" = {}
+"~/.config/gh/pat-switcher.sh" = {}
+
+# systemd
+"~/.config/systemd/user/bumblebee-nightly.service" = {}
+"~/.config/systemd/user/bumblebee-nightly.timer" = {}
+
+# zellij, htop, superfile, himalaya, alfred, taskferry, mcporter
+"~/.config/alfred/config.toml" = {}
+"~/.config/himalaya/config.toml" = {}
+"~/.config/htop/htoprc" = {}
+"~/.config/mcporter/config.json" = {}
+"~/.config/superfile/compact.toml" = {}
+"~/.config/superfile/config.toml" = {}
+"~/.config/superfile/hotkeys.toml" = {}
+"~/.config/taskferry/config.json" = {}
+"~/.config/zellij/config.kdl" = {}
+
+# older graphical workstation: i3, xorg, picom, alacritty, helix, zsh, tmux
+"~/.config/alacritty/alacritty-theme" = {}  # submodule, whole-dir symlink
+"~/.config/alacritty/alacritty.toml" = {}
+"~/.config/helix/config.toml" = {}
+"~/.config/helix/ignore" = {}
+"~/.config/helix/languages.toml" = {}
+"~/.config/i3/config" = {}
+"~/.config/picom.conf" = {}
+"~/.tmux.conf" = {}
+"~/.xinitrc" = {}
+"~/.xprofile" = {}
+"~/.zsh/aliases" = {}
+"~/.zsh/custom/plugins/zsh-autosuggestions" = {}  # submodule, whole-dir symlink
+"~/.zsh/custom/plugins/zsh-syntax-highlighting" = {}  # submodule, whole-dir symlink
+"~/.zsh/custom/themes/linuxonly-purple.zsh-theme" = {}
+"~/.zsh/custom/themes/powerlevel10k" = {}  # submodule, whole-dir symlink
+"~/.zsh/functions/e" = {}
+"~/.zsh/functions/edit.sh" = {}
+"~/.zshrc" = {}
+"~/.zshrc.local" = {}
+
