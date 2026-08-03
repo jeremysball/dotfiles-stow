@@ -80,3 +80,13 @@
 ;; Reflow prose to 72 columns (gq/gw). Doom defaults to 80, but skill
 ;; files and notes are written at 72.
 (setq-hook! (text-mode markdown-mode org-mode) fill-column 72)
+
+;; Edebug's eval list buffer ships only C-c chords. Normal-state g-prefix
+;; instead. Not the local leader: *edebug* is an editable Lisp Interaction
+;; buffer, so you are in insert state most of the time there and SPC would
+;; need an ESC first.
+(map! :after edebug
+      :map edebug-eval-mode-map
+      :n "gu" #'edebug-update-eval-list
+      :n "gd" #'edebug-delete-eval-item
+      :n "gw" #'edebug-where)
