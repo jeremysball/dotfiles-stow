@@ -1,0 +1,7 @@
+{
+  "summaryModel": "opencode/mimo-v2.5-free",
+  "defaultExecutor": "opencode",
+  "maxConcurrentTasks": 8,
+  "postOutputNoOutputTimeoutMs": 999999000,
+  "envFile": "/run/user/1000/secrets/global.env"
+}

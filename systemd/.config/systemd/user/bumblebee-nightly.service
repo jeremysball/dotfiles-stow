@@ -1,0 +1,9 @@
+[Unit]
+Description=Bumblebee nightly supply-chain scan
+After=network-online.target
+
+[Service]
+Type=oneshot
+Environment=PATH=%h/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=%h/.local/bin/bumblebee-nightly
+Nice=10
