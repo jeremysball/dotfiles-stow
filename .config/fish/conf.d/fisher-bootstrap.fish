@@ -7,7 +7,7 @@
 #
 # 1. EVERY fisher subcommand that changes state (install, update, remove,
 #    uninstall) rewrites fish_plugins. It writes the set that is actually
-#    installed, not the set the file listed. Since stow symlinks the manifest
+#    installed, not the set the file listed. Since mise symlinks the manifest
 #    into this repo, that write lands on tracked content.
 #
 #    So `fisher install <x>` after a failed tide install rewrites the manifest
@@ -16,8 +16,9 @@
 #    rewrite a no-op. Do not swap it for `fisher install`.
 #
 # 2. `fisher remove` of the last remaining plugin runs `rm -f $fish_plugins`,
-#    which deletes the stow symlink. The repo file survives; the link does not.
-#    Re-stow to repair it.
+#    which deletes the mise-managed symlink. The repo file survives; the link
+#    does not. Run `mise bootstrap dotfiles apply ~/.config/fish/fish_plugins`
+#    to repair it.
 #
 # The guard below checks that every plugin in the manifest is actually
 # installed, not merely that fisher exists. Guarding on `functions -q fisher`
