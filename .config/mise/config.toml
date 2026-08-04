@@ -62,12 +62,24 @@ run = "sudo pacman -S --needed ttf-nerd-fonts-symbols-mono discount texlive-plai
 idiomatic_version_file_enable_tools = ["node", "python", "go"]
 
 # Every file this repo manages, symlinked from ~/.dotfiles (the default
-# dotfiles.root) into place by `mise bootstrap dotfiles apply`. Each entry
-# is a single file, not a whole directory, so tools that write into these
-# same directories at runtime (fisher/tide in fish/functions and fish/conf.d
-# above all) never write into the repo by accident. The three submodule
-# directories are the only whole-directory entries, since nothing writes
-# into them at runtime.
+# dotfiles.root) into place by `mise bootstrap dotfiles apply`. Every entry
+# is one of:
+#   - a single file (mode omitted, the default `symlink`)
+#   - `mode = "symlink-each"`, for a directory a runtime tool writes into
+#     (fisher/tide in fish/functions, fish/conf.d, fish/completions; also
+#     .local/bin, since a few of those scripts are dangling symlinks that
+#     only resolve on specific machines -- see below). It symlinks only the
+#     files that exist in the repo's copy of the directory, so anything a
+#     tool writes straight into the live directory is left alone, and a
+#     source that doesn't resolve on this machine is skipped rather than
+#     failing the whole apply the way a plain `= {}` entry would.
+#   - `mode = "symlink"` on a whole directory, for the four git submodules
+#     (alacritty-theme, zsh-autosuggestions, zsh-syntax-highlighting,
+#     powerlevel10k), since nothing writes into an external theme/plugin
+#     checkout at runtime. Submodules aren't checked out by a plain
+#     `git clone` though -- run `git submodule update --init --recursive`
+#     first (init.sh does this for you), or those four entries symlink
+#     empty directories.
 #
 # A machine that does not want a given target (the graphical-workstation
 # section below, for instance) just does not need those entries applied --
@@ -75,34 +87,17 @@ idiomatic_version_file_enable_tools = ["node", "python", "go"]
 # entry with no source machine state does nothing until you `mise bootstrap
 # dotfiles add` it for real.
 [dotfiles]
-# fish
-"~/.config/fish/completions/alfred.fish" = {}
-"~/.config/fish/completions/dlv.fish" = {}
-"~/.config/fish/completions/peon.fish" = {}
-"~/.config/fish/conf.d/00-mise.fish" = {}
-"~/.config/fish/conf.d/_cloudflare_warp_completions.fish" = {}
-"~/.config/fish/conf.d/abbr-agents.fish" = {}
-"~/.config/fish/conf.d/aliases.fish" = {}
-"~/.config/fish/conf.d/carapace.fish" = {}
-"~/.config/fish/conf.d/fish_frozen_theme.fish" = {}
-"~/.config/fish/conf.d/fisher-bootstrap.fish" = {}
-"~/.config/fish/conf.d/fzf.fish" = {}
-"~/.config/fish/conf.d/gpg-agent.fish" = {}
-"~/.config/fish/conf.d/grc.fish" = {}
-"~/.config/fish/conf.d/keybindings.fish" = {}
-"~/.config/fish/conf.d/keychain.fish" = {}
-"~/.config/fish/conf.d/path.fish" = {}
-"~/.config/fish/conf.d/zoxide.fish" = {}
+# fish. completions/conf.d/functions use symlink-each: it symlinks only the
+# files that exist in the repo's copy of each directory, so a file fisher or
+# tide writes directly into the live directory (never into the repo) is left
+# alone untouched. Same guarantee as one entry per file, far fewer lines, and
+# a new file added to one of these three directories is picked up on the next
+# apply without an extra table edit.
+"~/.config/fish/completions" = { mode = "symlink-each" }
+"~/.config/fish/conf.d" = { mode = "symlink-each" }
+"~/.config/fish/functions" = { mode = "symlink-each" }
 "~/.config/fish/config.fish" = {}
 "~/.config/fish/fish_plugins" = {}
-"~/.config/fish/functions/claude.fish" = {}
-"~/.config/fish/functions/fan-down.fish" = {}
-"~/.config/fish/functions/fan-up.fish" = {}
-"~/.config/fish/functions/fish_greeting.fish" = {}
-"~/.config/fish/functions/fish_mode_prompt.fish" = {}
-"~/.config/fish/functions/refresh_xfce_panel.fish" = {}
-"~/.config/fish/functions/timed_print.fish" = {}
-"~/.config/fish/functions/what_is_my_ip.fish" = {}
 
 # mise (this file too)
 "~/.config/mise/config.toml" = {}
@@ -128,28 +123,12 @@ idiomatic_version_file_enable_tools = ["node", "python", "go"]
 "~/.config/doom/init.el" = {}
 "~/.config/doom/packages.el" = {}
 
-# bin scripts
-"~/.local/bin/alacritty-with-cwd" = {}
-"~/.local/bin/ascii-table" = {}
-"~/.local/bin/bumblebee-nightly" = {}
-"~/.local/bin/catbow" = {}
-"~/.local/bin/dg++" = {}
-"~/.local/bin/electorrent" = {}
-"~/.local/bin/gf2" = {}
-"~/.local/bin/hepl.sh" = {}
-"~/.local/bin/hx.sh" = {}
-"~/.local/bin/kitty-with-cwd" = {}
-"~/.local/bin/libregate" = {}
-"~/.local/bin/link_proton_to_bottles" = {}
-"~/.local/bin/myluakit" = {}
-"~/.local/bin/omen-fan-ctrl" = {}
-"~/.local/bin/pico8" = {}
-"~/.local/bin/sisyphus.sh" = {}
-"~/.local/bin/skewaita" = {}
-"~/.local/bin/speedcat" = {}
-"~/.local/bin/tablet-mode.sh" = {}
-"~/.local/bin/volctl" = {}
-"~/.local/bin/watch_mb" = {}
+# bin scripts. symlink-each also means gf2/libregate/pico8/speedcat (dangling
+# symlinks to tool paths that only exist on the machine that has those
+# tools -- see the [dotfiles] header comment) are silently skipped on a
+# machine that doesn't have them, instead of failing the whole apply the way
+# an individual `= {}` entry does.
+"~/.local/bin" = { mode = "symlink-each" }
 
 # fonts
 "~/.config/fontconfig/fonts.conf" = {}

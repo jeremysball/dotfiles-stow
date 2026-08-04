@@ -24,23 +24,35 @@ then `mise install` (pulls down the tools).
 `~/.dotfiles` is not an arbitrary choice: it is `dotfiles.root`'s default, the
 setting mise consults to find where dotfile sources live. `init.sh` also
 exports `MISE_DOTFILES_ROOT` pointing at wherever it actually lives, so
-cloning somewhere else still works, but `~/.dotfiles` is the path with zero
-extra configuration.
+`./init.sh` itself works from any clone location — but that export only
+covers `init.sh`'s own run. Any later ad-hoc `mise bootstrap dotfiles ...`
+command, run from a plain shell after setup, still resolves sources under
+whatever `dotfiles.root` actually is: the `~/.dotfiles` default unless you've
+set it otherwise with `mise settings set -g dotfiles.root <path>`. Cloning to
+`~/.dotfiles` means you never have to think about this again; cloning
+elsewhere means setting that global setting once, not just relying on
+`init.sh`'s export.
 
 Two things about `mise bootstrap dotfiles apply` matter here and neither is
 optional.
 
-Every target in `[dotfiles]` is an individual file, not a whole directory.
-Symlinking a whole directory (`~/.config/fish` as one symlink into the repo)
-means anything that later writes into that directory is writing into git.
-fish drops `fish_variables` there, and fisher installs its plugin files
-there. Neither belongs in the repo, so `fish/functions` and `fish/conf.d` (and
-every other target) get per-file entries instead: the real directory stays a
-real directory, mise only symlinks the files it's tracking, and fisher's
-generated files land next to those symlinks as plain, gitignored files. The
-only whole-directory entries are the three git submodules (`alacritty-theme`,
-`zsh-autosuggestions`, `zsh-syntax-highlighting`) and `powerlevel10k`, since
-nothing writes into an external theme/plugin checkout at runtime.
+No target symlinks a whole directory wholesale unless nothing ever writes
+into it at runtime. Symlinking `~/.config/fish` as one symlink into the repo
+would mean anything that later writes into that directory is writing into
+git — fish drops `fish_variables` there, fisher installs its plugin files
+there, neither belongs in the repo. `fish/functions`, `fish/conf.d`, and
+`fish/completions` instead use `mode = "symlink-each"`: mise symlinks only
+the files that exist in the repo's copy of the directory, so the real
+directory stays a real directory and anything fisher/tide writes straight
+into it lands as a plain, gitignored file next to the symlinks. `.local/bin`
+uses the same mode for a second reason below. Everything else not covered by
+`symlink-each` or the four whole-directory submodule entries
+(`alacritty-theme`, `zsh-autosuggestions`, `zsh-syntax-highlighting`,
+`powerlevel10k` — nothing writes into an external theme/plugin checkout at
+runtime) is a plain single-file entry. A plain `git clone` doesn't check
+submodules out, so `init.sh` runs `git submodule update --init --recursive`
+before applying anything — do the same by hand if you're applying without
+`init.sh`.
 
 If a live file already exists where `apply` wants to put a symlink and its
 content doesn't match the tracked source, it refuses and tells you which
@@ -57,34 +69,24 @@ tree and check `git diff` before committing.
 Simulate anything before you run it with `mise bootstrap dotfiles apply --dry-run`.
 It prints every symlink it would create and touches nothing.
 
-### `apply` is all-or-nothing
+### `apply` is all-or-nothing for a plain `= {}` entry, but not for `symlink-each`
 
 `mise bootstrap dotfiles apply` with no target arguments applies every entry
-in `[dotfiles]` in one batch, and if any one target's source doesn't resolve,
-the whole run fails before touching anything. `.local/bin/gf2`,
-`.local/bin/libregate`, `.local/bin/pico8`, and `.local/bin/speedcat` are
-checked-in symlinks to absolute paths on the machine those tools actually
-live on (`/home/jeremy/tools/gf/gf2` and similar). On any other machine those
-targets don't resolve, so a plain `mise bootstrap dotfiles apply` (what
-`init.sh` runs) fails outright there.
+in `[dotfiles]` in one batch. For a plain single-file entry, if that one
+target's source doesn't resolve, the whole run fails before touching
+anything. A `symlink-each` entry doesn't share that failure mode: it skips
+whichever of its own files don't resolve and still applies the rest.
 
-Two ways around it on a machine missing those tools:
-
-```fish
-# apply everything except the dangling ones, listing every other target by hand
-mise bootstrap dotfiles apply --yes -- ~/.bashrc ~/.config/fish/config.fish ...
-
-# or comment out / delete the offending lines from [dotfiles] locally first
-mise bootstrap dotfiles edit ~/.config/mise/config.toml
-mise bootstrap dotfiles apply --yes
-```
-
-Neither is a one-liner today. If this becomes a recurring annoyance, revisit
-whether those four symlinks belong in git at all.
+That's the second reason `.local/bin` is `symlink-each` rather than one entry
+per script: `gf2`, `libregate`, `pico8`, and `speedcat` are checked-in
+symlinks to absolute paths on the machine those tools actually live on
+(`/home/jeremy/tools/gf/gf2` and similar). On any other machine those four
+just don't get created — `mise bootstrap dotfiles apply` (what `init.sh`
+runs) still succeeds and links every other script in the directory.
 
 ## `[dotfiles]`
 
-All ~100 tracked targets live in one table in `.config/mise/config.toml`,
+All 60 tracked targets live in one table in `.config/mise/config.toml`,
 grouped by comment header to match what used to be separate stow packages:
 
 - `fish` shell config, one set of entries covering every host
@@ -239,5 +241,9 @@ set environment variables on you the moment you cd into it.
 Doom Emacs config: `config.el`, `init.el`, `packages.el`. Doom keeps user
 config in `~/.config/doom` and the framework itself in `~/.config/emacs`,
 which is a clone of doomemacs and is not tracked here. On a fresh machine,
-install Doom first, then run `mise bootstrap dotfiles apply` for the `doom`
-targets over the top of the config files its installer generates.
+install Doom first, then run `mise bootstrap dotfiles apply --force
+~/.config/doom/config.el ~/.config/doom/init.el ~/.config/doom/packages.el`
+to overwrite the starter template Doom's installer just generated with the
+tracked, customized versions. `--force` is required here specifically:
+Doom's installer writes real starter content, not empty files, so it always
+conflicts with the tracked source and a plain `apply` refuses.
