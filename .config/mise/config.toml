@@ -51,7 +51,8 @@ usage = "latest"
 carapace = "latest"
 
 # fun
-cowsay = "latest"
+cowsay                       = "latest"
+"github:jeremysball/catbow"  = "latest"
 
 [tasks.emacs-install]
 description = "GNU Emacs from Arch's repos; the runtime Doom Emacs builds on"
