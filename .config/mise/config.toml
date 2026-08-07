@@ -53,6 +53,14 @@ carapace = "latest"
 # fun
 cowsay = "latest"
 
+[tasks.emacs-install]
+description = "GNU Emacs from Arch's repos; the runtime Doom Emacs builds on"
+run = "sudo pacman -S --needed emacs"
+
+[tasks.doom-emacs-install]
+description = "Clone Doom Emacs source into ~/.config/emacs and run its official installer"
+run = "git clone https://github.com/doomemacs/doomemacs ~/.config/emacs && ~/.config/emacs/bin/doom install"
+
 [tasks.doom-emacs-extras]
 description = "System packages Doom Emacs needs that mise has no backend for (fonts, TeX Live groups, non-registry CLIs)"
 run = "sudo pacman -S --needed ttf-nerd-fonts-symbols-mono discount texlive-plaingeneric"
