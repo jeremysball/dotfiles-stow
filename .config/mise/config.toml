@@ -52,12 +52,10 @@ carapace = "latest"
 
 # fun
 cowsay = "latest"
-# catbow ships its binary as `cb`, but the v1.0.0-alpha release only
-# attaches cb / cb.exe (no linux-x64 asset), so the github: backend
-# can't match a platform-specific file. The go: backend has its own
-# toolchain-mismatch issue with Arch's nodwarf5 rebuild of go, so we
-# fall back to a [tasks] recipe that runs `go install` directly.
-# (see [tasks.catbow-install] below)
+# catbow's v1.0.1 release ships cb-v1.0.1-linux-amd64.tar.gz and
+# cb-v1.0.1-windows-amd64.zip, so the github: backend can match
+# platform-arch asset names without any custom tooling.
+"github:jeremysball/catbow" = "latest"
 
 [tasks.emacs-install]
 description = "GNU Emacs from Arch's repos; the runtime Doom Emacs builds on"
@@ -70,24 +68,6 @@ run = "git clone https://github.com/doomemacs/doomemacs ~/.config/emacs && ~/.co
 [tasks.doom-emacs-extras]
 description = "System packages Doom Emacs needs that mise has no backend for (fonts, TeX Live groups, non-registry CLIs)"
 run = "sudo pacman -S --needed ttf-nerd-fonts-symbols-mono discount texlive-plaingeneric"
-
-[tasks.catbow-install]
-# Build catbow from source. The release's binary is named `cb` but
-# `go install` produces `catbow` from the module path -- so on this
-# machine the install drops a binary named `catbow` at the active
-# GOPATH/bin (mise's go install directory, on this machine).
-# The fish function `cb` in conf.d/catbow.fish restores the
-# README's `fortune | cowsay | cb` invocation.
-#
-# Uses /usr/bin/go (Arch's go, which is built with nodwarf5) because
-# mise's own go install hits a toolchain mismatch against Arch's
-# rebuild of the runtime tooling -- `compile` reports go1.26.5 but
-# sees go1.26.5-X:nodwarf5 from the same toolchain, even with
-# GOTOOLCHAIN=local. The system go is internally consistent.
-# env -u clears the GOROOT mise exports, otherwise /usr/bin/go sees
-# mise's regular-go toolchain path and inherits the mismatch.
-description = "Build catbow (lolcat reimpl) via Arch's system go with mise's GOROOT unset -- binary installs as `catbow`, not `cb`"
-run = "env -u GOROOT -u GOTOOLCHAIN /usr/bin/go install github.com/jeremysball/catbow@v1.0.0-alpha"
 
 [settings]
 # Read .nvmrc / .python-version / .go-version in repos that never heard of mise
