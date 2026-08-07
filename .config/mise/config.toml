@@ -57,6 +57,34 @@ cowsay = "latest"
 # platform-arch asset names without any custom tooling.
 "github:jeremysball/catbow" = "latest"
 
+[tasks.secrets-install]
+description = "Clone jeremysball/secret-management (scripts) and jeremysball/password-store (encrypted data) if missing, then run secret-management's installer. Idempotent: skips any clone whose target dir already exists."
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPTS_DIR="$HOME/projects/secret-management"
+STORE_DIR="$HOME/.password-store"
+
+mkdir -p "$HOME/projects"
+
+if [ -d "$SCRIPTS_DIR" ]; then
+    echo "secrets-install: $SCRIPTS_DIR already exists, skipping clone"
+else
+    git clone https://github.com/jeremysball/secret-management.git "$SCRIPTS_DIR"
+fi
+
+if [ -d "$STORE_DIR" ]; then
+    echo "secrets-install: $STORE_DIR already exists, skipping clone"
+else
+    git clone https://github.com/jeremysball/password-store.git "$STORE_DIR"
+fi
+
+bash "$SCRIPTS_DIR/install.sh"
+
+echo "secrets-install: done. Run 'secrets-unlock' from a real terminal to decrypt secrets for this session."
+'''
+
 [tasks.emacs-install]
 description = "GNU Emacs from Arch's repos; the runtime Doom Emacs builds on"
 run = "sudo pacman -S --needed emacs"

@@ -24,4 +24,6 @@ mise bootstrap dotfiles apply --yes
 
 mise install
 
-echo "init.sh: done, run 'exec fish' to switch shells"
+mise run secrets-install
+
+echo "init.sh: done. Run 'secrets-unlock' (needs a real terminal, one pinentry prompt), then 'exec fish' to switch shells."
