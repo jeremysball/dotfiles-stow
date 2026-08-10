@@ -39,6 +39,10 @@ go     = "latest"
 python = "latest"
 uv     = "latest"
 
+# llm shell pipe tool. Not in mise's registry under a bare `mods` name, so
+# the aqua backend is named explicitly.
+"aqua:charmbracelet/mods" = "latest"
+
 # haskell: manage the manager, not the toolchain
 ghcup = "latest"
 
@@ -56,6 +60,31 @@ cowsay = "latest"
 # cb-v1.0.1-windows-amd64.zip, so the github: backend can match
 # platform-arch asset names without any custom tooling.
 "github:jeremysball/catbow" = "latest"
+
+[tasks.serper-axi-install]
+description = "Clone (or pull) jeremysball/serper-axi and install its CLI globally. Not published to npm, so this is the only install path. Idempotent: re-running pulls latest and reinstalls."
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_DIR="$HOME/projects/serper-axi"
+
+mkdir -p "$HOME/projects"
+
+if [ -d "$REPO_DIR" ]; then
+    echo "serper-axi-install: $REPO_DIR already exists, pulling latest"
+    git -C "$REPO_DIR" pull
+else
+    git clone https://github.com/jeremysball/serper-axi.git "$REPO_DIR"
+fi
+
+cd "$REPO_DIR"
+npm install
+npm run build
+npm install -g .
+
+echo "serper-axi-install: done. Export SERPER_API_KEY before running serper-axi."
+'''
 
 [tasks.secrets-install]
 description = "Clone jeremysball/secret-management (scripts) and jeremysball/password-store (encrypted data) if missing, then run secret-management's installer. Idempotent: skips any clone whose target dir already exists."
