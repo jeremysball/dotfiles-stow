@@ -11,9 +11,10 @@
 #   grc      - ships /etc/grc.fish, which config.fish sources by absolute path
 #   ghc/cabal/hls - ghcup already manages these well, and manages six GHC
 #                   versions side by side. mise installs ghcup, not the toolchain.
-#   ttf-nerd-fonts-symbols-mono, discount, texlive-plaingeneric - Doom Emacs
-#     deps with no mise backend at all (fonts, a TeX Live package group, a
-#     non-registry CLI). Reproduce via `mise run doom-emacs-extras`.
+#   ttf-nerd-fonts-symbols-mono, discount, texlive-plaingeneric, ispell - Doom
+#     Emacs deps with no mise backend at all (fonts, a TeX Live package group,
+#     a non-registry CLI, a spell checker). Reproduce via `mise run
+#     doom-emacs-extras`.
 
 [tools]
 # core CLI, referenced by fish abbrs and aliases
@@ -123,8 +124,10 @@ description = "Clone Doom Emacs source into ~/.config/emacs and run its official
 run = "git clone https://github.com/doomemacs/doomemacs ~/.config/emacs && ~/.config/emacs/bin/doom install"
 
 [tasks.doom-emacs-extras]
-description = "System packages Doom Emacs needs that mise has no backend for (fonts, TeX Live groups, non-registry CLIs)"
-run = "sudo pacman -S --needed ttf-nerd-fonts-symbols-mono discount texlive-plaingeneric"
+description = "System packages Doom Emacs needs that mise has no backend for (fonts, TeX Live groups, non-registry CLIs, spell checker)"
+# ispell backs Doom's :checkers spell module. Arch ships it in extra, so it
+# rides the same pacman line as the rest rather than pulling in brew.
+run = "sudo pacman -S --needed ttf-nerd-fonts-symbols-mono discount texlive-plaingeneric ispell"
 
 [settings]
 # Read .nvmrc / .python-version / .go-version in repos that never heard of mise
