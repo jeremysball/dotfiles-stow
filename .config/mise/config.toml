@@ -146,19 +146,24 @@ run = '''
 set -euo pipefail
 
 WORK="$HOME/projects/font-patching"
-mkdir -p "$WORK/patched"
 
+# The base snapshot is a fixed, immutable reference point (mhartington's
+# 2021 patch) -- caching it is correct, re-downloading it never gets
+# "fresher". FontPatcher is the opposite: it's the whole reason this task
+# exists to be re-run, so it's always re-fetched, never cached, or a second
+# run would silently keep patching with whatever nerd-fonts release was
+# current the first time this task ever ran.
 if [ ! -f "$WORK/MonoLisa-Regular-NF-source.otf" ]; then
     curl -fsSL -o "$WORK/MonoLisa-Regular-NF-source.otf" \
         "https://raw.githubusercontent.com/mhartington/dotfiles/refs/heads/main/config/fonts/MonoLisa/MonoLisa%20Regular%20Nerd%20Font%20Complete%20Mono.otf"
 fi
 
-if [ ! -d "$WORK/FontPatcher" ]; then
-    LATEST_URL=$(curl -s https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest \
-        | grep -o '"browser_download_url": *"[^"]*FontPatcher.zip"' | cut -d'"' -f4)
-    curl -fsSL -o "$WORK/FontPatcher.zip" "$LATEST_URL"
-    unzip -q -o "$WORK/FontPatcher.zip" -d "$WORK/FontPatcher"
-fi
+rm -rf "$WORK/FontPatcher" "$WORK/patched"
+mkdir -p "$WORK/patched"
+LATEST_URL=$(curl -s https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest \
+    | jq -r '.assets[] | select(.name == "FontPatcher.zip") | .browser_download_url')
+curl -fsSL -o "$WORK/FontPatcher.zip" "$LATEST_URL"
+unzip -q -o "$WORK/FontPatcher.zip" -d "$WORK/FontPatcher"
 
 fontforge -script "$WORK/FontPatcher/font-patcher" --complete --careful --mono \
     --outputdir "$WORK/patched" "$WORK/MonoLisa-Regular-NF-source.otf"
