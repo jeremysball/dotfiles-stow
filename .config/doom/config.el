@@ -90,3 +90,6 @@
       :n "gu" #'edebug-update-eval-list
       :n "gd" #'edebug-delete-eval-item
       :n "gw" #'edebug-where)
+
+;; Exit insert state on a quick `jk` instead of reaching for ESC.
+(map! :i "jk" #'evil-normal-state)
