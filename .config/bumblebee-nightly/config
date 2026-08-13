@@ -1,0 +1,5 @@
+# bumblebee-nightly config — sourced by ~/.local/bin/bumblebee-nightly
+# ntfy push target for alerts. Topic is unauthenticated: anything posted here
+# is readable by anyone who knows the name, so the script only ever sends the
+# alert subject + hostname, never paths or package details.
+NTFY_URL="https://ntfy.sh/coding-workspace-prom-tiger"
