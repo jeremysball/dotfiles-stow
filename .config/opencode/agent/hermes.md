@@ -1,0 +1,44 @@
+---
+model: openrouter/nousresearch/hermes-4-405b
+reasoningEffort: high
+tools:
+  bash: false
+  read: false
+  write: false
+  edit: false
+  glob: false
+  grep: false
+  list: false
+  task: false
+  webfetch: false
+  todowrite: false
+  patch: false
+  skill: false
+  lsp: false
+  kagi_kagi_extract: false
+  kagi_kagi_search_fetch: false
+  playwright_browser_navigate: false
+  playwright_browser_snapshot: false
+  playwright_browser_click: false
+  playwright_browser_fill_form: false
+  playwright_browser_evaluate: false
+  playwright_browser_take_screenshot: false
+  playwright_browser_console_messages: false
+  playwright_browser_hover: false
+  playwright_browser_type: false
+  playwright_browser_press_key: false
+  playwright_browser_wait_for: false
+  playwright_browser_resize: false
+  playwright_browser_close: false
+  playwright_browser_find: false
+  playwright_browser_navigate_back: false
+  playwright_browser_run_code_unsafe: false
+  playwright_browser_handle_dialog: false
+  playwright_browser_select_option: false
+  playwright_browser_drag: false
+  playwright_browser_drop: false
+  playwright_browser_file_upload: false
+  playwright_browser_tabs: false
+  playwright_browser_network_request: false
+  playwright_browser_network_requests: false
+---

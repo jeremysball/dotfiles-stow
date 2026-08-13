@@ -1,0 +1,22 @@
+[Unit]
+Description=Codex Plan OAuth -> Anthropic Messages proxy for Claude Code
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/home/jeremy/.local/share/mise/installs/node/26.5.1/bin/node /home/jeremy/.local/share/codex-anthropic-proxy/proxy.mjs
+Restart=on-failure
+RestartSec=3
+Environment=PROXY_PORT=3444
+Environment=PROXY_OPUS_MODEL=gpt-5.6-sol
+Environment=PROXY_SONNET_MODEL=gpt-5.6-terra
+Environment=PROXY_HAIKU_MODEL=gpt-5.6-luna
+Environment=PROXY_SMALL_FAST_MODEL=gpt-5.6-luna
+Environment=PROXY_EFFORT=medium
+Environment=PROXY_AUTH_FILE=/home/jeremy/.codex/auth.json
+# env for refresh endpoint path resolution if needed by node
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

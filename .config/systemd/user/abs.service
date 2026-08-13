@@ -1,0 +1,11 @@
+[Unit]
+Description=Always Be Sessioning - keep Claude Code session alive
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/abs run
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target

@@ -252,3 +252,38 @@ idiomatic_version_file_enable_tools = ["node", "python", "go"]
 "~/.zshrc" = {}
 "~/.zshrc.local" = {}
 
+# haskell (cabal, ghcup config -- the ghc toolchain itself stays unmanaged
+# per the [tools] header comment, ghcup owns it)
+"~/.config/cabal/config" = {}
+"~/.config/ghcup/config.yaml" = {}
+
+# bumblebee-nightly (config only; the systemd service/timer pair is tracked
+# above alongside bumblebee-nightly.{service,timer})
+"~/.config/bumblebee-nightly/config" = {}
+
+# herdr -- config.toml only. herdr-client.log, herdr-server.log,
+# session.json, release-notes.json are runtime state, not config, and
+# deliberately not tracked here.
+"~/.config/herdr/config.toml" = {}
+
+# mods
+"~/.config/mods/mods.yml" = {}
+
+# playwright-mcp
+"~/.config/playwright-mcp/config.json" = {}
+
+# tmux -- local override layered on ~/.tmux.conf above
+"~/.config/tmux/tmux.conf.local" = {}
+
+# opencode -- config only. meta-api-key is a live credential; node_modules,
+# package.json/package-lock.json are installed deps; backups-2026-07-17/ is
+# a stale snapshot. None of those four are tracked.
+"~/.config/opencode/opencode.json" = {}
+"~/.config/opencode/opencode.jsonc" = {}
+"~/.config/opencode/tui.json" = {}
+"~/.config/opencode/agent/hermes.md" = {}
+"~/.config/opencode/agents/notools-luna.md" = {}
+"~/.config/opencode/agents/notools-sol.md" = {}
+"~/.config/opencode/agents/notools-terra.md" = {}
+"~/.config/opencode/plugins/herdr-agent-state.js" = {}
+

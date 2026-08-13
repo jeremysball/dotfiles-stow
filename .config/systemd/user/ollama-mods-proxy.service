@@ -1,0 +1,16 @@
+[Unit]
+Description=Ollama Cloud -> mods proxy (native /api/chat, thinking forced off)
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/home/jeremy/.local/share/mise/installs/node/26.5.1/bin/node /workspace/llm-shims/ollama-mods/proxy.mjs
+Restart=on-failure
+RestartSec=3
+EnvironmentFile=/home/jeremy/.config/ollama-anthropic-proxy/env
+Environment=PROXY_PORT=3446
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
