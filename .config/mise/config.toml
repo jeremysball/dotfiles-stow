@@ -115,6 +115,37 @@ bash "$SCRIPTS_DIR/install.sh"
 echo "secrets-install: done. Run 'secrets-unlock' from a real terminal to decrypt secrets for this session."
 '''
 
+[tasks.bifrost-install]
+description = "Install the Bifrost LLM gateway (multi-provider OpenAI-compatible proxy) and enable its systemd user service. Idempotent: reinstalling the npm package and re-enabling an already-enabled unit are both no-ops. Requires 'mise bootstrap dotfiles apply' to already have placed ~/.config/systemd/user/bifrost.service and ~/.local/state/bifrost/config.json, and requires secrets-install + secrets-unlock to have decrypted ~/run/user/1000/secrets/global.env first."
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Pinned to match BIFROST_TRANSPORT_VERSION in the service unit -- bump both
+# together, never let npm silently pull a newer package against an older
+# pinned Go transport binary.
+npm install -g @maximhq/bifrost@1.6.3
+
+GLOBAL_ENV="/run/user/1000/secrets/global.env"
+ENV_DIR="$HOME/.config/bifrost"
+ENV_FILE="$ENV_DIR/env"
+
+if [ ! -f "$GLOBAL_ENV" ]; then
+    echo "bifrost-install: $GLOBAL_ENV not found. Run 'mise run secrets-install' then 'secrets-unlock' first." >&2
+    exit 1
+fi
+
+mkdir -p "$ENV_DIR"
+chmod 700 "$ENV_DIR"
+grep -E '^(META_MODEL_API_KEY|KIMI_API_KEY|ZAI_API_KEY|MINIMAX_API_KEY|CHEAPESTINFERENCE_API_KEY|OPENROUTER_API_KEY)=' "$GLOBAL_ENV" > "$ENV_FILE"
+chmod 600 "$ENV_FILE"
+
+systemctl --user daemon-reload
+systemctl --user enable --now bifrost.service
+
+echo "bifrost-install: done. Gateway listening on http://127.0.0.1:3447/v1/chat/completions. Manage with: systemctl --user {status,restart,stop} bifrost.service"
+'''
+
 [tasks.emacs-install]
 description = "GNU Emacs from Arch's repos; the runtime Doom Emacs builds on"
 run = "sudo pacman -S --needed emacs"
@@ -283,6 +314,7 @@ idiomatic_version_file_enable_tools = ["node", "python", "go"]
 # systemd
 "~/.config/systemd/user/bumblebee-nightly.service" = {}
 "~/.config/systemd/user/bumblebee-nightly.timer" = {}
+"~/.config/systemd/user/bifrost.service" = {}
 
 # zellij, htop, superfile, himalaya, alfred, taskferry, mcporter
 "~/.config/alfred/config.toml" = {}
@@ -324,6 +356,13 @@ idiomatic_version_file_enable_tools = ["node", "python", "go"]
 # bumblebee-nightly (config only; the systemd service/timer pair is tracked
 # above alongside bumblebee-nightly.{service,timer})
 "~/.config/bumblebee-nightly/config" = {}
+
+# bifrost -- config.json only. The unit is tracked above alongside
+# bifrost.service. Lives under ~/.local/state because the app also writes
+# its own sqlite state/log databases into the same directory; the env file
+# with the actual provider keys is never tracked here, see 'bifrost-install'
+# above, which regenerates it from global.env.
+"~/.local/state/bifrost/config.json" = {}
 
 # herdr -- config.toml only. herdr-client.log, herdr-server.log,
 # session.json, release-notes.json are runtime state, not config, and
