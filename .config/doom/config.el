@@ -93,3 +93,7 @@
 
 ;; Exit insert state on a quick `jk` instead of reaching for ESC.
 (map! :i "jk" #'evil-normal-state)
+
+;; Don't truncate which-key descriptions with ellipses. Default is 27 chars,
+;; which cuts off most entries. Set high so full descriptions show.
+(setq which-key-max-description-length 100)
