@@ -4,6 +4,9 @@
 # otherwise swap the fortune text for the relevant status line so the
 # cowsay/catbow pipeline still runs either way.
 function fish_greeting
+    if set -q INSIDE_EMACS
+        return
+    end
     set -l text
     set -l secrets_file (string join '' (set -q XDG_RUNTIME_DIR; and echo $XDG_RUNTIME_DIR; or echo /run/user/(id -u)) /secrets/global.env)
 
