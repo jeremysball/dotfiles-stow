@@ -224,6 +224,7 @@ echo "monolisa-nerd-font-patch: done. Copy $HOME/.local/share/fonts/MonoLisaNerd
 [settings]
 # Read .nvmrc / .python-version / .go-version in repos that never heard of mise
 idiomatic_version_file_enable_tools = ["node", "python", "go"]
+experimental = true
 
 # Every file this repo manages, symlinked from ~/.dotfiles (the default
 # dotfiles.root) into place by `mise bootstrap dotfiles apply`. Every entry
