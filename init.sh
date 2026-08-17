@@ -13,8 +13,25 @@ cd "$REPO_DIR"
 # the `cd` would silently find no config at all.
 export MISE_DOTFILES_ROOT="$REPO_DIR"
 
+# Ensure mise is available even on a truly fresh system where ~/.local/bin
+# is not yet on PATH and mise has never been installed. Check the absolute
+# location first so a reboot-fresh fish shell with a system-only PATH still
+# finds it, then auto-install via the official installer if truly missing.
 if ! command -v mise > /dev/null 2>&1; then
-    echo "init.sh: mise is not installed yet; install it first, then re-run this script" >&2
+    if [ -x "$HOME/.local/bin/mise" ]; then
+        export PATH="$HOME/.local/bin:$PATH"
+    elif [ -x "/home/linuxbrew/.linuxbrew/bin/mise" ]; then
+        export PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
+    fi
+fi
+if ! command -v mise > /dev/null 2>&1; then
+    echo "init.sh: mise not found, installing to ~/.local/bin/mise via https://mise.run ..." >&2
+    # Official installer respects MISE_INSTALL_PATH; default is ~/.local/bin/mise
+    curl -fsSL https://mise.run | sh
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+if ! command -v mise > /dev/null 2>&1; then
+    echo "init.sh: mise is still not installed after auto-install; install it manually, then re-run this script" >&2
     exit 1
 fi
 
