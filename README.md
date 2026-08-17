@@ -19,7 +19,16 @@ exec fish
 ```
 
 `init.sh` runs `mise bootstrap dotfiles apply` (creates the symlinks) and
-then `mise install` (pulls down the tools).
+then `mise install` (pulls down the tools). It also clones the separate
+[jeremysball/mise-en-system](https://github.com/jeremysball/mise-en-system)
+repo to `~/projects/mise-en-system` and runs its install tasks
+(`secrets-install`, `dotclaude-install`, `serper-axi-install`). Those tasks
+live there instead of in this repo's own `.config/mise/config.toml` because
+that file is loaded globally (needed for `[tools]` to land on `PATH` from
+any directory), and a global `[tasks]` table would leak into every other
+project's `mise tasks` output. Run any of them again later with
+`mise-sys <task>`, a fish function wrapping `mise -C ~/projects/mise-en-system
+run <task>`.
 
 `~/.dotfiles` is not an arbitrary choice: it is `dotfiles.root`'s default, the
 setting mise consults to find where dotfile sources live. `init.sh` also
@@ -241,7 +250,8 @@ set environment variables on you the moment you cd into it.
 Doom Emacs config: `config.el`, `init.el`, `packages.el`. Doom keeps user
 config in `~/.config/doom` and the framework itself in `~/.config/emacs`,
 which is a clone of doomemacs and is not tracked here. On a fresh machine,
-install Doom first, then run `mise bootstrap dotfiles apply --force
+install Doom first with `mise-sys doom-emacs-install` (see "Setting up a
+fresh machine" above), then run `mise bootstrap dotfiles apply --force
 ~/.config/doom/config.el ~/.config/doom/init.el ~/.config/doom/packages.el`
 to overwrite the starter template Doom's installer just generated with the
 tracked, customized versions. `--force` is required here specifically:

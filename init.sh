@@ -27,23 +27,27 @@ mise install
 # Install/bootstrap tasks (secrets-install, dotclaude-install,
 # serper-axi-install, ...) live in the separate jeremysball/mise-en-system
 # repo rather than this repo's own [tasks] table -- see the comment at the
-# top of .config/mise/config.toml for why. Clone it first so `mise -C` can
-# reach its tasks below.
+# top of .config/mise/config.toml for why. `mise bootstrap repos apply`
+# clones/converges the [bootstrap.repos] entry declared there: it clones
+# ~/projects/mise-en-system if missing, pulls it only when the checkout is
+# clean and origin matches, and leaves a dirty or diverged checkout alone
+# instead of aborting the whole script the way a bare `git pull` would.
 MISE_SYSTEM_DIR="$HOME/projects/mise-en-system"
 
-mkdir -p "$HOME/projects"
+mise bootstrap repos apply
 
-if [ -d "$MISE_SYSTEM_DIR" ]; then
-    echo "init.sh: $MISE_SYSTEM_DIR already exists, pulling latest"
-    git -C "$MISE_SYSTEM_DIR" pull
-else
-    git clone https://github.com/jeremysball/mise-en-system.git "$MISE_SYSTEM_DIR"
-fi
+# Install mise-en-system's own [tools] up front rather than letting the
+# first task below trigger an on-demand install -- a failed on-demand
+# install (no network mid-bootstrap, registry rate-limit) would otherwise
+# abort a task partway through instead of failing cleanly here.
+mise -C "$MISE_SYSTEM_DIR" install
 
-mise -C "$MISE_SYSTEM_DIR" run secrets-install
-
-mise -C "$MISE_SYSTEM_DIR" run dotclaude-install
-
-mise -C "$MISE_SYSTEM_DIR" run serper-axi-install
+# `:::` runs the three tasks as one mise invocation instead of three
+# separate fork/exec + config-parse cycles; `-j 1` keeps them sequential
+# since dotclaude-install and serper-axi-install assume secrets-install
+# has already run. Adding a task to mise-en-system's mise.toml means
+# adding it here too -- mise has no "run every task" mode this could
+# iterate over instead.
+mise -C "$MISE_SYSTEM_DIR" run -j 1 secrets-install ::: dotclaude-install ::: serper-axi-install
 
 echo "init.sh: done. Run 'secrets-unlock' (needs a real terminal, one pinentry prompt), then 'exec fish' to switch shells. Export SERPER_API_KEY before running serper-axi."

@@ -13,7 +13,7 @@
 #                   versions side by side. mise installs ghcup, not the toolchain.
 #   ttf-nerd-fonts-symbols-mono, discount, texlive-plaingeneric, ispell - Doom
 #     Emacs deps with no mise backend at all (fonts, a TeX Live package group,
-#     a non-registry CLI, a spell checker). Reproduce via `mise-sys run
+#     a non-registry CLI, a spell checker). Reproduce via `mise-sys
 #     doom-emacs-extras`.
 #
 # Install/bootstrap tasks (secrets-install, dotclaude-install,
@@ -75,6 +75,14 @@ cowsay = "latest"
 # Read .nvmrc / .python-version / .go-version in repos that never heard of mise
 idiomatic_version_file_enable_tools = ["node", "python", "go"]
 experimental = true
+
+# The mise-en-system repo (see the [tasks] header comment above). Declaring
+# it here lets `mise bootstrap repos apply` clone/converge it instead of
+# init.sh hand-rolling clone-or-pull: mise clones it if missing and pulls
+# only when the checkout is clean and origin matches, leaving a dirty or
+# diverged checkout alone rather than failing the whole bootstrap.
+[bootstrap.repos]
+"~/projects/mise-en-system" = { url = "https://github.com/jeremysball/mise-en-system.git" }
 
 # Every file this repo manages, symlinked from ~/.dotfiles (the default
 # dotfiles.root) into place by `mise bootstrap dotfiles apply`. Every entry
@@ -211,8 +219,8 @@ experimental = true
 # bifrost -- config.json only. The unit is tracked above alongside
 # bifrost.service. Lives under ~/.local/state because the app also writes
 # its own sqlite state/log databases into the same directory; the env file
-# with the actual provider keys is never tracked here, see 'bifrost-install'
-# above, which regenerates it from global.env.
+# with the actual provider keys is never tracked here, regenerate it via
+# `mise-sys bifrost-install`, which pulls from global.env.
 "~/.local/state/bifrost/config.json" = {}
 
 # herdr -- config.toml only. herdr-client.log, herdr-server.log,
