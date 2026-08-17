@@ -41,8 +41,30 @@ mise bootstrap dotfiles apply --yes
 
 mise install
 
-mise run secrets-install
+# Install/bootstrap tasks (secrets-install, dotclaude-install,
+# serper-axi-install, ...) live in the separate jeremysball/mise-en-system
+# repo rather than this repo's own [tasks] table -- see the comment at the
+# top of .config/mise/config.toml for why. `mise bootstrap repos apply`
+# clones/converges the [bootstrap.repos] entry declared there: it clones
+# ~/projects/mise-en-system if missing, pulls it only when the checkout is
+# clean and origin matches, and leaves a dirty or diverged checkout alone
+# instead of aborting the whole script the way a bare `git pull` would.
+MISE_SYSTEM_DIR="$HOME/projects/mise-en-system"
 
-mise run serper-axi-install
+mise bootstrap repos apply
+
+# Install mise-en-system's own [tools] up front rather than letting the
+# first task below trigger an on-demand install -- a failed on-demand
+# install (no network mid-bootstrap, registry rate-limit) would otherwise
+# abort a task partway through instead of failing cleanly here.
+mise -C "$MISE_SYSTEM_DIR" install
+
+# `:::` runs the three tasks as one mise invocation instead of three
+# separate fork/exec + config-parse cycles; `-j 1` keeps them sequential
+# since dotclaude-install and serper-axi-install assume secrets-install
+# has already run. Adding a task to mise-en-system's mise.toml means
+# adding it here too -- mise has no "run every task" mode this could
+# iterate over instead.
+mise -C "$MISE_SYSTEM_DIR" run -j 1 secrets-install ::: dotclaude-install ::: serper-axi-install
 
 echo "init.sh: done. Run 'secrets-unlock' (needs a real terminal, one pinentry prompt), then 'exec fish' to switch shells. Export SERPER_API_KEY before running serper-axi."

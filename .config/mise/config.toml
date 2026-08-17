@@ -13,8 +13,19 @@
 #                   versions side by side. mise installs ghcup, not the toolchain.
 #   ttf-nerd-fonts-symbols-mono, discount, texlive-plaingeneric, ispell - Doom
 #     Emacs deps with no mise backend at all (fonts, a TeX Live package group,
-#     a non-registry CLI, a spell checker). Reproduce via `mise run
+#     a non-registry CLI, a spell checker). Reproduce via `mise-sys
 #     doom-emacs-extras`.
+#
+# Install/bootstrap tasks (secrets-install, dotclaude-install,
+# serper-axi-install, secrets-sync, etc.) live in the separate
+# jeremysball/mise-en-system repo, not in this file's [tasks] table -- this
+# config is loaded globally by mise (required so [tools] lands on PATH from
+# any directory), and a global [tasks] table would leak into every other
+# project's `mise tasks`. Run them with `mise-sys <task>` (a fish function
+# wrapping `mise -C ~/projects/mise-en-system run <task>`) or `mise -C
+# ~/projects/mise-en-system run <task>` directly. For secret updates use
+# `mise-sys secrets-sync` (pulls both repos and re-links), not re-running
+# `secrets-install` which only clones.
 
 [tools]
 # core CLI, referenced by fish abbrs and aliases
@@ -62,169 +73,18 @@ cowsay = "latest"
 # platform-arch asset names without any custom tooling.
 "github:jeremysball/catbow" = "latest"
 
-[tasks.serper-axi-install]
-description = "Clone (or pull) jeremysball/serper-axi and install its CLI globally. Not published to npm, so this is the only install path. Idempotent: re-running pulls latest and reinstalls."
-run = '''
-#!/usr/bin/env bash
-set -euo pipefail
-
-REPO_DIR="$HOME/projects/serper-axi"
-
-mkdir -p "$HOME/projects"
-
-if [ -d "$REPO_DIR" ]; then
-    echo "serper-axi-install: $REPO_DIR already exists, pulling latest"
-    git -C "$REPO_DIR" pull
-else
-    git clone https://github.com/jeremysball/serper-axi.git "$REPO_DIR"
-fi
-
-cd "$REPO_DIR"
-npm install
-npm run build
-npm install -g .
-
-echo "serper-axi-install: done. Export SERPER_API_KEY before running serper-axi."
-'''
-
-[tasks.secrets-install]
-description = "Clone jeremysball/secret-management (scripts) and jeremysball/password-store (encrypted data) if missing, then run secret-management's installer. Idempotent: skips any clone whose target dir already exists."
-run = '''
-#!/usr/bin/env bash
-set -euo pipefail
-
-SCRIPTS_DIR="$HOME/projects/secret-management"
-STORE_DIR="$HOME/.password-store"
-
-mkdir -p "$HOME/projects"
-
-if [ -d "$SCRIPTS_DIR" ]; then
-    echo "secrets-install: $SCRIPTS_DIR already exists, skipping clone"
-else
-    git clone https://github.com/jeremysball/secret-management.git "$SCRIPTS_DIR"
-fi
-
-if [ -d "$STORE_DIR" ]; then
-    echo "secrets-install: $STORE_DIR already exists, skipping clone"
-else
-    git clone https://github.com/jeremysball/password-store.git "$STORE_DIR"
-fi
-
-bash "$SCRIPTS_DIR/install.sh"
-
-echo "secrets-install: done. Run 'secrets-unlock' from a real terminal to decrypt secrets for this session."
-'''
-
-[tasks.bifrost-install]
-description = "Install the Bifrost LLM gateway (multi-provider OpenAI-compatible proxy) and enable its systemd user service. Idempotent: reinstalling the npm package and re-enabling an already-enabled unit are both no-ops. Requires 'mise bootstrap dotfiles apply' to already have placed ~/.config/systemd/user/bifrost.service and ~/.local/state/bifrost/config.json, and requires secrets-install + secrets-unlock to have decrypted ~/run/user/1000/secrets/global.env first."
-run = '''
-#!/usr/bin/env bash
-set -euo pipefail
-
-# Pinned to match BIFROST_TRANSPORT_VERSION in the service unit -- bump both
-# together, never let npm silently pull a newer package against an older
-# pinned Go transport binary.
-npm install -g @maximhq/bifrost@1.6.3
-
-GLOBAL_ENV="/run/user/1000/secrets/global.env"
-ENV_DIR="$HOME/.config/bifrost"
-ENV_FILE="$ENV_DIR/env"
-
-if [ ! -f "$GLOBAL_ENV" ]; then
-    echo "bifrost-install: $GLOBAL_ENV not found. Run 'mise run secrets-install' then 'secrets-unlock' first." >&2
-    exit 1
-fi
-
-mkdir -p "$ENV_DIR"
-chmod 700 "$ENV_DIR"
-grep -E '^(META_MODEL_API_KEY|KIMI_API_KEY|ZAI_API_KEY|MINIMAX_API_KEY|CHEAPESTINFERENCE_API_KEY|OPENROUTER_API_KEY)=' "$GLOBAL_ENV" > "$ENV_FILE"
-chmod 600 "$ENV_FILE"
-
-systemctl --user daemon-reload
-systemctl --user enable --now bifrost.service
-
-echo "bifrost-install: done. Gateway listening on http://127.0.0.1:3447/v1/chat/completions. Manage with: systemctl --user {status,restart,stop} bifrost.service"
-'''
-
-[tasks.emacs-install]
-description = "GNU Emacs from Arch's repos; the runtime Doom Emacs builds on"
-run = "sudo pacman -S --needed emacs"
-
-[tasks.doom-emacs-install]
-description = "Clone Doom Emacs source into ~/.config/emacs and run its official installer"
-run = "git clone https://github.com/doomemacs/doomemacs ~/.config/emacs && ~/.config/emacs/bin/doom install"
-
-[tasks.doom-emacs-extras]
-description = "System packages Doom Emacs needs that mise has no backend for (fonts, TeX Live groups, non-registry CLIs, spell checker)"
-# ispell backs Doom's :checkers spell module. Arch ships it in extra, so it
-# rides the same pacman line as the rest rather than pulling in brew.
-run = "sudo pacman -S --needed ttf-nerd-fonts-symbols-mono discount texlive-plaingeneric ispell"
-
-[tasks.monolisa-nerd-font-patch]
-description = "Refresh ~/.local/share/fonts/MonoLisaNerdFontMono-Regular.otf with the current Nerd Fonts icon set"
-# The tracked .otf started as mhartington/dotfiles' pre-patched MonoLisa
-# Nerd Font (github.com/mhartington/dotfiles, config/fonts/MonoLisa/) --
-# last updated there in Feb 2021, five years stale against nerd-fonts'
-# active release cadence (v3.5.0 as of this writing). No unpatched MonoLisa
-# source is available for free (it's a commercial font from monolisa.dev,
-# not owned on this machine), so this re-patches ON TOP of that file with
-# --careful (add only what's missing, never touch existing glyphs) rather
-# than starting clean. That doubles the family name in font-patcher's own
-# output ("MonoLisaNerdFontCompleteMono Nerd Font Mono"), so the last step
-# rewrites the name table back to a clean "MonoLisa Nerd Font Mono".
-run = '''
-#!/usr/bin/env bash
-set -euo pipefail
-
-WORK="$HOME/projects/font-patching"
-
-# The base snapshot is a fixed, immutable reference point (mhartington's
-# 2021 patch) -- caching it is correct, re-downloading it never gets
-# "fresher". FontPatcher is the opposite: it's the whole reason this task
-# exists to be re-run, so it's always re-fetched, never cached, or a second
-# run would silently keep patching with whatever nerd-fonts release was
-# current the first time this task ever ran.
-if [ ! -f "$WORK/MonoLisa-Regular-NF-source.otf" ]; then
-    curl -fsSL -o "$WORK/MonoLisa-Regular-NF-source.otf" \
-        "https://raw.githubusercontent.com/mhartington/dotfiles/refs/heads/main/config/fonts/MonoLisa/MonoLisa%20Regular%20Nerd%20Font%20Complete%20Mono.otf"
-fi
-
-rm -rf "$WORK/FontPatcher" "$WORK/patched"
-mkdir -p "$WORK/patched"
-LATEST_URL=$(curl -s https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest \
-    | jq -r '.assets[] | select(.name == "FontPatcher.zip") | .browser_download_url')
-curl -fsSL -o "$WORK/FontPatcher.zip" "$LATEST_URL"
-unzip -q -o "$WORK/FontPatcher.zip" -d "$WORK/FontPatcher"
-
-fontforge -script "$WORK/FontPatcher/font-patcher" --complete --careful --mono \
-    --outputdir "$WORK/patched" "$WORK/MonoLisa-Regular-NF-source.otf"
-
-PATCHED=$(fd -e otf . "$WORK/patched" | head -1)
-
-cat > "$WORK/fix-name.pe" <<'PE'
-Open($1)
-SetTTFName(0x409, 1, "MonoLisa Nerd Font Mono")
-SetTTFName(0x409, 2, "Regular")
-SetTTFName(0x409, 4, "MonoLisa Nerd Font Mono")
-SetTTFName(0x409, 6, "MonoLisaNerdFontMono-Regular")
-SetTTFName(0x409, 16, "MonoLisa Nerd Font Mono")
-SetTTFName(0x409, 17, "Regular")
-SetFontOrder(2)
-Generate($2)
-PE
-
-fontforge -script "$WORK/fix-name.pe" "$PATCHED" \
-    "$HOME/.local/share/fonts/MonoLisaNerdFontMono-Regular.otf"
-
-fc-cache -f "$HOME/.local/share/fonts"
-
-echo "monolisa-nerd-font-patch: done. Copy $HOME/.local/share/fonts/MonoLisaNerdFontMono-Regular.otf into this repo's .local/share/fonts/ and commit it to actually update the tracked dotfile."
-'''
-
 [settings]
 # Read .nvmrc / .python-version / .go-version in repos that never heard of mise
 idiomatic_version_file_enable_tools = ["node", "python", "go"]
 experimental = true
+
+# The mise-en-system repo (see the [tasks] header comment above). Declaring
+# it here lets `mise bootstrap repos apply` clone/converge it instead of
+# init.sh hand-rolling clone-or-pull: mise clones it if missing and pulls
+# only when the checkout is clean and origin matches, leaving a dirty or
+# diverged checkout alone rather than failing the whole bootstrap.
+[bootstrap.repos]
+"~/projects/mise-en-system" = { url = "https://github.com/jeremysball/mise-en-system.git" }
 
 # Every file this repo manages, symlinked from ~/.dotfiles (the default
 # dotfiles.root) into place by `mise bootstrap dotfiles apply`. Every entry
@@ -297,7 +157,7 @@ experimental = true
 
 # fonts. MonoLisaNerdFontMono-Regular.otf is the patched terminal/editor font
 # itself, not a fontconfig setting -- reproduce or refresh it via
-# `mise run monolisa-nerd-font-patch`.
+# `mise-sys monolisa-nerd-font-patch`.
 "~/.config/fontconfig/fonts.conf" = {}
 "~/.local/share/fonts/MonoLisaNerdFontMono-Regular.otf" = {}
 
@@ -361,8 +221,8 @@ experimental = true
 # bifrost -- config.json only. The unit is tracked above alongside
 # bifrost.service. Lives under ~/.local/state because the app also writes
 # its own sqlite state/log databases into the same directory; the env file
-# with the actual provider keys is never tracked here, see 'bifrost-install'
-# above, which regenerates it from global.env.
+# with the actual provider keys is never tracked here, regenerate it via
+# `mise-sys bifrost-install`, which pulls from global.env.
 "~/.local/state/bifrost/config.json" = {}
 
 # herdr -- config.toml only. herdr-client.log, herdr-server.log,

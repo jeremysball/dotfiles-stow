@@ -19,7 +19,19 @@ exec fish
 ```
 
 `init.sh` runs `mise bootstrap dotfiles apply` (creates the symlinks) and
-then `mise install` (pulls down the tools).
+then `mise install` (pulls down the tools). It also clones the separate
+[jeremysball/mise-en-system](https://github.com/jeremysball/mise-en-system)
+repo to `~/projects/mise-en-system` and runs its install tasks
+(`secrets-install`, `dotclaude-install`, `serper-axi-install`). Those tasks
+live there instead of in this repo's own `.config/mise/config.toml` because
+that file is loaded globally (needed for `[tools]` to land on `PATH` from
+any directory), and a global `[tasks]` table would leak into every other
+project's `mise tasks` output. Run any of them again later with
+`mise-sys <task>`, a fish function wrapping `mise -C ~/projects/mise-en-system
+run <task>`. For secret updates after the first install, use
+`mise-sys secrets-sync` (pulls both `secret-management` and `password-store`
+and re-links) -- re-running `secrets-install` only clones when missing and
+will not pick up new secrets.
 
 `~/.dotfiles` is not an arbitrary choice: it is `dotfiles.root`'s default, the
 setting mise consults to find where dotfile sources live. `init.sh` also
@@ -141,6 +153,19 @@ straight into `$HOME` rather than through mise's dotfiles:
   every new shell, so it no longer matters whether the shell was opened under
   a particular directory.
 
+Updating secrets after the initial `secrets-install`:
+
+```fish
+mise-sys secrets-sync   # pulls secret-management + password-store, re-links, adopts new pass entries
+secrets-unlock          # if global/env changed, refreshes $XDG_RUNTIME_DIR/secrets/global.env (needs TTY)
+```
+
+Re-running `mise-sys secrets-install` will not pull updates -- it only clones
+when the target directory is missing. `secrets-sync` is the update path:
+`--ff-only` pulls for both repos, `install.sh` re-links any changed scripts,
+and any new `pass` entries under `ssh/authorized_keys/*` or `ssh/shared.pub`
+are adopted into `~/.ssh/authorized_keys` automatically.
+
 What this repo does contain is the consumer side: `fish_greeting`
 (`.config/fish/functions/fish_greeting.fish`) checks whether `global.env`
 exists and nags `secrets are locked! run secrets-unlock` if not, instead of a
@@ -151,6 +176,60 @@ fortune. Two narrower cases don't go through `pass show global/env` at all:
   excluded like the other credential-holding configs above.
 - `gh`'s `hosts.yml` holds OAuth tokens directly, not via `pass`, and stays
   gitignored rather than routed through the global-secrets flow.
+
+### SSH public keys in pass and tailnet trust
+
+SSH pubkeys can live alongside secrets in the same encrypted store -- they are
+not secret, but putting them in `pass` makes distribution explicit and
+versioned rather than a manual `ssh-copy-id` per host.
+
+Recommended layout (fits the existing `global/env` single-blob pattern -- one
+entry per pubkey, not one blob):
+
+- Per-host: `ssh/authorized_keys/<hostname>` -- each entry's content is one line,
+  e.g. `ssh-ed25519 AAA... jeremy@<host>` (what `cat ~/.ssh/id_ed25519.pub` prints).
+- Optional shared key: `ssh/shared` (private, multiline) + `ssh/shared.pub` (one
+  line). A single shared key is the simplest way to make every tailnet host trust
+  every other, but its blast radius is total: leaking one host leaks the key for
+  all. Per-host keys (or per-person keys) are more idiomatic and only slightly more
+  work.
+
+Distribution is handled by `secrets-sync`: after `pass git pull`, it rebuilds
+`~/.ssh/authorized_keys` from every entry under `ssh/authorized_keys/*` (deduped)
+and ensures `ssh/shared.pub` is present if you use the shared-key pattern. So
+adding a host is `pass insert -m ssh/authorized_keys/<new-host>` on one machine,
+`pass git push`, then `mise-sys secrets-sync` on the others -- no `authorized_keys`
+hand-editing.
+
+More idiomatic alternatives if you don't want to manage keys at all:
+
+- **Tailscale SSH** (`tailscale set --ssh=true` + an ACL rule without `check`).
+  When `RunSSH` is true, tailscaled itself is the SSH server and auth is via
+  tailnet identity, not `authorized_keys`. Your current ACL uses
+  `holdAndDelegate` (check mode), which is why you have to re-authenticate in a
+  browser often -- every SSH is delegated to the control plane for approval.
+  Switching the ACL to a plain `accept` (no `check` key) makes it hands-free:
+
+  ```json
+  {"action": "accept", "src": ["autogroup:members"], "dst": ["autogroup:self"], "users": ["autogroup:nonroot", "root"]}
+  ```
+
+  Then `tailscale set --ssh=true` on each host and `tailscale up --ssh` persists.
+  For fully headless hosts (containers, servers that can't do browser login),
+  bring them up once with a reusable auth key (`tailscale up --authkey=tskey-... --ssh`)
+  or an OAuth client, and disable key expiry (`tailscale set --key-expiry=0` or
+  set the key to not expire at creation). That removes the frequent re-auth you
+  are seeing while keeping Tailscale's identity-based auth.
+
+- **SSH certificates (CA)** -- heavier, but the most principled for many hosts.
+  One CA signs short-lived host/user certs; no `authorized_keys` distribution.
+  Overkill for a personal tailnet unless you enjoy the setup.
+
+For a personal tailnet where you control all nodes, either the single shared
+key in `pass` (simplest) or Tailscale SSH without `check` (no keys to rotate)
+are both reasonable. The `pass`-backed `authorized_keys` path above keeps
+plain `ssh` working even when tailscaled is down, while Tailscale SSH keeps
+auth in the control plane and works even if you lose a key.
 
 ## fish
 
@@ -241,7 +320,8 @@ set environment variables on you the moment you cd into it.
 Doom Emacs config: `config.el`, `init.el`, `packages.el`. Doom keeps user
 config in `~/.config/doom` and the framework itself in `~/.config/emacs`,
 which is a clone of doomemacs and is not tracked here. On a fresh machine,
-install Doom first, then run `mise bootstrap dotfiles apply --force
+install Doom first with `mise-sys doom-emacs-install` (see "Setting up a
+fresh machine" above), then run `mise bootstrap dotfiles apply --force
 ~/.config/doom/config.el ~/.config/doom/init.el ~/.config/doom/packages.el`
 to overwrite the starter template Doom's installer just generated with the
 tracked, customized versions. `--force` is required here specifically:
