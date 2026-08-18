@@ -22,7 +22,7 @@ exec fish
 then `mise install` (pulls down the tools). It also clones the separate
 [jeremysball/mise-en-system](https://github.com/jeremysball/mise-en-system)
 repo to `~/projects/mise-en-system` and runs its install tasks
-(`secrets-install`, `dotclaude-install`, `serper-axi-install`). Those tasks
+(`install-secrets`, `install-dotclaude`, `install-serper-axi`). Those tasks
 live there instead of in this repo's own `.config/mise/config.toml` because
 that file is loaded globally (needed for `[tools]` to land on `PATH` from
 any directory), and a global `[tasks]` table would leak into every other
@@ -30,7 +30,7 @@ project's `mise tasks` output. Run any of them again later with
 `mise-sys <task>`, a fish function wrapping `mise -C ~/projects/mise-en-system
 run <task>`. For secret updates after the first install, use
 `mise-sys secrets-sync` (pulls both `secret-management` and `password-store`
-and re-links) -- re-running `secrets-install` only clones when missing and
+and re-links) -- re-running `install-secrets` only clones when missing and
 will not pick up new secrets.
 
 `~/.dotfiles` is not an arbitrary choice: it is `dotfiles.root`'s default, the
@@ -153,14 +153,14 @@ straight into `$HOME` rather than through mise's dotfiles:
   every new shell, so it no longer matters whether the shell was opened under
   a particular directory.
 
-Updating secrets after the initial `secrets-install`:
+Updating secrets after the initial `install-secrets`:
 
 ```fish
 mise-sys secrets-sync   # pulls secret-management + password-store, re-links, adopts new pass entries
 secrets-unlock          # if global/env changed, refreshes $XDG_RUNTIME_DIR/secrets/global.env (needs TTY)
 ```
 
-Re-running `mise-sys secrets-install` will not pull updates -- it only clones
+Re-running `mise-sys install-secrets` will not pull updates -- it only clones
 when the target directory is missing. `secrets-sync` is the update path:
 `--ff-only` pulls for both repos, `install.sh` re-links any changed scripts,
 and any new `pass` entries are adopted automatically: `ssh/shared` (private)
@@ -215,7 +215,7 @@ New host with the shared key (hands-free after first unlock):
 
 ```fish
 git clone https://github.com/jeremysball/dotfiles ~/.dotfiles; cd ~/.dotfiles; ./init.sh
-# init.sh clones mise-en-system and runs secrets-install (clones password-store)
+# init.sh clones mise-en-system and runs install-secrets (clones password-store)
 mise-sys secrets-sync  # pulls ssh/shared + ssh/shared.pub, writes ~/.ssh/id_ed25519 (600) + authorized_keys (600)
 secrets-unlock         # one pinentry prompt if global/env changed, then exec fish
 ssh coding-workspace   # no ssh-copy-id needed
@@ -340,7 +340,7 @@ set environment variables on you the moment you cd into it.
 Doom Emacs config: `config.el`, `init.el`, `packages.el`. Doom keeps user
 config in `~/.config/doom` and the framework itself in `~/.config/emacs`,
 which is a clone of doomemacs and is not tracked here. On a fresh machine,
-install Doom first with `mise-sys doom-emacs-install` (see "Setting up a
+install Doom first with `mise-sys install-doom-emacs` (see "Setting up a
 fresh machine" above), then run `mise bootstrap dotfiles apply --force
 ~/.config/doom/config.el ~/.config/doom/init.el ~/.config/doom/packages.el`
 to overwrite the starter template Doom's installer just generated with the
