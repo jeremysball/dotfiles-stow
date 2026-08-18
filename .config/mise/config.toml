@@ -16,8 +16,8 @@
 #     a non-registry CLI, a spell checker). Reproduce via `mise-sys
 #     doom-emacs-extras`.
 #
-# Install/bootstrap tasks (secrets-install, dotclaude-install,
-# serper-axi-install, secrets-sync, etc.) live in the separate
+# Install/bootstrap tasks (install-secrets, install-dotclaude,
+# install-serper-axi, secrets-sync, etc.) live in the separate
 # jeremysball/mise-en-system repo, not in this file's [tasks] table -- this
 # config is loaded globally by mise (required so [tools] lands on PATH from
 # any directory), and a global [tasks] table would leak into every other
@@ -25,7 +25,7 @@
 # wrapping `mise -C ~/projects/mise-en-system run <task>`) or `mise -C
 # ~/projects/mise-en-system run <task>` directly. For secret updates use
 # `mise-sys secrets-sync` (pulls both repos and re-links), not re-running
-# `secrets-install` which only clones.
+# `install-secrets` which only clones.
 
 [tools]
 # core CLI, referenced by fish abbrs and aliases
@@ -229,7 +229,7 @@ experimental = true
 # bifrost.service. Lives under ~/.local/state because the app also writes
 # its own sqlite state/log databases into the same directory; the env file
 # with the actual provider keys is never tracked here, regenerate it via
-# `mise-sys bifrost-install`, which pulls from global.env.
+# `mise-sys install-bifrost`, which pulls from global.env.
 "~/.local/state/bifrost/config.json" = {}
 
 # herdr -- config.toml only. herdr-client.log, herdr-server.log,
