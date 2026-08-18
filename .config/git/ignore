@@ -20,7 +20,9 @@ Desktop.ini
 # Agent-tool state (Claude Code, superpowers, taskferry, playwright-mcp, pi)
 **/.claude/settings.local.json
 **/.claude/worktrees/
-**/.superpowers/*
+# .superpowers/ is tracked in full — plans, specs, and SDD scratch state are
+# part of a repo's record, not agent noise. A repo that genuinely needs one
+# path in there untracked re-ignores that exact path in its own .gitignore.
 **/.worktrees/
 **/.playwright-mcp/
 **/.pi/
