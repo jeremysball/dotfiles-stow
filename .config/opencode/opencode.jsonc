@@ -288,6 +288,76 @@
               "type": "enabled"
             }
           }
+        },
+        // Roster expanded 2026-08-18 per the official supported-models table
+        // (alibabacloud.com/help/en/model-studio/token-plan-team-overview —
+        // "models must match character-by-character; any difference in
+        // version or sub-model means the model is not supported"). The
+        // provider's own model IDs carry no date suffix — a prior standing
+        // rule in choosing-a-model's working-report.md pointed dispatches at
+        // `deepseek-v4-pro-0813`/`deepseek-v4-flash-0731`, neither of which
+        // exists here or on the live API; every dispatch to those IDs
+        // crashed `opencode_unknownerror` (reproduced live 2026-08-18,
+        // tasks oc_msz6lgka_8affb193 / oc_msz6lh7m_0fdfb118).
+        "deepseek-v4-pro": {
+          "name": "DeepSeek V4 Pro (Token Plan, SG)",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 131072 }
+        },
+        "deepseek-v4-flash": {
+          "name": "DeepSeek V4 Flash (Token Plan, SG)",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 131072 }
+        },
+        "deepseek-v3.2": {
+          "name": "DeepSeek V3.2 (Token Plan, SG)",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 131072 }
+        },
+        "kimi-k2.7-code": {
+          "name": "Kimi K2.7 Code (Token Plan, SG)",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 131072 }
+        },
+        "kimi-k2.6": {
+          "name": "Kimi K2.6 (Token Plan, SG)",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 131072 }
+        },
+        "kimi-k2.5": {
+          "name": "Kimi K2.5 (Token Plan, SG)",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 131072 }
+        },
+        "glm-5.2": {
+          "name": "GLM 5.2 (Token Plan, SG)",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 131072 }
+        },
+        "glm-5.1": {
+          "name": "GLM 5.1 (Token Plan, SG)",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 131072 }
+        },
+        "glm-5": {
+          "name": "GLM 5 (Token Plan, SG)",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 131072 }
+        },
+        "MiniMax-M2.5": {
+          "name": "MiniMax M2.5 (Token Plan, SG)",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 131072 }
         }
       }
     },
