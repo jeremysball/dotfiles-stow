@@ -23,7 +23,7 @@
       "name": "Meta",
       "options": {
         "baseURL": "https://api.meta.ai/v1",
-        "apiKey": "{file:/home/jeremy/.config/opencode/meta-api-key}"
+        "apiKey": "{env:META_MODEL_API_KEY}"
       },
       "models": {
         "muse-spark-1.1": {

@@ -97,13 +97,12 @@
 
   "provider": {
     "meta": {
-      // Meta Muse Spark — kept around as a non-subscription fallback.
-      //   key file: ~/.config/opencode/meta-api-key
+      // Meta Muse Spark — now via env like all others (was file: ~/.config/opencode/meta-api-key, removed 2026-08-18 per Sir).
       "npm": "@ai-sdk/openai",
       "name": "Meta",
       "options": {
         "baseURL": "https://api.meta.ai/v1",
-        "apiKey": "{file:/home/jeremy/.config/opencode/meta-api-key}"
+        "apiKey": "{env:META_MODEL_API_KEY}"
       },
       "models": {
         "muse-spark-1.1": {
