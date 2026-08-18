@@ -1,0 +1,18 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "permission": {
+    "*": {
+      "*": "allow"
+    },
+    "bash": "allow",
+    "external_directory": {
+      "/tmp/*": "allow",
+      "/home/jeremy/.config/mise/*": "allow",
+      "/home/jeremy/.config/fish/*": "allow",
+      "/home/jeremy/.config/fish/functions/*": "allow"
+    }
+  },
+  "skills": {
+    "paths": ["~/.claude/skills"]
+  }
+}
