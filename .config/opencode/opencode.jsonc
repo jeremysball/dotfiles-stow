@@ -288,6 +288,112 @@
               "type": "enabled"
             }
           }
+        },
+        // Roster expanded 2026-08-18 per the official supported-models table
+        // (alibabacloud.com/help/en/model-studio/token-plan-team-overview and
+        // the DeepSeek model page, help.aliyun.com/en/model-studio/deepseek-api
+        // — "models must match character-by-character; any difference in
+        // version or sub-model means the model is not supported"). The
+        // provider's own docs list both a bare alias (`deepseek-v4-pro`,
+        // `deepseek-v4-flash`, which floats to the current default snapshot)
+        // and pinned dated snapshots (`deepseek-v4-pro-0813`,
+        // `deepseek-v4-flash-0731`) as distinct valid IDs. Registered here as
+        // the pinned dated snapshots, per user directive, matching this
+        // repo's general "pin exact versions" convention rather than a
+        // floating alias. This block previously had no DeepSeek entry at
+        // all (bare or dated) — that omission, not the ID's date suffix, is
+        // what crashed every dispatch to `deepseek-v4-pro-0813`/
+        // `deepseek-v4-flash-0731` with `opencode_unknownerror` (reproduced
+        // live 2026-08-18, tasks oc_msz6lgka_8affb193 / oc_msz6lh7m_0fdfb118).
+        "deepseek-v4-pro-0813": {
+          "name": "DeepSeek V4 Pro 0813 (Token Plan, SG)",
+          "limit": { "context": 200000, "output": 131072 },
+          "options": {
+            "thinking": {
+              "type": "enabled"
+            }
+          }
+        },
+        "deepseek-v4-flash-0731": {
+          "name": "DeepSeek V4 Flash 0731 (Token Plan, SG)",
+          "limit": { "context": 200000, "output": 131072 },
+          "options": {
+            "thinking": {
+              "type": "enabled"
+            }
+          }
+        },
+        "deepseek-v3.2": {
+          "name": "DeepSeek V3.2 (Token Plan, SG)",
+          "limit": { "context": 200000, "output": 131072 },
+          "options": {
+            "thinking": {
+              "type": "enabled"
+            }
+          }
+        },
+        "kimi-k2.7-code": {
+          "name": "Kimi K2.7 Code (Token Plan, SG)",
+          "limit": { "context": 200000, "output": 131072 },
+          "options": {
+            "thinking": {
+              "type": "enabled"
+            }
+          }
+        },
+        "kimi-k2.6": {
+          "name": "Kimi K2.6 (Token Plan, SG)",
+          "limit": { "context": 200000, "output": 131072 },
+          "options": {
+            "thinking": {
+              "type": "enabled"
+            }
+          }
+        },
+        "kimi-k2.5": {
+          "name": "Kimi K2.5 (Token Plan, SG)",
+          "limit": { "context": 200000, "output": 131072 },
+          "options": {
+            "thinking": {
+              "type": "enabled"
+            }
+          }
+        },
+        "glm-5.2": {
+          "name": "GLM 5.2 (Token Plan, SG)",
+          "limit": { "context": 200000, "output": 131072 },
+          "options": {
+            "thinking": {
+              "type": "enabled"
+            }
+          }
+        },
+        "glm-5.1": {
+          "name": "GLM 5.1 (Token Plan, SG)",
+          "limit": { "context": 200000, "output": 131072 },
+          "options": {
+            "thinking": {
+              "type": "enabled"
+            }
+          }
+        },
+        "glm-5": {
+          "name": "GLM 5 (Token Plan, SG)",
+          "limit": { "context": 200000, "output": 131072 },
+          "options": {
+            "thinking": {
+              "type": "enabled"
+            }
+          }
+        },
+        "MiniMax-M2.5": {
+          "name": "MiniMax M2.5 (Token Plan, SG)",
+          "limit": { "context": 200000, "output": 131072 },
+          "options": {
+            "thinking": {
+              "type": "enabled"
+            }
+          }
         }
       }
     },
