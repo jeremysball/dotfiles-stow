@@ -68,10 +68,12 @@ carapace = "latest"
 
 # fun
 cowsay = "latest"
-# catbow's v1.0.1 release ships cb-v1.0.1-linux-amd64.tar.gz and
-# cb-v1.0.1-windows-amd64.zip, so the github: backend can match
-# platform-arch asset names without any custom tooling.
-"github:jeremysball/catbow" = "latest"
+# catbow — installed from source via go: backend so the binary is `catbow`
+# (the github release asset is `cb-v1.0.1-linux-amd64.tar.gz` containing a
+# binary named `cb`, not `catbow`, so the github backend installs `cb` and
+# `mise which catbow` fails with "No executable found"). Using go: builds
+# from github.com/jeremysball/catbow and produces the correct `catbow` name.
+"go:github.com/jeremysball/catbow" = "latest"
 
 [settings]
 # Read .nvmrc / .python-version / .go-version in repos that never heard of mise
