@@ -1,7 +1,15 @@
 {
   "summaryModel": "opencode/mimo-v2.5-free",
   "defaultExecutor": "opencode",
-  "maxConcurrentTasks": 16,
+  "maxConcurrentTasks": 32,
   "postOutputNoOutputTimeoutMs": 900000,
-  "envFile": "/run/user/1000/secrets/global.env"
+  "envFile": "/run/user/1000/secrets/global.env",
+  "profilingEnabled": true,
+  "providerLimits": {
+    "cheapestinference": { "maxConcurrentTasks": 1 },
+    "ollama": { "maxConcurrentTasks": 3 },
+    "minimax": { "maxConcurrentTasks": 4 },
+    "opencode": { "maxConcurrentTasks": 3 },
+    "alibaba-tknplan": { "maxConcurrentTasks": 2 }
+  }
 }
