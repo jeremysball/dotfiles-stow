@@ -60,4 +60,9 @@ function fish_greeting
     else
         printf "%s" $msg
     end
+    # Trailing newline: none of the printf calls above emit one, so without
+    # this the first prompt line lands glued to the greeting's last line
+    # (seen on WSL; other terminals happened to paper over it). fish_greeting
+    # is expected to end the terminal on its own line, same as `echo` would.
+    echo
 end
