@@ -251,3 +251,6 @@ experimental = true
 "~/.config/opencode/agents/notools-terra.md" = {}
 "~/.config/opencode/plugins/herdr-agent-state.js" = {}
 
+# kilo -- its own kilo.jsonc exposes claude-code plugin skills via skills.paths
+"~/.config/kilo/kilo.jsonc" = {}
+
