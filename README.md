@@ -163,8 +163,10 @@ secrets-unlock          # if global/env changed, refreshes $XDG_RUNTIME_DIR/secr
 Re-running `mise-sys secrets-install` will not pull updates -- it only clones
 when the target directory is missing. `secrets-sync` is the update path:
 `--ff-only` pulls for both repos, `install.sh` re-links any changed scripts,
-and any new `pass` entries under `ssh/authorized_keys/*` or `ssh/shared.pub`
-are adopted into `~/.ssh/authorized_keys` automatically.
+and any new `pass` entries are adopted automatically: `ssh/shared` (private)
+to `~/.ssh/id_ed25519` (`600`) + `ssh/shared.pub` to `~/.ssh/id_ed25519.pub`
+(`644`) and `~/.ssh/authorized_keys` (`600`), and every entry under
+`ssh/authorized_keys/*` (one pubkey line each) rebuilt into `authorized_keys`.
 
 What this repo does contain is the consumer side: `fish_greeting`
 (`.config/fish/functions/fish_greeting.fish`) checks whether `global.env`
@@ -177,29 +179,47 @@ fortune. Two narrower cases don't go through `pass show global/env` at all:
 - `gh`'s `hosts.yml` holds OAuth tokens directly, not via `pass`, and stays
   gitignored rather than routed through the global-secrets flow.
 
-### SSH public keys in pass and tailnet trust
+### SSH keys in pass and tailnet trust
 
 SSH pubkeys can live alongside secrets in the same encrypted store -- they are
 not secret, but putting them in `pass` makes distribution explicit and
 versioned rather than a manual `ssh-copy-id` per host.
 
-Recommended layout (fits the existing `global/env` single-blob pattern -- one
-entry per pubkey, not one blob):
+**Current choice: single shared key in `pass` (`ssh/shared` + `ssh/shared.pub`).**
+This host (`coding-workspace`) was the source: its `~/.ssh/id_ed25519`
+(`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA+M...` at `~/.ssh/id_ed25519.pub:1`) was
+stored as two `pass` entries via `pass insert -m ssh/shared < ~/.ssh/id_ed25519`
+and `pass insert -m ssh/shared.pub < ~/.ssh/id_ed25519.pub`, committed and
+pushed to `jeremysball/password-store` (`ssh/shared.gpg:1`, `ssh/shared.pub.gpg:1`).
+`secrets-sync` now distributes both halves: private to `~/.ssh/id_ed25519`
+(`600`, backed up as `~/.ssh/id_ed25519.bak.<epoch>` if it differs) and pub to
+`~/.ssh/id_ed25519.pub` (`644`) and appended to `~/.ssh/authorized_keys`
+(`600`) if missing, so every tailnet host can `ssh` every other without per-host
+`authorized_keys` editing. Blast radius is total -- leaking one host leaks the
+key for all -- which is acceptable for a single-user private tailnet where the
+WireGuard layer already trusts every node. For multi-user or audit, prefer the
+per-host pattern below.
 
-- Per-host: `ssh/authorized_keys/<hostname>` -- each entry's content is one line,
-  e.g. `ssh-ed25519 AAA... jeremy@<host>` (what `cat ~/.ssh/id_ed25519.pub` prints).
-- Optional shared key: `ssh/shared` (private, multiline) + `ssh/shared.pub` (one
-  line). A single shared key is the simplest way to make every tailnet host trust
-  every other, but its blast radius is total: leaking one host leaks the key for
-  all. Per-host keys (or per-person keys) are more idiomatic and only slightly more
-  work.
+Supported layout (one entry per pubkey, not one big blob):
 
-Distribution is handled by `secrets-sync`: after `pass git pull`, it rebuilds
-`~/.ssh/authorized_keys` from every entry under `ssh/authorized_keys/*` (deduped)
-and ensures `ssh/shared.pub` is present if you use the shared-key pattern. So
-adding a host is `pass insert -m ssh/authorized_keys/<new-host>` on one machine,
-`pass git push`, then `mise-sys secrets-sync` on the others -- no `authorized_keys`
-hand-editing.
+- **Shared (active):** `ssh/shared` (private, multiline) + `ssh/shared.pub` (one
+  line). `secrets-sync` handles both as above.
+- **Per-host (also supported):** `ssh/authorized_keys/<hostname>` -- each entry's
+  content is one line, e.g. `ssh-ed25519 AAA... jeremy@<host>` (what `cat
+  ~/.ssh/id_ed25519.pub` prints). After `pass git pull`, `secrets-sync` rebuilds
+  `~/.ssh/authorized_keys` from every entry under `ssh/authorized_keys/*`
+  (deduped). So adding a host is `pass insert -m ssh/authorized_keys/<new-host>`
+  on one machine, `pass git push`, then `mise-sys secrets-sync` on the others.
+
+New host with the shared key (hands-free after first unlock):
+
+```fish
+git clone https://github.com/jeremysball/dotfiles ~/.dotfiles; cd ~/.dotfiles; ./init.sh
+# init.sh clones mise-en-system and runs secrets-install (clones password-store)
+mise-sys secrets-sync  # pulls ssh/shared + ssh/shared.pub, writes ~/.ssh/id_ed25519 (600) + authorized_keys (600)
+secrets-unlock         # one pinentry prompt if global/env changed, then exec fish
+ssh coding-workspace   # no ssh-copy-id needed
+```
 
 More idiomatic alternatives if you don't want to manage keys at all:
 
