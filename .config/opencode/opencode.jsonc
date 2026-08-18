@@ -290,23 +290,29 @@
           }
         },
         // Roster expanded 2026-08-18 per the official supported-models table
-        // (alibabacloud.com/help/en/model-studio/token-plan-team-overview —
-        // "models must match character-by-character; any difference in
+        // (alibabacloud.com/help/en/model-studio/token-plan-team-overview and
+        // the DeepSeek model page, help.aliyun.com/en/model-studio/deepseek-api
+        // — "models must match character-by-character; any difference in
         // version or sub-model means the model is not supported"). The
-        // provider's own model IDs carry no date suffix — a prior standing
-        // rule in choosing-a-model's working-report.md pointed dispatches at
-        // `deepseek-v4-pro-0813`/`deepseek-v4-flash-0731`, neither of which
-        // exists here or on the live API; every dispatch to those IDs
-        // crashed `opencode_unknownerror` (reproduced live 2026-08-18,
-        // tasks oc_msz6lgka_8affb193 / oc_msz6lh7m_0fdfb118).
-        "deepseek-v4-pro": {
-          "name": "DeepSeek V4 Pro (Token Plan, SG)",
+        // provider's own docs list both a bare alias (`deepseek-v4-pro`,
+        // `deepseek-v4-flash`, which floats to the current default snapshot)
+        // and pinned dated snapshots (`deepseek-v4-pro-0813`,
+        // `deepseek-v4-flash-0731`) as distinct valid IDs. Registered here as
+        // the pinned dated snapshots, per user directive, matching this
+        // repo's general "pin exact versions" convention rather than a
+        // floating alias. This block previously had no DeepSeek entry at
+        // all (bare or dated) — that omission, not the ID's date suffix, is
+        // what crashed every dispatch to `deepseek-v4-pro-0813`/
+        // `deepseek-v4-flash-0731` with `opencode_unknownerror` (reproduced
+        // live 2026-08-18, tasks oc_msz6lgka_8affb193 / oc_msz6lh7m_0fdfb118).
+        "deepseek-v4-pro-0813": {
+          "name": "DeepSeek V4 Pro 0813 (Token Plan, SG)",
           "reasoning": true,
           "tool_call": true,
           "limit": { "context": 200000, "output": 131072 }
         },
-        "deepseek-v4-flash": {
-          "name": "DeepSeek V4 Flash (Token Plan, SG)",
+        "deepseek-v4-flash-0731": {
+          "name": "DeepSeek V4 Flash 0731 (Token Plan, SG)",
           "reasoning": true,
           "tool_call": true,
           "limit": { "context": 200000, "output": 131072 }
