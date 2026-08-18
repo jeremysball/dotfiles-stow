@@ -14,10 +14,8 @@ cd "$REPO_DIR"
 export MISE_DOTFILES_ROOT="$REPO_DIR"
 
 # Pretty output helpers — use gum (charmbracelet) when available, otherwise
-# plain echo. On a fresh machine gum is not yet installed until `mise install`
-# below, so every helper re-checks `command -v gum` at call time, not once at
-# startup. This keeps the first bootstrap readable without requiring gum ahead
-# of time.
+# plain echo. Helpers re-check `command -v gum` at call time so they work
+# even if gum appears mid-run (after we install it FIRST below).
 _has_gum() { command -v gum >/dev/null 2>&1; }
 _gum_style() {
     if _has_gum; then
@@ -45,8 +43,6 @@ _gum_spin() {
     fi
 }
 
-_gum_style "dotfiles bootstrap"
-
 # Ensure mise is available even on a truly fresh system where ~/.local/bin
 # is not yet on PATH and mise has never been installed. Check the absolute
 # location first so a reboot-fresh fish shell with a system-only PATH still
@@ -68,6 +64,20 @@ if ! command -v mise > /dev/null 2>&1; then
     _gum_log error "mise is still not installed after auto-install; install it manually, then re-run this script"
     exit 1
 fi
+
+# Install gum FIRST so even the first real step is pretty. On a fresh
+# machine gum is not yet on PATH until after `mise install`, but `gum` is
+# tiny (prebuilt binary, <10s) and defined in .config/mise/config.toml, so we
+# can pull it alone before the heavy `mise install` of everything else. If
+# this fails (no network), we fall back to plain echo for the rest.
+if ! _has_gum; then
+    printf '→ Installing gum for pretty output…\n' >&2
+    mise install gum 2>&1 | tail -n 5 || true
+    # mise shims may not be on PATH in this bash yet; add them explicitly
+    export PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:$PATH"
+fi
+
+_gum_style "dotfiles bootstrap"
 
 _gum_spin "Initializing submodules…" git submodule update --init --recursive
 
@@ -100,6 +110,15 @@ _gum_spin "Installing system tools…" mise -C "$MISE_SYSTEM_DIR" install
 # adding it here too -- mise has no "run every task" mode this could
 # iterate over instead.
 _gum_spin "Running bootstrap tasks (secrets/dotclaude/serper-axi)…" mise -C "$MISE_SYSTEM_DIR" run -j 1 install-secrets ::: install-dotclaude ::: install-serper-axi
+
+# Weekly mise auto-upgrade (bump script) — best-effort. On WSL without
+# systemd this is a no-op; on a real Arch host it enables the timer that was
+# just symlinked via `mise bootstrap dotfiles apply` above.
+if systemctl --user list-units >/dev/null 2>&1; then
+    _gum_spin "Enabling weekly mise upgrade timer…" bash -c 'systemctl --user daemon-reload && systemctl --user enable --now mise-upgrade.timer'
+else
+    _gum_log info "systemd user not running (WSL without systemd?) — skipping mise-upgrade.timer enable; enable manually with: systemctl --user enable --now mise-upgrade.timer"
+fi
 
 if _has_gum; then
     gum style --foreground 212 --bold "✔ done"

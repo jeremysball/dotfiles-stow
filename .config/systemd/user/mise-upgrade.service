@@ -1,0 +1,15 @@
+[Unit]
+Description=mise upgrade — keep all mise-managed tools at latest (respects ranges in mise.toml)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# Bump installed tools to latest within the range in mise.toml (`latest` → new latest).
+# Use `mise upgrade --bump` instead if you want to rewrite mise.toml versions to the newest majors.
+ExecStart=%h/.local/bin/mise upgrade
+# Also keep mise itself fresh (no-op if already latest)
+ExecStart=%h/.local/bin/mise self-update --yes
+
+[Install]
+WantedBy=default.target

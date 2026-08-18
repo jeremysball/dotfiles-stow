@@ -187,6 +187,8 @@ experimental = true
 "~/.config/systemd/user/bumblebee-nightly.service" = {}
 "~/.config/systemd/user/bumblebee-nightly.timer" = {}
 "~/.config/systemd/user/bifrost.service" = {}
+"~/.config/systemd/user/mise-upgrade.service" = {}
+"~/.config/systemd/user/mise-upgrade.timer" = {}
 
 # zellij, htop, superfile, himalaya, alfred, taskferry, mcporter
 "~/.config/alfred/config.toml" = {}
