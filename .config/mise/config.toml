@@ -66,7 +66,7 @@ usage = "latest"
 # hundreds of CLIs that don't ship their own
 carapace = "latest"
 
-# fun
+# fun — fortune feeds fish_greeting, cowsay/catbow decorate it
 cowsay = "latest"
 # catbow — installed from source via go: backend so the binary is `catbow`
 # (the github release asset is `cb-v1.0.1-linux-amd64.tar.gz` containing a
@@ -74,6 +74,11 @@ cowsay = "latest"
 # `mise which catbow` fails with "No executable found"). Using go: builds
 # from github.com/jeremysball/catbow and produces the correct `catbow` name.
 "go:github.com/jeremysball/catbow" = "latest"
+
+# AUR helper — not in Arch's official repos, so `sudo pacman -S yay` would
+# fail. Mise pulls the prebuilt binary from GitHub releases (Jguer/yay) with
+# no build step, matching how other prebuilt tools are managed here.
+"github:Jguer/yay" = "latest"
 
 [settings]
 # Read .nvmrc / .python-version / .go-version in repos that never heard of mise
