@@ -11,6 +11,13 @@
 # is not guarded the same way: if `fortune` is missing or `fortune -as`
 # returns empty, the greeting emits an explicit error (not "Welcome!") so a
 # broken install is visible — fix with `mise run install-fortune`.
+#
+# Multiline handling: fish splits `set msg (fortune -as)` into an array and
+# `echo $msg` re-joins with spaces, mangling cowsay's box (seen as stray 'w'
+# in the 2026-08-17 offensive-fortune report where `fortune | cowsay | catbow`
+# worked separately but the guarded `echo $msg | cowsay` did not). Use
+# `string collect` to keep fortune as one string with newlines and
+# `printf "%s"` to pipe without re-joining.
 function fish_greeting
     if set -q INSIDE_EMACS
         return
@@ -30,7 +37,7 @@ function fish_greeting
         set msg $text
     else
         if command -q fortune
-            set msg (fortune -as 2>/dev/null)
+            set msg (fortune -as 2>/dev/null | string collect)
             if test -z "$msg"
                 set msg "fish_greeting: fortune -as failed or returned empty — run 'mise run install-fortune' (or 'mise-sys install-fortune') to rebuild"
             end
@@ -41,16 +48,16 @@ function fish_greeting
 
     # cowsay layer (mise: npm:cowsay). If missing or failing, keep plain msg.
     if command -q cowsay
-        set -l _cowsay_out (echo $msg | cowsay -g 2>/dev/null)
+        set -l _cowsay_out (printf "%s" $msg | cowsay -g 2>/dev/null | string collect)
         if test $status -eq 0; and test -n "$_cowsay_out"
             set msg $_cowsay_out
         end
     end
 
-    # catbow layer (mise: github:jeremysball/catbow, fallback go/bin). Same guard.
+    # catbow layer (mise: go:github.com/jeremysball/catbow). Same guard.
     if command -q catbow
-        echo $msg | catbow -freq .2 -spread 2.3 2>/dev/null; or echo $msg
+        printf "%s" $msg | catbow -freq .2 -spread 2.3 2>/dev/null; or printf "%s" $msg
     else
-        echo $msg
+        printf "%s" $msg
     end
 end
