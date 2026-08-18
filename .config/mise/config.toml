@@ -55,6 +55,10 @@ uv     = "latest"
 # the aqua backend is named explicitly.
 "aqua:charmbracelet/mods" = "latest"
 
+# charmbracelet gum — beautiful shell scripts (gum style/spin/log) used by init.sh
+# when available; init.sh falls back to plain echo if not yet installed (fresh machine).
+gum = "latest"
+
 # haskell: manage the manager, not the toolchain
 ghcup = "latest"
 
