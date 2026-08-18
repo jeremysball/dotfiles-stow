@@ -14,5 +14,6 @@
   },
   "skills": {
     "paths": ["~/.claude/skills"]
-  }
+  },
+  "instructions": ["~/.claude/CLAUDE_md-addendum-for-non-claude-model.md"]
 }
