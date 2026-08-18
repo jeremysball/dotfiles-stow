@@ -1,0 +1,10 @@
+[Unit]
+Description=Weekly mise upgrade (tools + mise itself)
+
+[Timer]
+OnCalendar=weekly
+Persistent=true
+RandomizedDelaySec=1h
+
+[Install]
+WantedBy=timers.target

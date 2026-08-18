@@ -3,12 +3,14 @@
 # instead of on every prompt draw. When secrets are fine, show a fortune;
 # otherwise swap the fortune text for the relevant status line.
 #
-# Defensive: cowsay and catbow are mise-managed (and fortune may be missing
-# on a minimal container). On a fresh machine where `mise activate` has not
-# yet succeeded, or before `mise install` has fetched them, the pipeline
-# `fortune | cowsay | catbow` would fail with "Unknown command" and produce
-# no greeting at all. Each layer is now guarded with `command -q` and falls
-# back to the plain text.
+# Defensive: cowsay and catbow are mise-managed and may be missing on a
+# minimal container. On a fresh machine where `mise activate` has not yet
+# succeeded, or before `mise install` has fetched them, the pipeline would
+# fail with "Unknown command" and produce no greeting at all. Those two
+# layers are guarded with `command -q` and fall back to plain text. Fortune
+# is not guarded the same way: if `fortune` is missing or `fortune -as`
+# returns empty, the greeting emits an explicit error (not "Welcome!") so a
+# broken install is visible — fix with `mise run install-fortune`.
 function fish_greeting
     if set -q INSIDE_EMACS
         return
@@ -22,7 +24,7 @@ function fish_greeting
         set text "Remember to source config.fish or restart your shell!"
     end
 
-    # Base message: status text or fortune (or static fallback).
+    # Base message: status text or fortune (hard error if fortune missing/empty).
     set -l msg
     if test -n "$text"
         set msg $text
@@ -30,10 +32,10 @@ function fish_greeting
         if command -q fortune
             set msg (fortune -as 2>/dev/null)
             if test -z "$msg"
-                set msg "Welcome!"
+                set msg "fish_greeting: fortune -as failed or returned empty — run 'mise run install-fortune' (or 'mise-sys install-fortune') to rebuild"
             end
         else
-            set msg "Welcome!"
+            set msg "fish_greeting: fortune not found — run 'mise run install-fortune' (or 'mise-sys install-fortune') to build with offensive fortunes"
         end
     end
 
