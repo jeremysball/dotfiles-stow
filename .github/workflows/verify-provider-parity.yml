@@ -1,0 +1,54 @@
+name: verify-provider-parity
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/verify-provider-parity.sh'
+      - '.github/workflows/verify-provider-parity.yml'
+      - '.config/opencode/opencode.jsonc'
+      - '.config/opencode/**'
+  pull_request:
+    paths:
+      - 'scripts/verify-provider-parity.sh'
+      - '.github/workflows/verify-provider-parity.yml'
+      - '.config/opencode/opencode.jsonc'
+      - '.config/opencode/**'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pi
+        run: |
+          npm install -g @mariozechner/pi-coding-agent 2>&1 | tail -20
+          pi --version 2>&1 | head -5
+      - name: Install opencode
+        run: |
+          curl -fsSL https://opencode.ai/install | bash 2>&1 | tail -20
+          echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+          export PATH="$HOME/.opencode/bin:$PATH"
+          opencode --version 2>&1 | head -5
+      - name: Install dotfiles config to harness locations
+        run: |
+          mkdir -p ~/.config/opencode
+          cp .config/opencode/opencode.jsonc ~/.config/opencode/opencode.jsonc 2>/dev/null || true
+          cp .config/opencode/opencode.json ~/.config/opencode/opencode.json 2>/dev/null || true
+          # opencode also reads from cwd, ensure symlink visible
+          echo "opencode config installed:" && ls -lh ~/.config/opencode/ 2>&1 | head -10
+      - name: Verify provider parity via harness porcelain
+        run: |
+          export PATH="$HOME/.opencode/bin:$PATH"
+          # Script uses harness porcelain only: pi --list-models and opencode models
+          # It parses provider/model from each, checks strict equality for custom
+          # providers and subset for built-ins, and fails on banned/dead drift.
+          # In CI without private API keys/extensions, strict providers will be 0;
+          # the script handles this as a warning when GITHUB_ACTIONS=true.
+          bash scripts/verify-provider-parity.sh --verbose
+      - name: Verify parity JSON (CI artifact check)
+        run: |
+          export PATH="$HOME/.opencode/bin:$PATH"
+          bash scripts/verify-provider-parity.sh --json | tee parity.json
+          cat parity.json
