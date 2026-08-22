@@ -1,29 +1,52 @@
 ---
 name: commit
-description: Make atomic commits with conventional commit format. Commit early and often. Use git add -p only when necessary.
+description: Make small, atomic commits with conventional commit format. Commit at clear validated checkpoints. Use git add -p only when needed.
 ---
 
-# Commit Early, Commit Often
+# Commit Small, Validated Checkpoints
 
-**Commit after each working change.** Small, atomic commits. Never batch features.
+Commit when a change reaches a clean, reviewable boundary. A good commit contains one logical change, passes the relevant validation, and can be reverted without dragging unrelated work with it.
 
-## The Cadence
+## When to Commit
 
+Commit when:
+- one logical change is complete and validated
+- an approved workflow reaches a natural checkpoint, such as a completed PRD task block
+- the code, tests, docs, and prompt or template updates for the same behavior change are ready together
+
+Do not commit when:
+- the diff mixes unrelated changes
+- the touched surface has not been validated
+- the user explicitly asked you not to commit
+
+**Do not push unless the user explicitly asks.**
+
+## Default Cadence
+
+```text
+Write or update test
+Implement the minimum change
+Run relevant validation
+Stage only the intended diff
+Review the staged diff
+Commit
 ```
-Write test → Implement → Run tests → git add -p → Commit → Repeat
-```
 
-See [todo skill](/workspace/.pi/skills/todo/SKILL.md) for test-first workflow.
+Use `git add -p` only when you need to separate unrelated hunks. If the change is already clean and atomic, plain `git add <files>` is fine.
 
 ## Rules
 
-1. **One logical change per commit** — Describe it in one line
-2. **Every commit passes tests**
-3. **Commit immediately** — Do not wait until "done"
+1. **One logical change per commit.** Describe it in one line.
+2. **Commit the smallest working checkpoint.** Do not wait for a giant batch.
+3. **Stage intentionally.** Review `git diff --cached` before you commit.
+4. **Run relevant validation first.** Validate the touched surface, not the whole repo by default.
+5. **Use conventional commits.**
+6. **Keep aligned changes together.** If code, tests, docs, PRD updates, or prompts belong to the same completed slice, commit them together.
+7. **Do not batch unrelated fixes.**
 
 ## Conventional Commits
 
-```
+```text
 <type>[scope]: <description>
 ```
 
@@ -36,92 +59,57 @@ See [todo skill](/workspace/.pi/skills/todo/SKILL.md) for test-first workflow.
 | `refactor` | Restructure |
 | `perf` | Performance |
 | `test` | Tests |
-| `chore` | Build/tooling |
+| `chore` | Build, tooling, or maintenance |
 
-Rules: lowercase, under 72 characters, body explains "what" and "why".
+Message rules:
+- use lowercase type and scope
+- use an imperative description
+- keep the summary under 72 characters
+- make it specific
+- add a body when it helps explain what changed and why
 
-## Examples
-
-### Good — Atomic, Specific
-
-```bash
-feat(tui): add Throbber class in throbber.py
-feat(tui): wire Throbber into StatusLine.__init__
-feat(tui): start throbber animation on LLM request start
-feat(tui): stop throbber animation on LLM response end
-test(tui): verify throbber tick advances state
-refactor(tui): extract throbber color to constant
-```
-
-### Bad — Too Broad
+## Good Commit Boundaries
 
 ```bash
-# Multiple features
-git commit -m "feat: add throbber"
-
-# Multiple files with different purposes
-git commit -m "feat: update tui and fix bug"
-
-# Vague
-git commit -m "fix stuff"
+feat(memory): add support profile scope contract
+feat(memory): define relational registry values
+docs(prd): record support registry value sets
+test(memory): cover scoped support profile validation
+refactor(tui): extract throbber color constant
 ```
 
-### Case Study: Bad Batch Commit
-
-**What I did wrong:**
-```bash
-# BAD: Batched three logical changes into one commit
-feat(pypitui): enable Rich markdown rendering in AlfredTUI
-
-- Import USE_MARKDOWN_RENDERING constant
-- Enable markdown for user messages in _on_submit()
-- Enable markdown for assistant messages in _send_message()
-```
-
-**Why it's bad:**
-- Three separate logical operations in one commit
-- Can't easily revert just the user message change
-- Harder to review, harder to bisect
-- Violates "one logical change per commit"
-
-**What I should have done:**
-```bash
-# GOOD: Three atomic commits
-feat(pypitui): import USE_MARKDOWN_RENDERING constant in tui.py
-feat(pypitui): enable markdown rendering for user messages
-feat(pypitui): enable markdown rendering for assistant messages
-```
-
-## Recovery: Automate git add -p with tmux
-
-Use when you have multiple uncommitted changes to separate. Automate with tmux send-keys.
+## Bad Commit Boundaries
 
 ```bash
-# Start detached session
-tmux new-session -d -s commit
-
-# Automate git add -p (send 'y' for yes, 'n' for no, 's' for split)
-tmux send-keys -t commit "git add -p src/file.py" Enter
-
-# Example: stage first hunk, skip second
-tmux send-keys -t commit "y" Enter    # Stage this hunk
-tmux send-keys -t commit "n" Enter    # Skip next hunk
-
-# Verify and commit
-tmux send-keys -t commit "git diff --cached" Enter
-OUTPUT=$(tmux capture-pane -t commit -p)
-tmux send-keys -t commit "git commit -m 'feat(scope): description'" Enter
-
-# Cleanup
-tmux kill-session -t commit
+feat: update memory stuff
+fix: several issues
+chore: work in progress
+feat: add support profile and clean up web ui
 ```
 
-See [tmux skill](/workspace/.pi/skills/tmux/SKILL.md) for automation patterns.
+## Before You Commit
 
-## Verify
+- the staged diff is one logical change
+- the relevant checks passed
+- the staged files match your intent
+- the message is specific
+- no unrelated files are included
+- if you plan to push, the user explicitly asked
+
+## Validation
+
+Run the smallest checks that prove the changed surface works.
+
+Examples:
 
 ```bash
-uv run ruff check src/ && uv run mypy src/ && uv run pytest
+# Python example
+uv run ruff check <paths>
+uv run mypy --strict <paths>
+uv run pytest <targeted tests>
+
+# JavaScript example
+npm run js:check
 ```
 
-Fix issues. Then commit.
+Broaden validation only when the change crosses boundaries or the failure mode is unclear.
