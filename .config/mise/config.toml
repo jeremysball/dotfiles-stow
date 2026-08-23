@@ -26,6 +26,10 @@
 # ~/projects/mise-en-system run <task>` directly. For secret updates use
 # `mise-sys secrets-sync` (pulls both repos and re-links), not re-running
 # `install-secrets` which only clones.
+#
+# Exception: install-worktree-githooks lives here intentionally so `mise run
+# install-worktree-githooks` is globally available from any directory without
+# the `mise-sys` wrapper — you want it on every machine after dotfiles apply.
 
 [tools]
 # core CLI, referenced by fish abbrs and aliases
@@ -266,4 +270,40 @@ experimental = true
 
 # kilo -- its own kilo.jsonc exposes claude-code plugin skills via skills.paths
 "~/.config/kilo/kilo.jsonc" = {}
+
+[tasks.install-worktree-githooks]
+description = "Install worktree-githooks template (post-checkout hook that symlinks node_modules / runs uv sync) to ~/.config/git/hooks and set global core.hooksPath. Globally available via `mise run install-worktree-githooks` from any directory. Idempotent: clones or pulls jeremysball/worktree-githooks, copies hook, sets hooksPath."
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_DIR="$HOME/projects/worktree-githooks"
+HOOK_SRC=".githooks/post-checkout"
+GLOBAL_HOOKS="$HOME/.config/git/hooks"
+
+mkdir -p "$HOME/projects" "$GLOBAL_HOOKS"
+
+if [ -d "$REPO_DIR/.git" ]; then
+  echo "install-worktree-githooks: pulling $REPO_DIR"
+  git -C "$REPO_DIR" pull --ff-only
+else
+  if [ -d "$REPO_DIR" ]; then
+    echo "install-worktree-githooks: $REPO_DIR exists but not a git repo, skipping clone" >&2
+  else
+    git clone https://github.com/jeremysball/worktree-githooks.git "$REPO_DIR"
+  fi
+fi
+
+if [ ! -f "$REPO_DIR/$HOOK_SRC" ]; then
+  echo "install-worktree-githooks: $REPO_DIR/$HOOK_SRC not found" >&2
+  exit 1
+fi
+
+cp "$REPO_DIR/$HOOK_SRC" "$GLOBAL_HOOKS/post-checkout"
+chmod +x "$GLOBAL_HOOKS/post-checkout"
+git config --global core.hooksPath "$GLOBAL_HOOKS"
+
+echo "install-worktree-githooks: installed $GLOBAL_HOOKS/post-checkout and set global core.hooksPath=$GLOBAL_HOOKS"
+echo "install-worktree-githooks: per-repo override still works: cp $REPO_DIR/$HOOK_SRC .githooks/post-checkout && git config core.hooksPath .githooks"
+'''
 
