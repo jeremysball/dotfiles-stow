@@ -87,6 +87,9 @@ cowsay = "latest"
 # fail. Mise pulls the prebuilt binary from GitHub releases (Jguer/yay) with
 # no build step, matching how other prebuilt tools are managed here.
 "github:Jguer/yay" = "latest"
+rust = "1.91"
+ast-grep = "0.44.1"
+"pipx:huggingface_hub" = "latest"
 
 [settings]
 # Read .nvmrc / .python-version / .go-version in repos that never heard of mise
