@@ -15,5 +15,23 @@
   "skills": {
     "paths": ["~/.claude/skills"]
   },
-  "instructions": ["~/.claude/CLAUDE_md-addendum-for-non-claude-model.md"]
+  "instructions": ["~/.claude/CLAUDE_md-addendum-for-non-claude-model.md"],
+  "provider": {
+    "kagi-qwen": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Kagi Qwen 27B",
+      "options": {
+        "baseURL": "https://balmy-untold-catchy.ngrok-free.dev/v1",
+        "apiKey": "local"
+      },
+      "models": {
+        "qwen27b-obliterated": {
+          "name": "Qwen3.8 27B OBLITERATED",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 131072, "output": 8192 }
+        }
+      }
+    }
+  }
 }
