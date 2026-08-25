@@ -97,7 +97,12 @@ ast-grep = "0.44.1"
 # huggingface_hub above, making the shim version-independent. `all` extra
 # matches what the stray install effectively had (cli/drive/native/mcp/etc
 # were all importable), so nothing regresses vs the ad hoc install it replaces.
-"pipx:colabctl" = { version = "latest", extras = ["all"] }
+# jupyter-kernel-client pinned below 1.0: google-colab-cli 0.6.0 (colabctl's
+# `cli` extra) imports jupyter_kernel_client.KernelClient, which 1.0.0
+# renamed to JupyterKernelClient, breaking `colabctl exec` with
+# `AttributeError: module 'jupyter_kernel_client' has no attribute
+# 'KernelClient'`. 0.9.0 is the last release with the old name.
+"pipx:colabctl" = { version = "latest", extras = ["all"], uvx_args = "--with jupyter-kernel-client==0.9.0" }
 
 [settings]
 # Read .nvmrc / .python-version / .go-version in repos that never heard of mise
