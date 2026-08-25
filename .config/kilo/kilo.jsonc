@@ -1,5 +1,8 @@
 {
   "$schema": "https://app.kilo.ai/config.json",
+  "snapshot": false,
+  "model": "alibaba-token-plan/qwen3.8-max-preview",
+  "small_model": "alibaba-token-plan/qwen3.6-flash",
   "permission": {
     "*": {
       "*": "allow"
@@ -12,11 +15,101 @@
       "/home/jeremy/.config/fish/functions/*": "allow"
     }
   },
-  "skills": {
-    "paths": ["~/.claude/skills"]
+  "compaction": {
+    // Auto-compact at 200k, mirroring the opencode fleet compaction
+    // (auto:true, reserved 25000) so long contexts compact early.
+    "auto": true,
+    "prune": true,
+    "tail_turns": 2,
+    "preserve_recent_tokens": 20000,
+    "reserved": 0
   },
-  "instructions": ["~/.claude/CLAUDE_md-addendum-for-non-claude-model.md"],
   "provider": {
+    "openai": {
+      // Cap direct OpenAI models at the fleet's 200k context budget. Set
+      // input explicitly because compaction uses it when it is present.
+      "models": {
+        "gpt-5.3-codex-spark": { "limit": { "context": 200000, "output": 32000 } },
+        "gpt-5.4": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "gpt-5.4-fast": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "gpt-5.4-mini": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "gpt-5.4-mini-fast": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "gpt-5.5": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "gpt-5.5-fast": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "gpt-5.6-luna": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "gpt-5.6-luna-fast": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "gpt-5.6-sol": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "gpt-5.6-sol-fast": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "gpt-5.6-terra": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "gpt-5.6-terra-fast": { "limit": { "context": 200000, "input": 200000, "output": 128000 } }
+      }
+    },
+    "kilo": {
+      // OpenAI models via kilo gateway, capped to 200k context to match
+      // the fleet cap. Output stays at each model's native value.
+      "models": {
+        "openai/gpt-4.1": { "limit": { "context": 200000, "input": 200000, "output": 32768 } },
+        "openai/gpt-4.1-mini": { "limit": { "context": 200000, "input": 200000, "output": 32768 } },
+        "openai/gpt-4.1-nano": { "limit": { "context": 200000, "input": 200000, "output": 32768 } },
+        "openai/gpt-5": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "openai/gpt-5-mini": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "openai/gpt-5-nano": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "openai/gpt-5-pro": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "openai/gpt-5.1": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "openai/gpt-5.1-codex": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "openai/gpt-5.1-codex-max": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "openai/gpt-5.1-codex-mini": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "openai/gpt-5.2": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "openai/gpt-5.2-codex": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "openai/gpt-5.2-pro": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "openai/gpt-5.3-codex": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "openai/gpt-5.4": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "openai/gpt-5.4-mini": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "openai/gpt-5.4-nano": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "openai/gpt-5.4-pro": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "openai/gpt-5.5": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "openai/gpt-5.5-pro": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "openai/gpt-5.6-luna": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "openai/gpt-5.6-luna-pro": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "openai/gpt-5.6-sol": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "openai/gpt-5.6-sol-pro": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "openai/gpt-5.6-terra": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "openai/gpt-5.6-terra-pro": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "openai/gpt-chat-latest": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+      }
+    },
+    "ollama-cloud": {
+      // Ollama Cloud (turbo) hosted models via its OpenAI-compatible API.
+      // {env:...} works fine here (verified with a real run); it's only
+      // disallowed in *project*-level kilo.jsonc, not this global one.
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama Cloud",
+      "options": {
+        "baseURL": "https://ollama.com/v1",
+        "apiKey": "{env:OLLAMA_CLOUD_API_KEY}"
+      },
+      "models": {
+        "glm-5.2": { "name": "GLM 5.2" },
+        "nemotron-3-nano:30b": { "name": "Nemotron 3 Nano 30B" },
+        "nemotron-3-super": { "name": "Nemotron 3 Super" },
+        "nemotron-3-ultra": { "name": "Nemotron 3 Ultra" },
+        "kimi-k3": { "name": "Kimi K3" },
+        "deepseek-v4-flash:preview": { "name": "DeepSeek V4 Flash (preview)" },
+        "gpt-oss:120b": { "name": "GPT-OSS 120B" },
+        "gpt-oss:20b": { "name": "GPT-OSS 20B" },
+        "deepseek-v4-flash:0731": { "name": "DeepSeek V4 Flash 0731" },
+        "minimax-m2.7": { "name": "MiniMax M2.7" },
+        "gemma4:31b": { "name": "Gemma 4 31B" },
+        "qwen3.5:397b": { "name": "Qwen 3.5 397B" },
+        "glm-5.1": { "name": "GLM 5.1" },
+        "kimi-k2.6": { "name": "Kimi K2.6" },
+        "kimi-k2.7-code": { "name": "Kimi K2.7 Code" },
+        "deepseek-v4-pro:preview": { "name": "DeepSeek V4 Pro (preview)" },
+        "deepseek-v4-pro:0813": { "name": "DeepSeek V4 Pro 0813" },
+        "minimax-m3": { "name": "MiniMax M3" },
+        "mistral-large-3:675b": { "name": "Mistral Large 3 675B" },
+      }
+    },
     "colab": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "Colab",
@@ -32,6 +125,39 @@
           "limit": { "context": 131072, "output": 8192 }
         }
       }
+    },
+    "meta": {
+      // Meta Muse Spark, capped to 200k context to match fleet cap (mirrors pi/opencode).
+      "models": {
+        "muse-spark-1.1": { "limit": { "context": 200000, "output": 200000 } },
+        "muse-spark-1.2": { "limit": { "context": 200000, "output": 200000 } },
+        "muse-spark-1.2-contributor": { "limit": { "context": 200000, "output": 200000 } }
+      }
+    },
+    "alibaba-token-plan": {
+      // Alibaba Cloud Model Studio Token Plan, capped to 200k context.
+      "models": {
+        "deepseek-v4-flash": { "limit": { "context": 200000, "output": 384000 } },
+        "deepseek-v4-flash-0731": { "limit": { "context": 200000, "output": 384000 } },
+        "deepseek-v4-pro": { "limit": { "context": 200000, "output": 384000 } },
+        "deepseek-v4-pro-0813": { "limit": { "context": 200000, "output": 384000 } },
+        "glm-5": { "limit": { "context": 200000, "output": 16384 } },
+        "glm-5.1": { "limit": { "context": 200000, "output": 128000 } },
+        "glm-5.2": { "limit": { "context": 200000, "output": 131072 } },
+        "kimi-k2.5": { "limit": { "context": 200000, "output": 98304 } },
+        "kimi-k2.6": { "limit": { "context": 200000, "output": 262144 } },
+        "kimi-k2.7-code": { "limit": { "context": 200000, "output": 262144 } },
+        "qwen3.6-flash": { "limit": { "context": 200000, "output": 65536 } },
+        "qwen3.6-plus": { "limit": { "context": 200000, "output": 65536 } },
+        "qwen3.7-max": { "limit": { "context": 200000, "output": 131072 } },
+        "qwen3.7-plus": { "limit": { "context": 200000, "output": 65536 } },
+        "qwen3.8-max": { "limit": { "context": 200000, "output": 131072 } },
+        "qwen3.8-max-preview": { "limit": { "context": 200000, "output": 131072 } },
+      }
     }
-  }
+  },
+  "skills": {
+    "paths": ["~/.claude/skills"]
+  },
+  "instructions": ["~/.claude/CLAUDE_md-addendum-for-non-claude-model.md"]
 }
