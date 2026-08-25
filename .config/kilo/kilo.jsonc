@@ -17,9 +17,9 @@
   },
   "instructions": ["~/.claude/CLAUDE_md-addendum-for-non-claude-model.md"],
   "provider": {
-    "kagi-qwen": {
+    "qwen": {
       "npm": "@ai-sdk/openai-compatible",
-      "name": "Kagi Qwen 27B",
+      "name": "Qwen 27B",
       "options": {
         "baseURL": "https://balmy-untold-catchy.ngrok-free.dev/v1",
         "apiKey": "local"
