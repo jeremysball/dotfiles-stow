@@ -91,6 +91,14 @@ rust = "1.91"
 ast-grep = "0.44.1"
 "pipx:huggingface_hub" = "latest"
 
+# colabctl was a stray `pip install` into the shared python@latest venv,
+# so its shim only resolved from directories where that happened to be the
+# active python version. pipx backend isolates it the same way as
+# huggingface_hub above, making the shim version-independent. `all` extra
+# matches what the stray install effectively had (cli/drive/native/mcp/etc
+# were all importable), so nothing regresses vs the ad hoc install it replaces.
+"pipx:colabctl" = { version = "latest", extras = ["all"] }
+
 [settings]
 # Read .nvmrc / .python-version / .go-version in repos that never heard of mise
 idiomatic_version_file_enable_tools = ["node", "python", "go"]
