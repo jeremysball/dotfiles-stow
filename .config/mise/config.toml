@@ -104,6 +104,16 @@ ast-grep = "0.44.1"
 # 'KernelClient'`. 0.9.0 is the last release with the old name.
 "pipx:colabctl" = { version = "latest", extras = ["all"], uvx_args = "--with jupyter-kernel-client==0.9.0" }
 
+# `colab` (the underlying binary colabctl's default transport shells out to)
+# had no mise-tracked shim of its own, so PATH resolution fell through to
+# whatever else claimed the name first, an unrelated npm package `colab-cli`
+# (AWS/Redis commands, nothing to do with Colab) that was shadowing it. This
+# installs the real PyPI `google-colab-cli` package directly so `colab`
+# resolves deterministically without a `--colab-bin` override. Same
+# jupyter-kernel-client pin as colabctl above: this package hits the exact
+# same `KernelClient` rename break on its own `colab exec`/kernel commands.
+"pipx:google-colab-cli" = { version = "latest", uvx_args = "--with jupyter-kernel-client==0.9.0" }
+
 [settings]
 # Read .nvmrc / .python-version / .go-version in repos that never heard of mise
 idiomatic_version_file_enable_tools = ["node", "python", "go"]
