@@ -17,16 +17,16 @@
   },
   "instructions": ["~/.claude/CLAUDE_md-addendum-for-non-claude-model.md"],
   "provider": {
-    "qwen": {
+    "colab": {
       "npm": "@ai-sdk/openai-compatible",
-      "name": "Qwen 27B",
+      "name": "Colab",
       "options": {
         "baseURL": "https://balmy-untold-catchy.ngrok-free.dev/v1",
         "apiKey": "local"
       },
       "models": {
         "qwen27b-obliterated": {
-          "name": "Qwen3.8 27B OBLITERATED",
+          "name": "Qwen 3.8 27B OBLITERATED",
           "reasoning": true,
           "tool_call": true,
           "limit": { "context": 131072, "output": 8192 }
