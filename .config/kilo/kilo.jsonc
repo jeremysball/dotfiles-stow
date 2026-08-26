@@ -120,7 +120,13 @@
       "models": {
         "qwen27b-obliterated": {
           "name": "Qwen 3.8 27B OBLITERATED",
-          "reasoning": true,
+          "reasoning": false,
+          "tool_call": true,
+          "limit": { "context": 131072, "output": 8192 }
+        },
+        "qwen27b-uncensored": {
+          "name": "Qwen 3.8 27B Uncensored (JonathanColetti)",
+          "reasoning": false,
           "tool_call": true,
           "limit": { "context": 131072, "output": 8192 }
         }

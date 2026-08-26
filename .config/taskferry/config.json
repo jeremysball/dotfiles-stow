@@ -6,10 +6,20 @@
   "envFile": "/run/user/1000/secrets/global.env",
   "profilingEnabled": true,
   "providerLimits": {
-    "cheapestinference": { "maxConcurrentTasks": 1 },
-    "ollama": { "maxConcurrentTasks": 3 },
-    "minimax": { "maxConcurrentTasks": 4 },
-    "opencode": { "maxConcurrentTasks": 3 },
-    "alibaba-tknplan": { "maxConcurrentTasks": 2 }
+    "cheapestinference": {
+      "maxConcurrentTasks": 1
+    },
+    "ollama": {
+      "maxConcurrentTasks": 3
+    },
+    "minimax": {
+      "maxConcurrentTasks": 4
+    },
+    "opencode": {
+      "maxConcurrentTasks": 3
+    },
+    "alibaba-tknplan": {
+      "maxConcurrentTasks": 2
+    }
   }
 }

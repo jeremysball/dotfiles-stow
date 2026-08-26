@@ -243,7 +243,7 @@
       // Alibaba Cloud Model Studio "Token Plan" subscription (SG endpoint,
       // verified live 2026-07-29 via curl → 200 OK on
       // https://token-plan.ap-southeast-1.maas.aliyuncs.com/apps/anthropic/v1/messages).
-      // Auth: {env:ALIBABA_TKN_PLAN_API_KEY} (the Anthropic-format token-plan
+      // Auth: {env:ALIBABA_TOKEN_PLAN_API_KEY} (the Anthropic-format token-plan
       // route rejects the bare RAM AccessKey pair with 401 InvalidApiKey).
       //
       // baseURL already includes the trailing /v1 because @ai-sdk/anthropic
@@ -257,7 +257,7 @@
       "name": "Alibaba Cloud Model Studio (Token Plan, SG)",
       "options": {
         "baseURL": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/apps/anthropic/v1",
-        "apiKey": "{env:ALIBABA_TKN_PLAN_API_KEY}"
+        "apiKey": "{env:ALIBABA_TOKEN_PLAN_API_KEY}"
       },
       "models": {
         "qwen3.8-max-preview": {
