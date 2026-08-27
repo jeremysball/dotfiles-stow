@@ -132,6 +132,30 @@
         }
       }
     },
+    "kaggle": {
+      // Live Kaggle T4x2 box (2026-08-27): qwen27b-uncensored, Q6_K 22.4GB
+      // served via cloudflared quick tunnel. The hostname rotates every
+      // kernel run -- grab the current one from the webhook's STAGE-tunnel
+      // post, or run `kaggle kernels` + the notebook again to refresh it.
+      // tool_call is false on purpose: this Modelfile is the naive
+      // FROM-<gguf> build (no TEMPLATE splice), so tool requests 400.
+      // context 32768 matches the box's num_ctx PARAMETER (T4x2 32GB budget
+      // for a 22.4GB model); the colab twins above are the A100 deployment.
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Kaggle",
+      "options": {
+        "baseURL": "https://gasoline-everywhere-clark-infrastructure.trycloudflare.com/v1",
+        "apiKey": "local"
+      },
+      "models": {
+        "qwen27b-uncensored": {
+          "name": "Qwen 3.8 27B Uncensored (JonathanColetti)",
+          "reasoning": false,
+          "tool_call": false,
+          "limit": { "context": 32768, "output": 8192 }
+        }
+      }
+    },
     "meta": {
       // Meta Muse Spark, capped to 200k context to match fleet cap (mirrors pi/opencode).
       "models": {
