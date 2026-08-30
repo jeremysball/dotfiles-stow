@@ -1,32 +1,29 @@
 # Pi Coding Agent Monorepo
 
-This monorepo contains extensions and skills for the [Pi coding agent](https://github.com/mariozechner/pi-coding-agent).
-
-## Quick Start
-
-```bash
-# Install dependencies (requires pnpm)
-pnpm install
-
-# Run a script across all packages
-pnpm -r run build
-
-# Add a dependency to a specific package
-pnpm --filter @pi/extension-auto-prd add <package>
-```
+Extensions and skills for the [Pi coding agent](https://github.com/mariozechner/pi-coding-agent), absorbed into dotfiles under `.pi/` on 2026-08-30.
 
 ## Structure
 
 ```
-.
-├── extensions/          # Pi extensions
-│   ├── auto-compact/    # Auto context compaction
-│   ├── auto-prd/        # GitHub PRD workflows
-│   ├── osc777-notify/   # Notifications
-│   └── pi-todo/         # TDD task lists
-├── skills/              # Pi skills
-│   └── token-burn/      # Token usage analysis
-└── package.json         # Root workspace config
+.pi/
+├── agent/                  # Pi runtime config (tracked)
+│   ├── settings.json       # user settings + provider modelOverrides
+│   ├── models.json         # provider catalog
+│   ├── APPEND_SYSTEM.md_   # appended system prompt (trailing _ is intentional)
+│   └── extensions/         # provider + hook extensions (registerProvider)
+├── extensions/             # pnpm-workspace extension packages
+│   ├── auto-prd/           # GitHub PRD workflows (archived)
+│   ├── osc777-notify/      # desktop notifications
+│   ├── pi-todo/            # TDD task lists
+│   └── *.ts                # loose extension sources (glm5-timeout-resend,
+│                           #   peon-ping, turingtools-disabled, tsconfig.base)
+├── skills/                 # active skills (30)
+├── skills-archive/         # retired skills (36), flattened, history dropped
+├── disabled/               # extensions archived in place
+├── prds/                   # PRD markdown
+├── package.json            # pnpm workspace root
+├── pnpm-workspace.yaml
+└── pnpm-lock.yaml
 ```
 
 ## Package Management
@@ -45,29 +42,17 @@ This project uses **pnpm workspaces**. The npm workspaces had issues, so pnpm is
 Uses [changesets](https://github.com/changesets/changesets) for versioning:
 
 ```bash
-# Create a changeset
-pnpm changeset
-
-# Version packages
-pnpm version-packages
-
-# Publish
-pnpm release
+pnpm changeset          # create a changeset
+pnpm version-packages   # version packages
+pnpm release            # publish
 ```
 
-## Extensions
+## Runtime state (not tracked)
 
-### [@pi/extension-auto-compact](./extensions/auto-compact/)
-Automatically triggers context compaction when usage exceeds configurable thresholds.
-
-### [@pi/extension-auto-prd](./extensions/auto-prd/)
-GitHub PRD workflow automation - create, start, and manage PRDs from pi.
-
-### [@pi/extension-pi-todo](./extensions/pi-todo/)
-TDD-style task lists with test-first development workflow.
-
-### [@pi/extension-osc777-notify](./extensions/osc777-notify/)
-Desktop notifications for long-running jobs.
+`.pi/.gitignore` excludes machine-local runtime state: `auth.json`,
+`models-store.json`, `sessions/`, `node_modules/`, and `*.bak.*` backups.
+`agent/settings.json` and `agent/models.json` are tracked — they are live
+config, not runtime state.
 
 ## License
 

@@ -129,10 +129,12 @@ problem.
 `superfile/theme/`, which superfile ships itself.
 
 `.pi/` runtime state is gitignored via `.pi/.gitignore`: `auth.json`,
-`models-store.json`, `models.json`, `settings.json`, `sessions/`,
-`node_modules/`. Those are machine-local (credentials, pi's model cache,
-session history) and stay out of the repo; the tracked `.pi/` holds the
-config, extensions, skills, and prds that should follow a machine.
+`models-store.json`, `sessions/`, `node_modules/`, and the `*.bak.*`
+timestamped backups. Those are machine-local (credentials, pi's model cache,
+session history) and stay out of the repo. `agent/settings.json` and
+`agent/models.json` are tracked — they are the live provider catalog and user
+settings, not runtime state — so the tracked `.pi/` holds the config,
+extensions, skills, and prds that should follow a machine.
 
 ### Retired LLM providers
 

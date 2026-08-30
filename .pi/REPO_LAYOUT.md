@@ -1,21 +1,29 @@
 # ~/.pi Monorepo Layout
 
-This is a pnpm workspaces monorepo containing Pi extensions and skills.
+This is a pnpm workspaces monorepo containing Pi extensions and skills,
+absorbed into dotfiles under `.pi/` on 2026-08-30.
 
 ## Structure
 
 ```
-~/.pi/
-├── package.json              # Root monorepo configuration
-├── pnpm-workspace.yaml       # pnpm workspaces definition
-├── extensions/               # Pi extensions
-│   ├── auto-compact/         # Auto-compaction extension
-│   ├── auto-prd/             # PRD workflow automation
-│   ├── pi-todo/              # TDD task lists
-│   └── osc777-notify/        # Notifications
-├── skills/                   # Pi skills
-│   └── token-burn/           # Token usage analysis
-└── .changeset/               # Changeset configuration
+.pi/
+├── agent/                  # Pi runtime config (tracked)
+│   ├── settings.json       # user settings + provider modelOverrides
+│   ├── models.json         # provider catalog
+│   ├── APPEND_SYSTEM.md_   # appended system prompt (trailing _ is intentional)
+│   └── extensions/         # provider + hook extensions (registerProvider)
+├── extensions/             # pnpm-workspace extension packages
+│   ├── auto-prd/           # GitHub PRD workflows (archived)
+│   ├── osc777-notify/      # desktop notifications
+│   ├── pi-todo/            # TDD task lists
+│   └── *.ts                # loose extension sources
+├── skills/                 # active skills (30)
+├── skills-archive/         # retired skills (36), flattened, history dropped
+├── disabled/               # extensions archived in place
+├── prds/                   # PRD markdown
+├── package.json            # pnpm workspace root
+├── pnpm-workspace.yaml
+└── pnpm-lock.yaml
 ```
 
 ## Package Management
@@ -23,21 +31,12 @@ This is a pnpm workspaces monorepo containing Pi extensions and skills.
 This monorepo uses **pnpm** with workspaces. Do not use npm.
 
 ```bash
-# Install all dependencies
-pnpm install
-
-# Run a script in all packages
-pnpm -r run build
+pnpm install                          # install all dependencies
+pnpm -r run build                     # run a script in all packages
 pnpm -r run lint
-
-# Run a script in a specific package
-pnpm --filter @pi/extension-auto-prd run build
-
-# Add a dependency to the root
-pnpm add -D -w <package>
-
-# Add a dependency to a specific package
-pnpm --filter @pi/extension-auto-prd add <package>
+pnpm --filter @pi/extension-auto-prd run build   # run in a specific package
+pnpm add -D -w <package>              # add a dependency to the root
+pnpm --filter @pi/extension-auto-prd add <package>  # add to a specific package
 ```
 
 ## Versioning
@@ -45,18 +44,16 @@ pnpm --filter @pi/extension-auto-prd add <package>
 Uses changesets for versioning and publishing:
 
 ```bash
-# Create a changeset
-pnpm changeset
-
-# Version packages
-pnpm version-packages
-
-# Publish (after building)
-pnpm release
+pnpm changeset          # create a changeset
+pnpm version-packages   # version packages
+pnpm release            # publish (after building)
 ```
 
 ## Legacy Notes
 
-- Each extension/skill previously lived in its own git repository
-- The old structure was: `skills/<skill-name>/` and `extensions/<extension-name>/`
-- Disabled extension stubs remain at the top level of `extensions/` for now
+- Each extension/skill previously lived in its own git repository.
+- The old structure was `skills/<skill-name>/` and `extensions/<extension-name>/`.
+- `skills-archive/` and `extensions/auto-prd/` were flattened into this repo
+  (nested `.git` dirs removed, history dropped) and marked archived.
+- Disabled extension stubs remain at the top level of `extensions/` and in
+  `disabled/`.

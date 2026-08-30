@@ -8,7 +8,7 @@
 #
 # Checks:
 #   1. Strict equality for custom providers where we control the full catalog
-#      (ollama, cheapestinference, xiaomi-tknplan, meta)
+#      (ollama, cheapestinference, xiaomi-token-plan, meta)
 #   2. Banned model check (deepseek-v4-pro family) — must not appear in
 #      strict providers; ignored for built-ins where catalog is unavoidable.
 #   3. Dead provider check (openai/openai-codex, alibaba-tknplan, opencode-go,
@@ -79,7 +79,7 @@ sort -u "$OPENCODE_RAW" > "$OPENCODE_MODELS"
 normalize() { tr '[:upper:]' '[:lower:]' ; }
 
 # --- provider classification ---
-STRICT_PROVIDERS=("ollama" "cheapestinference" "xiaomi-tknplan" "meta")
+STRICT_PROVIDERS=("ollama" "cheapestinference" "xiaomi-token-plan" "meta")
 BUILTIN_PROVIDERS=()
 # Dead providers: skip parity, just warn if present
 DEAD_PROVIDERS=("openai" "openai-codex" "alibaba-tknplan" "opencode-go" "minimax")

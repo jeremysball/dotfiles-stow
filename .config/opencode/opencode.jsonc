@@ -437,13 +437,15 @@
 //       }
 //     },
 
-    "xiaomi-tknplan": {
+    "xiaomi-token-plan": {
       // Xiaomi MiMo "Token Plan" coding subscription — native Anthropic-format
-      // API. {env:XIAOMI_TKN_PLAN_URL} itself ends in `/anthropic` (no `/v1`);
-      // `/v1` is appended here in baseURL because @ai-sdk/anthropic only adds
-      // `/messages` to whatever baseURL it's given, not `/v1/messages`.
-      //   base: {env:XIAOMI_TKN_PLAN_URL}/v1 = https://token-plan-sgp.xiaomimimo.com/anthropic/v1
-      //   auth: {env:XIAOMI_TKN_PLAN_API_KEY}
+      // API. The endpoint ends in `/anthropic` (no `/v1`); `/v1` is appended
+      // here in baseURL because @ai-sdk/anthropic only adds `/messages` to
+      // whatever baseURL it's given, not `/v1/messages`. The host is not a
+      // secret, so it is inline here rather than read from an env var,
+      // matching the alibaba-token-plan and nanogpt blocks.
+      //   base: https://token-plan-sgp.xiaomimimo.com/anthropic/v1
+      //   auth: {env:XIAOMI_TOKEN_PLAN_SGP_API_KEY}
       // Verified live 2026-07-22 via curl: both mimo-v2.5 and mimo-v2.5-pro
       // respond with real `thinking` content blocks. Context/output limits
       // per OpenRouter's listing for the same models (1.05M ctx / 131072 out
@@ -459,8 +461,8 @@
       "npm": "@ai-sdk/anthropic",
       "name": "Xiaomi MiMo (Token Plan)",
       "options": {
-        "baseURL": "{env:XIAOMI_TKN_PLAN_URL}/v1",
-        "apiKey": "{env:XIAOMI_TKN_PLAN_API_KEY}"
+        "baseURL": "https://token-plan-sgp.xiaomimimo.com/anthropic/v1",
+        "apiKey": "{env:XIAOMI_TOKEN_PLAN_SGP_API_KEY}"
       },
       "models": {
         "mimo-v2.5": {
