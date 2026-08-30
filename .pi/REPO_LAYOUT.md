@@ -1,22 +1,34 @@
-# ~/.pi Monorepo Layout
+# ~/.pi Layout
 
-This is a pnpm workspaces monorepo containing Pi extensions and skills.
+This directory lives inside the dotfiles repo (absorbed from
+`jeremysball/pi-mono` 2026-08-30) and is applied to the live `~/.pi` by mise
+dotfiles as per-file symlinks. It is a pnpm workspaces monorepo containing
+Pi extensions and skills.
 
 ## Structure
 
 ```
-~/.pi/
-├── package.json              # Root monorepo configuration
-├── pnpm-workspace.yaml       # pnpm workspaces definition
-├── extensions/               # Pi extensions
-│   ├── auto-compact/         # Auto-compaction extension
-│   ├── auto-prd/             # PRD workflow automation
-│   ├── pi-todo/              # TDD task lists
-│   └── osc777-notify/        # Notifications
-├── skills/                   # Pi skills
-│   └── token-burn/           # Token usage analysis
-└── .changeset/               # Changeset configuration
+.pi/                         # repo copy; live ~/.pi is symlinked from here
+├── agent/                   # pi agent config
+│   ├── extensions/          # provider/model extensions (js/ts)
+│   └── skills/              # agent skills
+├── package.json             # Root monorepo configuration
+├── pnpm-workspace.yaml      # pnpm workspaces definition
+├── extensions/              # Pi extensions
+│   ├── auto-compact/        # Auto-compaction extension
+│   ├── auto-prd/            # PRD workflow automation
+│   ├── pi-todo/             # TDD task lists
+│   └── osc777-notify/       # Notifications
+├── skills/                  # Pi skills
+│   └── token-burn/          # Token usage analysis
+├── skills-archive/          # Retired skills, kept for reference
+├── prds/                    # Pi PRDs (open and done)
+├── disabled/                # Disabled extensions
+└── .changeset/              # Changeset configuration
 ```
+
+Runtime state (sessions, auth, model caches, settings) is gitignored and
+never tracked; see `.pi/.gitignore`.
 
 ## Package Management
 

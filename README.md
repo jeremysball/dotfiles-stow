@@ -112,6 +112,8 @@ grouped by comment header to match what used to be separate stow packages:
 - `gh` GitHub CLI config and the PAT switcher `.bashrc` sources
 - `systemd` user units and timers
 - `zellij`, `htop`, `superfile`, `himalaya`, `alfred`, `taskferry`, `mcporter`
+- `pi` agent config, extensions, skills, and prds under `.pi/` (absorbed
+  from the old `jeremysball/pi-mono` repo 2026-08-30)
 - an older graphical workstation section (`i3`, `xorg`, `picom`, `alacritty`,
   `helix`, `zsh`, `tmux`), kept for whenever I set one back up
 
@@ -125,6 +127,12 @@ problem.
 
 `hosts.yml` under `gh` holds OAuth tokens and is gitignored. So is
 `superfile/theme/`, which superfile ships itself.
+
+`.pi/` runtime state is gitignored via `.pi/.gitignore`: `auth.json`,
+`models-store.json`, `models.json`, `settings.json`, `sessions/`,
+`node_modules/`. Those are machine-local (credentials, pi's model cache,
+session history) and stay out of the repo; the tracked `.pi/` holds the
+config, extensions, skills, and prds that should follow a machine.
 
 ### Retired LLM providers
 

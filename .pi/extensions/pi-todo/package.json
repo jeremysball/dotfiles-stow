@@ -1,0 +1,16 @@
+{
+  "name": "@pi/extension-pi-todo",
+  "version": "1.0.0",
+  "description": "Pi-todo extension - TDD task lists for pi",
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": "*"
+  },
+  "keywords": ["pi", "extension", "todo", "tdd"],
+  "license": "MIT"
+}

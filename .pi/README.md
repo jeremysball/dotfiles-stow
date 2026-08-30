@@ -1,6 +1,13 @@
-# Pi Coding Agent Monorepo
+# Pi Coding Agent Config
 
-This monorepo contains extensions and skills for the [Pi coding agent](https://github.com/mariozechner/pi-coding-agent).
+This directory holds the pi coding agent's config, extensions, skills, and
+prds. It was absorbed from the standalone `jeremysball/pi-mono` repo into
+dotfiles on 2026-08-30; the old repo is retired.
+
+The live `~/.pi` is populated from here by mise dotfiles
+(`"~/.pi" = { mode = "symlink-each" }` in `.config/mise/config.toml`), which
+symlinks each file individually. Runtime state pi writes into `~/.pi`
+(sessions, auth, model caches, settings) is gitignored and stays local.
 
 ## Quick Start
 

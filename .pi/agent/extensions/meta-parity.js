@@ -14,7 +14,7 @@ export default function (pi) {
       name: "Meta",
       baseUrl: "https://api.meta.ai/v1",
       apiKey: "$META_MODEL_API_KEY",
-      api: "openai",
+      api: "openai-completions",
       models: [
         {
           id: "muse-spark-1.1",

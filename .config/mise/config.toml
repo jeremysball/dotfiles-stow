@@ -231,6 +231,12 @@ experimental = true
 "~/.config/taskferry/config.json" = {}
 "~/.config/zellij/config.kdl" = {}
 
+# pi agent (absorbed from jeremysball/pi-mono 2026-08-30). symlink-each
+# recurses and symlinks per-file, so runtime state pi writes into ~/.pi
+# (sessions/, auth.json, models-store.json, settings.json — all gitignored
+# in .pi/.gitignore) stays local and never reaches the repo.
+"~/.pi" = { mode = "symlink-each" }
+
 # older graphical workstation: i3, xorg, picom, alacritty, helix, zsh, tmux
 "~/.config/alacritty/alacritty-theme" = {}  # submodule, whole-dir symlink
 "~/.config/alacritty/alacritty.toml" = {}
