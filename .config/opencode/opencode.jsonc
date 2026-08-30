@@ -46,7 +46,7 @@
     "prune": true,
     "tail_turns": 2,
     "preserve_recent_tokens": 20000,
-    "reserved": 25000
+    "reserved": 0
   },
 
   // Default model: opencode-go subscription ($10/mo, 12+ models, OpenAI-compatible).
@@ -107,6 +107,34 @@
       "models": {
         "muse-spark-1.1": {
           "name": "Muse Spark 1.1",
+          "reasoning": true,
+          "limit": { "context": 200000, "output": 131072 },
+          "modalities": {
+            "input": ["text", "image", "pdf", "video"],
+            "output": ["text"]
+          },
+          "options": {
+            "reasoningEffort": "high",
+            "reasoningSummary": "auto",
+            "include": ["reasoning.encrypted_content"]
+          }
+        },
+        "muse-spark-1.2": {
+          "name": "Muse Spark 1.2",
+          "reasoning": true,
+          "limit": { "context": 200000, "output": 131072 },
+          "modalities": {
+            "input": ["text", "image", "pdf", "video"],
+            "output": ["text"]
+          },
+          "options": {
+            "reasoningEffort": "high",
+            "reasoningSummary": "auto",
+            "include": ["reasoning.encrypted_content"]
+          }
+        },
+        "muse-spark-1.2-contributor": {
+          "name": "Muse Spark 1.2 Contributor",
           "reasoning": true,
           "limit": { "context": 200000, "output": 131072 },
           "modalities": {
@@ -577,9 +605,52 @@
       }
     },
     "openai": {
+      // OpenAI catalog capped to 200k input/context so compaction uses the
+      // same effective boundary. Output stays at each model's native value.
+      // gpt-5.3-codex-spark (native 128k) is left below the cap.
       "models": {
-        "gpt-5.6-luna": { "limit": { "context": 200000, "output": 128000 } },
-        "gpt-5.6-terra": { "limit": { "context": 200000, "output": 128000 } }
+        "gpt-5.4": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "gpt-5.4-fast": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "gpt-5.4-mini": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "gpt-5.4-mini-fast": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "gpt-5.5": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "gpt-5.5-fast": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "gpt-5.6-luna": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "gpt-5.6-luna-fast": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "gpt-5.6-sol": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "gpt-5.6-sol-fast": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "gpt-5.6-terra": { "limit": { "context": 200000, "input": 200000, "output": 128000 } },
+        "gpt-5.6-terra-fast": { "limit": { "context": 200000, "input": 200000, "output": 128000 } }
+      }
+    },
+    "alibaba-token-plan": {
+      // models.dev built-in alibaba-token-plan provider (Alibaba Cloud Model
+      // Studio Token Plan). On 2026-08-18 the models.dev catalog carries a
+      // 25-model `alibaba-token-plan` provider independently of this config's
+      // custom `alibaba-tknplan` block; it had no limit override at all, so
+      // its deepseek-v4/qwen3.x/glm-5.2/kimi-k2.x/MiniMax-M2.5 family ran at
+      // 1M+ native context and never triggered early compaction. Cap the
+      // text models to 200000 (the same 200k cap as everything else on the
+      // fleet). Image/video models (happyhorse-*, qwen-image-*, wan2.7-image,
+      // deepseek-v3.2 at 131072, MiniMax-M2.5 native 196608) are left at
+      // native — setting them to 200000 would overstate their real capacity.
+      "models": {
+        "deepseek-v4-flash": { "limit": { "context": 200000, "output": 384000 } },
+        "deepseek-v4-flash-0731": { "limit": { "context": 200000, "output": 384000 } },
+        "deepseek-v4-pro": { "limit": { "context": 200000, "output": 384000 } },
+        "deepseek-v4-pro-0813": { "limit": { "context": 200000, "output": 384000 } },
+        "glm-5": { "limit": { "context": 200000, "output": 16384 } },
+        "glm-5.1": { "limit": { "context": 200000, "output": 128000 } },
+        "glm-5.2": { "limit": { "context": 200000, "output": 131072 } },
+        "kimi-k2.5": { "limit": { "context": 200000, "output": 98304 } },
+        "kimi-k2.6": { "limit": { "context": 200000, "output": 262144 } },
+        "kimi-k2.7-code": { "limit": { "context": 200000, "output": 262144 } },
+        "qwen3.6-flash": { "limit": { "context": 200000, "output": 65536 } },
+        "qwen3.6-plus": { "limit": { "context": 200000, "output": 65536 } },
+        "qwen3.7-max": { "limit": { "context": 200000, "output": 131072 } },
+        "qwen3.7-plus": { "limit": { "context": 200000, "output": 65536 } },
+        "qwen3.8-max": { "limit": { "context": 200000, "output": 131072 } },
+        "qwen3.8-max-preview": { "limit": { "context": 200000, "output": 131072 } }
       }
     },
     "openrouter": {
@@ -593,11 +664,6 @@
   },
 
   "mcp": {
-    "kagi": {
-      "type": "local",
-      "command": ["uvx", "kagimcp"],
-      "enabled": true
-    },
     "playwright": {
       "type": "local",
       "command": ["npx", "@playwright/mcp@latest", "--headless", "--isolated"],
