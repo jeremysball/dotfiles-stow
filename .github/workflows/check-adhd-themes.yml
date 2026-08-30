@@ -1,0 +1,71 @@
+name: check-adhd-themes
+
+# Mirrors the global pre-commit hook (.config/git/hooks/pre-commit, wired
+# via [core] hooksPath in .gitconfig). Runs the --tracked-only variant so
+# the live ~/.config symlinks (created by `mise bootstrap dotfiles apply`)
+# and the runtime secrets check (which needs $XDG_RUNTIME_DIR/secrets/) are
+# both skipped on a fresh runner. CI verifies the source of truth in the
+# repo: the tracked adhd theme JSON under .config/{kilo,opencode}/themes/
+# is valid, the tracked tui.json for both tools selects adhd, the [dotfiles]
+# table still deploys all four files, and the tracked .gitconfig still wires
+# the hooksPath.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/check-adhd-themes.sh'
+      - '.config/mise/config.toml'
+      - '.config/git/hooks/**'
+      - '.config/kilo/**'
+      - '.config/opencode/**'
+      - '.gitconfig'
+      - '.github/workflows/check-adhd-themes.yml'
+  pull_request:
+    paths:
+      - 'scripts/check-adhd-themes.sh'
+      - '.config/mise/config.toml'
+      - '.config/git/hooks/**'
+      - '.config/kilo/**'
+      - '.config/opencode/**'
+      - '.gitconfig'
+      - '.github/workflows/check-adhd-themes.yml'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install jq
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq jq
+      - name: Verify dotfiles table deploys the theme + tui config
+        # A PR that drops a [dotfiles] entry leaves the runtime file without
+        # a source on the next machine; the per-file check below passes on a
+        # fresh runner regardless, so assert the table entries explicitly.
+        run: |
+          set -euo pipefail
+          for path in \
+              '~/.config/opencode/themes/adhd.json' \
+              '~/.config/opencode/tui.json' \
+              '~/.config/kilo/themes/adhd.json' \
+              '~/.config/kilo/tui.json' \
+              '~/.config/git/hooks/pre-commit'; do
+              if ! grep -F "\"$path\"" .config/mise/config.toml >/dev/null; then
+                  echo "  $path missing from [dotfiles] table" >&2
+                  exit 1
+              fi
+          done
+      - name: Verify tracked .gitconfig wires hooksPath
+        run: |
+          set -euo pipefail
+          if ! grep -q 'hooksPath' .gitconfig; then
+              echo "  [core] hooksPath missing from .gitconfig" >&2
+              exit 1
+          fi
+      - name: Verify tracked adhd theme JSON + tui selection
+        # --tracked-only resolves the dotfiles root from its own path.
+        # actions/checkout places the repo at $GITHUB_WORKSPACE, so the
+        # script derives the root correctly.
+        run: bash scripts/check-adhd-themes.sh --tracked-only

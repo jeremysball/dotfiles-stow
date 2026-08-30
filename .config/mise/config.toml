@@ -289,6 +289,11 @@ experimental = true
 # tmux -- local override layered on ~/.tmux.conf above
 "~/.config/tmux/tmux.conf.local" = {}
 
+# git -- global hooks, wired via [core] hooksPath in .gitconfig. Tracked
+# here so every machine that runs `mise bootstrap dotfiles apply` gets the
+# pre-commit (adhd-theme guardrail + em-dash gate) with zero manual setup.
+"~/.config/git/hooks/pre-commit" = {}
+
 # opencode -- config only. meta-api-key is a live credential; node_modules,
 # package.json/package-lock.json are installed deps; backups-2026-07-17/ is
 # a stale snapshot. None of those four are tracked.
@@ -304,43 +309,64 @@ experimental = true
 # `mise bootstrap dotfiles apply` recreates the symlink on fresh machines
 # without needing ~/.claude/skills/designing-for-adhd to be cloned. Keep
 # in sync with ~/.claude/skills/designing-for-adhd/references/theme-adhd.json
-# (the canonical source). scripts/check-mise-env-and-themes.sh flags drift.
+# (the canonical source). scripts/check-adhd-themes.sh flags drift in both
+# the file and the tui.json selection.
 "~/.config/opencode/themes/adhd.json" = {}
 
 # kilo -- its own kilo.jsonc exposes claude-code plugin skills via skills.paths
 "~/.config/kilo/kilo.jsonc" = {}
+# tui.json selects the theme; without it kilo falls back to the default
+# palette (this file was missing entirely, which is why kilo kept losing
+# the adhd theme). Must stay "theme": "adhd" -- check-adhd-themes.sh enforces.
+"~/.config/kilo/tui.json" = {}
 # adhd theme (mirror of the opencode one above, same source/sync caveat).
 "~/.config/kilo/themes/adhd.json" = {}
 
-[tasks.check-mise-env-and-themes]
-# Validates two recurring dotfiles breakages: (1) mise auto-loads every
-# .env under $XDG_RUNTIME_DIR/secrets/ when [settings] experimental = true
-# (src/system/secrets.rs in jdx/mise), and one malformed line aborts the
-# whole file with a "failed to parse dotenv file: ..." error before any
-# tool on PATH runs; (2) the kilo + opencode adhd theme symlinks (managed
-# via this config's [dotfiles] table) are resolvable and point to valid
-# opencode theme JSON. The check is alerting only -- it doesn't auto-repair
-# the secrets file (live credentials) or re-fetch the theme source. Run
-# from any directory: `mise run check-mise-env-and-themes`. The script
-# itself lives at scripts/check-mise-env-and-themes.sh in the dotfiles
-# repo, which mise bootstrap dotfiles apply symlinks to ~/.local/bin/ via
-# the symlink-each `~/.local/bin` entry, so the script is also reachable
-# directly as `check-mise-env-and-themes` after apply.
-description = "Validate the mise secrets env file parses and the kilo/opencode adhd theme symlinks resolve. Alerts only (exits 1 on any failure with the broken file + line/path); does not auto-repair the secrets file (live credentials) or re-fetch the theme source. Run with --verbose for per-link resolution detail."
+[tasks.check-adhd-themes]
+# The recurring breakage: kilo and opencode keep falling back to their
+# default palette because the adhd theme file goes missing OR stops being
+# selected in tui.json. Validates both, for both tools: the theme JSON
+# exists + is a valid opencode theme, and .config/{kilo,opencode}/tui.json
+# has "theme": "adhd". Alert-only (exits 1 with the exact broken path);
+# the [dotfiles] table auto-repairs the symlinks on `mise bootstrap dotfiles
+# apply`. The same check runs in --tracked-only mode from the global
+# pre-commit hook and CI, so a theme regression can't be committed.
+description = "Verify the adhd theme is present and selected for kilo + opencode (theme file valid + tui.json theme=adhd). Alerts only; exits 1 with the broken path. The [dotfiles] table auto-heals the symlinks on apply."
 run = '''
 #!/usr/bin/env bash
 set -euo pipefail
 
-# This task is defined in a global [tasks] table (loaded everywhere via
-# the symlinked ~/.config/mise/config.toml), but the script it runs is a
-# tracked file in the dotfiles repo. Resolve the script from the dotfiles
-# root rather than from a mise-internal path so the task survives a
-# `mise bootstrap dotfiles unapply` followed by a fresh apply.
-DOTFILES_ROOT="${DOTFILES_ROOT:-$HOME/.dotfiles}"
-SCRIPT="$DOTFILES_ROOT/scripts/check-mise-env-and-themes.sh"
+# Defined in the global [tasks] table but the script is a tracked file in
+# the dotfiles repo; resolve from the dotfiles root (init.sh exports
+# MISE_DOTFILES_ROOT) so the task survives unapply/reapply and worktrees.
+DOTFILES_ROOT="${MISE_DOTFILES_ROOT:-${DOTFILES_ROOT:-$HOME/.dotfiles}}"
+SCRIPT="$DOTFILES_ROOT/scripts/check-adhd-themes.sh"
 
 if [ ! -f "$SCRIPT" ]; then
-    echo "check-mise-env-and-themes: $SCRIPT not found. Run \`mise bootstrap dotfiles apply\` first." >&2
+    echo "check-adhd-themes: $SCRIPT not found. Run \`mise bootstrap dotfiles apply\` first." >&2
+    exit 1
+fi
+
+exec "$SCRIPT" "$@"
+'''
+
+[tasks.check-mise-secrets]
+# One-time (so far) breakage: a stray line in the secrets env files mise
+# auto-loads crashed every mise command. Verifies every .env under
+# $XDG_RUNTIME_DIR/secrets/ parses as dotenv. Runtime-only (the secrets dir
+# isn't in the repo) so it has no --tracked-only mode. The lasting fix is
+# validation in secrets-unlock before writing the runtime file; this is the
+# standing backstop.
+description = "Verify mise auto-loaded secrets env files ($XDG_RUNTIME_DIR/secrets/*.env) parse as dotenv. Alerts only; exits 1 with the broken file:line. Skips if secrets not unlocked."
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+
+DOTFILES_ROOT="${MISE_DOTFILES_ROOT:-${DOTFILES_ROOT:-$HOME/.dotfiles}}"
+SCRIPT="$DOTFILES_ROOT/scripts/check-mise-secrets.sh"
+
+if [ ! -f "$SCRIPT" ]; then
+    echo "check-mise-secrets: $SCRIPT not found. Run \`mise bootstrap dotfiles apply\` first." >&2
     exit 1
 fi
 
