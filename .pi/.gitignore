@@ -1,0 +1,15 @@
+# Runtime state and credentials — never tracked
+agent/auth.json
+agent/models-store.json
+agent/models.json
+agent/models.json.bak.*
+agent/settings.json
+agent/settings.json.bak.*
+agent/sessions/
+agent/pi-crash.log
+agent/APPEND_SYSTEM.md_
+auth.json
+models.json
+settings.json
+sessions/
+node_modules/

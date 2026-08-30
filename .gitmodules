@@ -10,3 +10,9 @@
 [submodule ".zsh/custom/plugins/zsh-syntax-highlighting"]
 	path = .zsh/custom/plugins/zsh-syntax-highlighting
 	url = https://github.com/zsh-users/zsh-syntax-highlighting.git
+[submodule ".pi/skills/strudel/docs/awesome"]
+	path = .pi/skills/strudel/docs/awesome
+	url = https://github.com/terryds/awesome-strudel.git
+[submodule ".pi/skills/strudel/docs/songs"]
+	path = .pi/skills/strudel/docs/songs
+	url = https://github.com/eefano/strudel-songs-collection.git
