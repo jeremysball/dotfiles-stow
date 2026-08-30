@@ -1,0 +1,41 @@
+# pi writes into this checkout at runtime, and the repo was created with an
+# empty .gitignore, so everything below was showing up as untracked noise and
+# nothing at all was getting committed. Split by why it is excluded.
+
+# Credentials. Never track these.
+auth.json
+agent/auth.json
+
+# Session transcripts. 528M and growing, one directory per session. These are
+# records of what happened, not configuration.
+sessions/
+agent/sessions/
+
+# Runtime caches and crash output.
+agent/models-store.json
+agent/pi-crash.log
+*.log
+
+# Timestamped backups left behind by config edits (agent/models.json.bak.*,
+# agent/settings.json.bak.*). The committed file is the backup now.
+*.bak
+*.bak.*
+
+# Installed dependencies.
+node_modules/
+
+# Symlink farms pointing at absolute paths outside this repo
+# (agent/skills/claude -> /home/jeremy/.claude/skills, agent/CLAUDE.md ->
+# /home/jeremy/.claude/CLAUDE.md). Committing them would hardcode one
+# machine's home directory into the repo.
+agent/skills/
+agent/CLAUDE.md
+
+# skills-archive/ and extensions/auto-prd were flattened into this repo
+# (nested .git dirs removed, history dropped) and are tracked as plain files.
+# Generated/cache dirs inside them (.venv, __pycache__, dist, node_modules)
+# are excluded by the rules above and below.
+
+# Dangling absolute symlink to /home/node/.pi/extensions/auto-prd, a path
+# that does not exist on this machine.
+agent/extensions/auto-prd

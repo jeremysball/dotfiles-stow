@@ -112,6 +112,8 @@ grouped by comment header to match what used to be separate stow packages:
 - `gh` GitHub CLI config and the PAT switcher `.bashrc` sources
 - `systemd` user units and timers
 - `zellij`, `htop`, `superfile`, `himalaya`, `alfred`, `taskferry`, `mcporter`
+- `pi` agent config, extensions, skills, and prds under `.pi/` (absorbed
+  from the old `jeremysball/pi-mono` repo 2026-08-30)
 - an older graphical workstation section (`i3`, `xorg`, `picom`, `alacritty`,
   `helix`, `zsh`, `tmux`), kept for whenever I set one back up
 
@@ -125,6 +127,32 @@ problem.
 
 `hosts.yml` under `gh` holds OAuth tokens and is gitignored. So is
 `superfile/theme/`, which superfile ships itself.
+
+`.pi/` runtime state is gitignored via `.pi/.gitignore`: `auth.json`,
+`models-store.json`, `sessions/`, `node_modules/`, and the `*.bak.*`
+timestamped backups. Those are machine-local (credentials, pi's model cache,
+session history) and stay out of the repo. `agent/settings.json` and
+`agent/models.json` are tracked — they are the live provider catalog and user
+settings, not runtime state — so the tracked `.pi/` holds the config,
+extensions, skills, and prds that should follow a machine.
+
+### Retired LLM providers
+
+On 2026-08-30 three providers were declared dead and commented out of the
+live configs (not deleted — the blocks survive as comments in
+`.config/opencode/opencode.jsonc` and the pi extension files):
+
+- `alibaba-tknplan` — Alibaba token plan lapsed ("Access to model denied"
+  on every dispatch)
+- `opencode-go` — OpenCode Go subscription lapsed
+- `minimax` — MiniMax quota exhausted
+
+To bring any of them back, retrieve the pre-retirement config from the
+`providers/pre-retirement-2026-08-30` tag in this repo (and the matching tag
+in the `~/.pi` repo for the pi-side extensions), then re-enable the
+commented blocks. The tag is the last commit before the retirement change,
+so `git show providers/pre-retirement-2026-08-30:.config/opencode/opencode.jsonc`
+has the full live config as it stood.
 
 `.config/rclone/rclone.conf`, `.config/msmtp/`, and `.config/protonmail/`
 hold credentials and stay out entirely. `himalaya` is here only because its

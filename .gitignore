@@ -26,3 +26,9 @@ fish_variables*
 
 # superfile ships its own theme/ directory; nothing in it is hand-edited.
 .config/superfile/theme/
+
+# ~/.pi is tracked here (absorbed from pi-mono 2026-08-30). The global
+# **/.pi/ ignore rule is for project-local pi state; this repo's copy is
+# the real thing, so re-include it.
+!.pi/
+!.pi/**

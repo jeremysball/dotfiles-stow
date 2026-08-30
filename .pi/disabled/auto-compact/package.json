@@ -1,0 +1,16 @@
+{
+  "name": "@pi/extension-auto-compact",
+  "version": "1.0.0",
+  "description": "Auto-compact extension - triggers compaction at configurable thresholds",
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": "*"
+  },
+  "keywords": ["pi", "extension", "compaction"],
+  "license": "MIT"
+}
