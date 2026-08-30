@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# .githooks/pre-commit — native git hook for the dotfiles repo.
+#
+# Runs scripts/check-mise-env-and-themes.sh --tracked-only on every
+# commit. Catches invalid theme JSON before the commit lands and the
+# symlink is propagated by `mise bootstrap dotfiles apply` on the
+# next machine.
+#
+# Setup (one-time, per dotfiles checkout):
+#   git config core.hooksPath .githooks
+#
+# Why --tracked-only: the env file and runtime symlinks don't exist in
+# this repo or on a fresh CI runner, and the env file's contents are
+# secrets (we don't want them in a hook's stderr anyway). The full
+# runtime check lives in the `mise run check-mise-env-and-themes` task.
+
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+SCRIPT="$REPO_ROOT/scripts/check-mise-env-and-themes.sh"
+
+if [ ! -f "$SCRIPT" ]; then
+    echo "pre-commit: $SCRIPT not found -- skipping check" >&2
+    exit 0
+fi
+
+"$SCRIPT" --tracked-only
