@@ -1,0 +1,80 @@
+{
+  "lastChangelogVersion": "0.83.0",
+  "defaultProvider": "ollama",
+  "defaultModel": "deepseek-v4-flash:0731",
+  "defaultThinkingLevel": "off",
+  "treeFilterMode": "default",
+  "doubleEscapeAction": "tree",
+  "collapseChangelog": true,
+  "hideThinkingBlock": false,
+  "compaction": {
+    "enabled": true,
+    "reserveTokens": 25000,
+    "keepRecentTokens": 20000
+  },
+  "providers": {
+    "openai-codex": {
+      "modelOverrides": {
+        "gpt-5.4": {
+          "contextWindow": 200000
+        },
+        "gpt-5.4-mini": {
+          "contextWindow": 200000
+        },
+        "gpt-5.5": {
+          "contextWindow": 200000
+        },
+        "gpt-5.6-luna": {
+          "contextWindow": 200000
+        },
+        "gpt-5.6-sol": {
+          "contextWindow": 200000
+        },
+        "gpt-5.6-terra": {
+          "contextWindow": 200000
+        }
+      }
+    },
+    "openrouter": {
+      "modelOverrides": {
+        "deepseek/deepseek-v4-flash": {
+          "contextWindow": 400000
+        },
+        "deepseek/deepseek-v4-pro": {
+          "contextWindow": 350000
+        },
+        "tencent/hy3": {
+          "contextWindow": 200000
+        },
+        "tencent/hy3-preview": {
+          "contextWindow": 200000
+        }
+      }
+    },
+    "meta": {
+      "modelOverrides": {
+        "muse-spark-1.1": {
+          "contextWindow": 200000
+        },
+        "muse-spark-1.2": {
+          "contextWindow": 200000
+        },
+        "muse-spark-1.2-contributor": {
+          "contextWindow": 200000
+        }
+      }
+    },
+    "xiaomi-token-plan": {
+      "modelOverrides": {
+        "mimo-v2.5-pro": {
+          "contextWindow": 200000
+        }
+      }
+    }
+  },
+  "theme": "dark",
+  "defaultProjectTrust": "ask",
+  "skills": [
+    "~/.claude/skills"
+  ]
+}
