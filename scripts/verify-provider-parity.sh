@@ -8,13 +8,11 @@
 #
 # Checks:
 #   1. Strict equality for custom providers where we control the full catalog
-#      (alibaba-tknplan, ollama, cheapestinference, xiaomi-tknplan, meta)
-#   2. Subset check for built-in providers where catalog is shared (opencode-go, minimax)
-#      — every non-banned model pi lists must exist in opencode and vice versa
-#      for the dispatched fleet.
-#   3. Banned model check (deepseek-v4-pro family) — must not appear in
+#      (ollama, cheapestinference, xiaomi-tknplan, meta)
+#   2. Banned model check (deepseek-v4-pro family) — must not appear in
 #      strict providers; ignored for built-ins where catalog is unavoidable.
-#   4. Dead provider check (openai/openai-codex) — skipped for parity, warned.
+#   3. Dead provider check (openai/openai-codex, alibaba-tknplan, opencode-go,
+#      minimax) — skipped for parity, warned.
 #
 # Exit 0 on parity, 1 on drift. Human-readable diff on failure.
 # Designed to run in CI (GitHub Actions) and locally.
@@ -81,10 +79,10 @@ sort -u "$OPENCODE_RAW" > "$OPENCODE_MODELS"
 normalize() { tr '[:upper:]' '[:lower:]' ; }
 
 # --- provider classification ---
-STRICT_PROVIDERS=("alibaba-tknplan" "ollama" "cheapestinference" "xiaomi-tknplan" "meta")
-BUILTIN_PROVIDERS=("opencode-go" "minimax")
+STRICT_PROVIDERS=("ollama" "cheapestinference" "xiaomi-tknplan" "meta")
+BUILTIN_PROVIDERS=()
 # Dead providers: skip parity, just warn if present
-DEAD_PROVIDERS=("openai" "openai-codex")
+DEAD_PROVIDERS=("openai" "openai-codex" "alibaba-tknplan" "opencode-go" "minimax")
 
 # Track failures
 FAILURES=()

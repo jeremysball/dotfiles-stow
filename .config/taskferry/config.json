@@ -12,14 +12,8 @@
     "ollama": {
       "maxConcurrentTasks": 3
     },
-    "minimax": {
-      "maxConcurrentTasks": 4
-    },
     "opencode": {
       "maxConcurrentTasks": 3
-    },
-    "alibaba-tknplan": {
-      "maxConcurrentTasks": 2
     }
   }
 }

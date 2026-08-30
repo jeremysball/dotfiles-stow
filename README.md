@@ -126,6 +126,24 @@ problem.
 `hosts.yml` under `gh` holds OAuth tokens and is gitignored. So is
 `superfile/theme/`, which superfile ships itself.
 
+### Retired LLM providers
+
+On 2026-08-30 three providers were declared dead and commented out of the
+live configs (not deleted — the blocks survive as comments in
+`.config/opencode/opencode.jsonc` and the pi extension files):
+
+- `alibaba-tknplan` — Alibaba token plan lapsed ("Access to model denied"
+  on every dispatch)
+- `opencode-go` — OpenCode Go subscription lapsed
+- `minimax` — MiniMax quota exhausted
+
+To bring any of them back, retrieve the pre-retirement config from the
+`providers/pre-retirement-2026-08-30` tag in this repo (and the matching tag
+in the `~/.pi` repo for the pi-side extensions), then re-enable the
+commented blocks. The tag is the last commit before the retirement change,
+so `git show providers/pre-retirement-2026-08-30:.config/opencode/opencode.jsonc`
+has the full live config as it stood.
+
 `.config/rclone/rclone.conf`, `.config/msmtp/`, and `.config/protonmail/`
 hold credentials and stay out entirely. `himalaya` is here only because its
 config fetches the bridge password from `pass` at runtime rather than
