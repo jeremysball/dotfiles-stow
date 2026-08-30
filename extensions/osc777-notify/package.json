@@ -1,0 +1,16 @@
+{
+  "name": "@pi/extension-osc777-notify",
+  "version": "1.0.0",
+  "description": "Notify extension - Notifications for long-running jobs",
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "lint": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": "*"
+  },
+  "keywords": ["pi", "extension", "notifications"],
+  "license": "MIT"
+}
