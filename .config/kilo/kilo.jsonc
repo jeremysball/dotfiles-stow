@@ -138,52 +138,6 @@
         "mistral-large-3:675b": { "name": "Mistral Large 3 675B" },
       }
     },
-    "colab": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Colab",
-      "options": {
-        "baseURL": "https://balmy-untold-catchy.ngrok-free.dev/v1",
-        "apiKey": "local"
-      },
-      "models": {
-        "qwen27b-obliterated": {
-          "name": "Qwen 3.8 27B OBLITERATED",
-          "reasoning": false,
-          "tool_call": true,
-          "limit": { "context": 131072, "output": 8192 }
-        },
-        "qwen27b-uncensored": {
-          "name": "Qwen 3.8 27B Uncensored (JonathanColetti)",
-          "reasoning": false,
-          "tool_call": true,
-          "limit": { "context": 131072, "output": 8192 }
-        }
-      }
-    },
-    "kaggle": {
-      // Live Kaggle T4x2 box (2026-08-27): qwen27b-uncensored, Q6_K 22.4GB
-      // served via cloudflared quick tunnel. The hostname rotates every
-      // kernel run -- grab the current one from the webhook's STAGE-tunnel
-      // post, or run `kaggle kernels` + the notebook again to refresh it.
-      // tool_call is false on purpose: this Modelfile is the naive
-      // FROM-<gguf> build (no TEMPLATE splice), so tool requests 400.
-      // context 32768 matches the box's num_ctx PARAMETER (T4x2 32GB budget
-      // for a 22.4GB model); the colab twins above are the A100 deployment.
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Kaggle",
-      "options": {
-        "baseURL": "https://gasoline-everywhere-clark-infrastructure.trycloudflare.com/v1",
-        "apiKey": "local"
-      },
-      "models": {
-        "qwen27b-uncensored": {
-          "name": "Qwen 3.8 27B Uncensored (JonathanColetti)",
-          "reasoning": false,
-          "tool_call": false,
-          "limit": { "context": 32768, "output": 8192 }
-        }
-      }
-    },
     "meta": {
       // Meta Muse Spark, capped to 200k context to match fleet cap (mirrors pi/opencode).
       "models": {
@@ -277,37 +231,8 @@
           "tool_call": true,
           "limit": { "context": 200000, "output": 32768 } // native ctx 262144 — cheapest here, $0.08/$0.33
         },
-        "huihui-ai/Llama-3.3-70B-Instruct-abliterated": {
-          // No tool calling and only a 16k window — chat/prose use only.
-          "name": "Llama 3.3 70B Abliterated",
-          "reasoning": false,
-          "tool_call": false,
-          "limit": { "context": 16384, "output": 16384 } // $0.70/$0.70
-        },
-        "venice-uncensored": {
-          "name": "Venice Uncensored",
-          "reasoning": false,
-          "tool_call": false,
-          "limit": { "context": 128000, "output": 8192 } // $0.40/$1.80
-        },
-        "nousresearch/hermes-4-405b": {
-          // Hermes 4 405B — neutrally-aligned, steerable; no tool calling.
-          "name": "Hermes 4 405B",
-          "reasoning": false,
-          "tool_call": false,
-          "limit": { "context": 128000, "output": 8192 } // $0.30/$1.20
-        },
 
         // --- Models the rest of the fleet cannot reach at all.
-        "moonshotai/kimi-k3": {
-          // Full Kimi K3. opencode-go carries a k3 but caps output at
-          // 131072; this route is always-thinking and multimodal
-          // (image + video in), with a 1M native window both ways.
-          "name": "Kimi K3 (NanoGPT)",
-          "reasoning": true,
-          "tool_call": true,
-          "limit": { "context": 200000, "output": 200000 } // native 1048576/1048576 — $2/$10
-        },
         "anthropic/claude-opus-5": {
           // Claude via a third party. Only reach for this when something
           // genuinely needs Claude *outside* the Claude Code session —
@@ -316,12 +241,6 @@
           "reasoning": true,
           "tool_call": true,
           "limit": { "context": 200000, "output": 128000 } // native ctx 1000000 — $5/$25, priciest non-fugu route
-        },
-        "anthropic/claude-sonnet-5": {
-          "name": "Claude Sonnet 5 (NanoGPT)",
-          "reasoning": false,
-          "tool_call": true,
-          "limit": { "context": 200000, "output": 128000 } // native ctx 1000000 — $2/$10
         },
         "x-ai/grok-4.20-multi-agent": {
           // Grok's multi-agent variant; 2M native window is the largest
@@ -347,18 +266,6 @@
           "tool_call": true,
           "limit": { "context": 200000, "output": 131072 } // native ctx 1048576 — $0.10/$0.20
         },
-        "longcat-2.0": {
-          "name": "LongCat 2.0",
-          "reasoning": false,
-          "tool_call": true,
-          "limit": { "context": 200000, "output": 262144 } // native ctx 1048756 — $0.75/$3
-        },
-        "kwaipilot/kat-coder-pro-v2.5": {
-          "name": "KAT Coder Pro v2.5",
-          "reasoning": false,
-          "tool_call": true,
-          "limit": { "context": 200000, "output": 80000 } // native ctx 256000 — $0.74/$2.96
-        },
         "nanogpt/coding-router": {
           // NanoGPT's own routing model — picks a backend per request, so
           // cost varies. Exposes low/medium/high/max as separate upstream
@@ -376,14 +283,6 @@
           "tool_call": false,
           "limit": { "context": 127000, "output": 128000 } // $2/$8
         },
-        "sonar-deep-research": {
-          // Long-running: a trivial prompt still returned a multi-section
-          // report and took ~2 min. Budget max_tokens generously.
-          "name": "Perplexity Sonar Deep Research",
-          "reasoning": false,
-          "tool_call": false,
-          "limit": { "context": 60000, "output": 128000 } // $3.40/$13.60
-        }
       }
     }
   },
