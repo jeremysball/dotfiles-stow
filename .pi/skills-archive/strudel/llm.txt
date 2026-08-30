@@ -1,0 +1,493 @@
+# Strudel Live Coding Reference
+
+Strudel is a JavaScript port of TidalCycles for browser-based algorithmic music. Patterns loop within "cycles" (default: 2 seconds per cycle).
+
+## Quick Start
+
+```javascript
+s("bd sd hh")                         // play samples
+note("c3 e3 g3").s("sawtooth")        // play notes with a synth
+$: s("bd*4")                          // parallel patterns with $:
+$: note("c2 eb2 g3").s("triangle")
+setcpm(120/4)                         // tempo: 120 BPM / 4 beats per cycle
+```
+
+## Mini-Notation (Pattern Language)
+
+### Basic
+| Syntax | Meaning | Example |
+|--------|---------|---------|
+| space | sequence | `"c e g"` |
+| `,` | parallel/chord | `"[c,e,g]"` |
+| `[]` | sub-sequence | `"c [e g]"` |
+| `~` or `-` | rest | `"c ~ g"` |
+| `:` | sample number | `"bd:1 sd:0"` |
+
+### Timing
+| Syntax | Meaning | Example |
+|--------|---------|---------|
+| `*n` | speed up n× | `"[c e]*2"` |
+| `/n` | slow down n× | `"[c e]/2"` |
+| `<>` | one per cycle | `"<c e g>"` = `"[c e g]/3"` |
+| `@n` | elongate | `"c@2 e"` (c lasts 2×) |
+| `!n` | replicate | `"c!2 e"` (c plays twice) |
+
+### Randomness
+| Syntax | Meaning | Example |
+|--------|---------|---------|
+| `?` | 50% chance | `"c?"` |
+| `?n` | n% chance | `"c?0.8"` |
+| `\|` | random choice | `"c\|e\|g"` |
+
+### Euclidean
+`s("bd(3,8)")` — 3 beats spread across 8 slots
+`s("bd(3,8,2)")` — with rotation offset 2
+
+## Core Functions
+
+```javascript
+s("bd sd")                  // play sample by name
+note("c3 e3 g3")            // play note (name or MIDI number)
+freq(440)                   // play frequency in Hz
+n("0 2 4").scale("C:major") // scale degrees
+chord("C Am Dm G")          // chord symbols
+```
+
+## Available Sounds
+
+### Default Samples
+Drums: `bd`(kick), `sd`(snare), `hh`(closed hat), `oh`(open hat), `cp`(clap), `rim`(rimshot), `lt/mt/ht`(toms), `rd`(ride), `cr`(crash)
+Other: `sh`(shaker), `cb`(cowbell), `tb`(tambourine), `perc`, `misc`, `fx`
+
+### Drum Banks
+Select with `.bank("name")`. Available banks:
+- **RolandTR808** — classic 808 (boomy kick, clicky hats, snappy snare)
+- **RolandTR909** — classic 909 (punchy kick, sizzle hats, heavy snare)
+- **LinnDrum** / **linndrum** — LinnDrum (80s pop/wave)
+- **linn9000** — Linn 9000
+- **EmuDrumulator** — Emu Drumulator
+- **dmx** — Oberheim DMX
+
+```javascript
+s("bd sd bd sd").bank("RolandTR808")
+s("bd sd").bank("RolandTR909")
+s("hh*8").bank("LinnDrum")
+```
+
+### Built-In Synths
+```javascript
+note("c3").s("sine")         // pure sine wave
+note("c3").s("sawtooth")     // or "saw" — bright, buzzy
+note("c3").s("square")       // hollow, reedy
+note("c3").s("triangle")     // default if only note() used — soft, mellow
+note("c3").s("supersaw")     // detuned multi-saw — thick, lush
+```
+
+### Noise Sources
+```javascript
+s("white")                   // harsh full-spectrum noise
+s("pink")                    // softer, rolled-off highs
+s("brown")                   // deep rumble
+s("crackle").density(0.05)   // vinyl crackle — density controls amount
+note("c3").noise(0.25)       // add pink noise to any oscillator
+```
+
+### GM (General MIDI) Instruments
+Use as `.s("gm_name")`. Common ones:
+```
+gm_piano                     gm_electric_guitar_clean
+gm_overdriven_guitar         gm_electric_bass_pick
+gm_electric_bass_finger      gm_synth_bass_1
+gm_violin                    gm_string_ensemble_2
+gm_choir_aahs                gm_pad_choir
+gm_pad_bowed                 gm_trumpet
+gm_brass_section             gm_tuba
+gm_flute                     gm_piccolo
+gm_church_organ              gm_percussive_organ
+gm_accordion                 gm_vibraphone
+gm_dulcimer                  gm_lead_1_square
+gm_lead_2_sawtooth           gm_gunshot
+```
+
+## Envelope (ADSR)
+
+```javascript
+note("c3").attack(0.01).decay(0.1).sustain(0.5).release(0.2)
+note("c3").adsr("0.01:0.1:0.5:0.2")  // shorthand
+```
+
+## Pitch Envelope
+
+Sweep the pitch at note onset — essential for 808 kicks and bass slides:
+```javascript
+note("c1").s("sine").penv(12)          // sweep down 12 semitones
+note("c1").s("sine").penv(-5)          // sweep up 5 semitones
+note("c1").penv(24).pdec(0.05)         // pdec = pitch decay time
+note("c1").penv(12).patt(0.01)         // patt = pitch attack time
+note("c1").penv(12).panchor(0)         // panchor: 0 = start at base, sweep up to +penv
+```
+
+## FM Synthesis
+
+```javascript
+note("c3").fm(4)             // modulation index (higher = brighter/harsher)
+note("c3").fmh(2)            // harmonicity ratio (integer = harmonic, fractional = inharmonic)
+note("c3").fmwave("sine")    // modulator waveform
+note("c3").fmattack(0.01).fmdecay(0.1).fmsustain(0.5)  // FM envelope
+note("c3").fmenv(4)          // FM envelope depth
+```
+
+## Vibrato
+
+```javascript
+note("a3").vib(4)            // 4Hz vibrato
+note("a3").vib("4:12")       // 4Hz, 12 semitone depth
+note("a3").vib(6).vibmod(0.5) // vibmod sets depth in semitones
+```
+
+## Additive Synthesis
+
+```javascript
+note("c3").partials([1, 0.5, 0.25])       // harmonic amplitudes
+note("c3").s("user").partials([1, 0, 0.3]) // custom waveform via "user"
+note("c3").partials(randL(10))             // random harmonics
+```
+
+## Audio Effects
+
+### Signal Chain (order matters)
+Effects apply in this fixed order:
+1. Gain (+ volume ADSR)
+2. Low-pass filter (`lpf`)
+3. High-pass filter (`hpf`)
+4. Band-pass filter (`bpf`)
+5. Vowel filter (`vowel`)
+6. Sample rate reduction (`coarse`)
+7. Bit crush (`crush`)
+8. Waveshape distortion (`shape`)
+9. Distortion (`distort`)
+10. Tremolo
+11. Compressor
+12. Pan
+13. Phaser
+→ Then split to: dry output, delay send, reverb send
+
+### Filters
+```javascript
+.lpf(1000)           // low-pass cutoff in Hz
+.hpf(200)            // high-pass cutoff in Hz
+.bpf(500)            // band-pass center in Hz
+.resonance(5)        // synonym: .lpq(5) — filter Q, 0-50
+.hpq(5)              // high-pass Q
+.bpq(5)              // band-pass Q
+.ftype("ladder")     // filter type: "12db" (0), "ladder" (1), "24db" (2)
+                     // ladder is more aggressive
+```
+
+### Filter Envelopes
+Sweep the filter cutoff with an envelope — the soul of synth sound design:
+```javascript
+.lpenv(4)            // filter envelope depth (semitones above cutoff)
+.lpa(0)              // filter attack
+.lpd(0.2)            // filter decay
+.lpe(1)              // filter envelope amount
+.lpr(1)              // filter release
+// Also: .hpenv(), .bpenv() for high-pass and band-pass
+```
+
+### Delay
+```javascript
+.delay(0.5)                  // delay send amount 0-1
+.delay("0.5:0.25")           // amount:feedback
+.delay("0.5:0.25:0.3")       // amount:feedback:time
+// Shorthands:
+.dt(0.3)                     // delay time
+.dfb(0.25)                   // delay feedback
+```
+
+### Reverb
+```javascript
+.room(0.5)           // reverb send amount 0-1
+.size(4)             // reverb size (roomsize/rsize also work)
+.dry(0.8)            // dry signal amount (default 1)
+```
+
+### Distortion
+```javascript
+.distort(0.5)        // standard distortion (use "amount:wet" for mix)
+.shape(0.5)          // waveshaping — different character than distort
+.crush(8)            // bit depth reduction (lower = harsher)
+.coarse(4)           // sample rate reduction
+```
+
+### Dynamics & Stereo
+```javascript
+.gain(0.5)           // volume 0-1+ (overall level)
+.velocity(0.8)       // per-note volume (use for drums)
+.pan(0.5)            // stereo: 0=left, 0.5=center, 1=right
+.compressor(-20)     // threshold in dB
+.postgain(1.5)       // gain after effects chain
+```
+
+### Modulation
+```javascript
+.vowel("a e i o u")  // formant vowel filter
+.phaser(0.5)         // phaser rate
+.chorus(0.5)         // chorus amount
+.tremolo(0.5)        // tremolo rate (free-running)
+.tremolosync(4)      // tremolo synced to cycles
+.tremolodepth(0.8)   // tremolo depth
+```
+
+### Sample Playback
+```javascript
+.speed(1.5)          // playback speed (2 = octave up, 0.5 = octave down)
+.begin(0.25)         // skip to 25% of sample
+.end(0.5)            // cut at 50% of sample
+.loop(1)             // loop the sample
+.cut(1)              // choke group — cuts other sounds in same group
+.clip(1)             // legato multiplier
+```
+
+### Echo (distinct from delay)
+```javascript
+.echo(3, 0.25, 0.5)  // echoes, time between, feedback
+```
+
+## Orbits (Mixing)
+
+Each `$:` pattern sends to an orbit. Patterns sharing an orbit share one reverb and one delay. The default orbit is 1.
+
+**If two patterns fight over reverb/delay settings, separate their orbits:**
+```javascript
+$: s("bd*4").room(0.1).orbit(1)
+$: note("c4*4").s("sine").room(0.8).size(6).orbit(2)  // different reverb
+```
+
+## Pattern Modifiers
+
+### Time
+```javascript
+.fast(2)             // 2× faster
+.slow(2)             // 2× slower
+.rev()               // reverse pattern order
+.early(0.25)         // shift earlier by fraction of cycle
+.late(0.02)          // shift later — use for humanize/swing
+```
+
+### Pitch
+```javascript
+.add(12)             // transpose up 12 semitones
+.sub(7)              // transpose down 7 semitones
+.transpose(12)       // alias for add
+```
+
+### Repetition & Density
+```javascript
+.ply(2)              // repeat each event 2×
+.struct("x ~ x x")   // impose rhythmic structure onto any pattern
+.segment(16)         // quantize a continuous signal into 16 steps
+.seg(16)             // alias for segment
+```
+
+### Randomness & Probability
+```javascript
+.degrade()           // randomly drop 50% of events
+.degradeBy(0.3)      // randomly drop 30% of events
+.sometimes(x => x.crush(4))      // apply 50% of the time
+.often(x => x.speed(2))          // apply 75% of the time
+.rarely(x => x.rev())            // apply 25% of the time
+.almostAlways(x => x.delay(0.3)) // apply 90% of the time
+.almostNever(x => x.crush(2))    // apply 10% of the time
+.sometimesBy(0.3, x => x.gain(0)) // apply with custom probability
+.someCycles(x => x.fast(2))      // apply to 50% of cycles
+.someCyclesBy(0.3, x => x.fast(2)) // apply to 30% of cycles
+```
+
+### Layering & Combination
+```javascript
+// layer: split one pattern through multiple transformations
+note("c3 e3 g3").layer(
+  x => x.s("sine").gain(0.5),           // layer 1
+  x => x.s("sawtooth").lpf(400).gain(0.3), // layer 2
+  x => x.transpose(12).s("triangle").gain(0.2) // layer 3
+)
+
+// superimpose: play original + modified copy together
+note("c3 e3").s("sine").superimpose(x => x.add(12).gain(0.3))
+
+// off: delayed modified copy
+note("c3 e3").s("sine").off(1/8, x => x.add(7).gain(0.3))
+
+// jux: apply function to right channel only
+s("bd sd hh cp").jux(x => x.rev())
+
+// stack: combine independent patterns
+stack(
+  s("bd sd"),
+  note("c3 e3").s("sine")
+)
+```
+
+## Chords & Voicings
+
+```javascript
+chord("C Am Dm G")                   // basic chords
+chord("Cmaj7 Dm7 G7")               // seventh chords
+chord("Cmaj9 Fmaj7").voicing()       // auto voice-leading
+chord("Cmaj9 Fmaj7").voicing().anchor("c5") // anchor top note
+
+// Extract bass notes from a chord progression:
+chord("<C Am F G>").rootNotes(2).note().s("sawtooth").lpf(200)
+```
+
+Symbols: `m`=minor, `M/maj`=major, `7`=seventh, `dim`=diminished, `aug`=augmented, `sus2`, `sus4`, `add9`, `9`, `11`, `13`
+
+## Scales
+
+```javascript
+n("0 2 4 6").scale("C:major")
+n("0 2 4 6").scale("A:minor")
+n("0 2 4 6").scale("D:dorian")
+```
+
+Common: `major`, `minor`, `dorian`, `phrygian`, `lydian`, `mixolydian`, `locrian`, `pentatonic`, `blues`, `chromatic`, `harmonic_minor`
+
+## Signals (Continuous Modulation)
+
+```javascript
+sine / saw / square / tri / rand / perlin
+
+// Modulate filter cutoff with a slow sine wave:
+.lpf(sine.slow(4).range(200, 2000))
+
+// Random panning:
+.pan(rand)
+
+// Perlin noise for organic drift:
+.gain(perlin.range(0.3, 0.8))
+```
+
+**Signals sample only when a note fires.** To fake continuous sweeps, add `.seg(16)`:
+```javascript
+s("supersaw").seg(16).lpf(sine.slow(2).range(100, 5000))
+```
+
+## Song Structure
+
+### arrange — sequence sections over time
+```javascript
+const intro = s("hh*8").gain(0.3)
+const drop  = stack(s("bd*4"), note("c2").s("sawtooth").lpf(200))
+const break_ = note("c4 e4 g4").s("sine").room(0.8)
+
+stack(
+  arrange([8, intro], [16, drop], [8, break_], [16, drop]),
+  // ... other layers
+).cpm(128/4)
+```
+
+### mask — mute/unmute layers over time
+```javascript
+$: note("c3 e3 g3").s("sine").mask("<0 0 1 1>/4")  // silent for 2 cycles, plays for 2
+```
+
+## Pattern Selection
+
+### pickOut — map names to sounds (for drum programming)
+```javascript
+"<bd sd [bd bd] [sd cp]>".pickOut({
+  bd: s('bd').velocity(0.8).lpf(800),
+  sd: s('sd').velocity(0.7).hpf(200),
+  cp: s('cp').velocity(0.5).room(0.3)
+}).bank("RolandTR808")
+```
+
+### pickRestart — switch between named sub-patterns
+```javascript
+const song = "<a@8 b@8>"
+const melodies = {
+  a: "c4 e4 g4 c5",
+  b: "f4 a4 c5 f5"
+}
+note(song.pickRestart(melodies)).s("sine")
+```
+
+## Custom Samples
+
+```javascript
+// From GitHub
+samples('github:tidalcycles/dirt-samples')
+
+// From URL with base path
+samples({
+  kick: 'bd/BT0AADA.wav',
+  snare: ['sd/01.wav', 'sd/02.wav'],
+}, 'https://raw.githubusercontent.com/tidalcycles/Dirt-Samples/master/')
+```
+
+## Common Patterns
+
+### Drums
+```javascript
+s("bd [~ bd] sd bd, hh*8")            // Rock
+s("bd*4, [~ oh]*2, hh*16")            // House
+s("bd*4, sd*4, hh*16, oh*4")          // Techno
+s("bd(3,8), sd(5,8), hh(7,16)")       // Breakbeat
+```
+
+### Full Track
+```javascript
+setcpm(128/4)
+$: s("bd*4, [~ sd]*2, hh*8").bank("RolandTR909").gain(0.8).orbit(1)
+$: note("<c2 [c2 eb2] f2 g2>").s("sawtooth").lpf(300).gain(0.5).orbit(2)
+$: chord("<Cm Am Fm Gm>").voicing().s("triangle").lpf(2000).room(0.5).gain(0.3).orbit(3)
+$: note("<e5 g5 bb5 c6>/2").s("sine").delay(0.4).gain(0.25).orbit(4)
+```
+
+## ⚠ Common Pitfalls
+
+### Effects are single-use
+You cannot chain two of the same effect. The second overrides the first:
+```javascript
+// WRONG — second lpf replaces the first:
+s("bd").lpf(100).distort(2).lpf(800)
+// The sound only gets lpf(800)
+```
+
+### Orbits share reverb and delay
+Two `$:` patterns on the same orbit share one reverb and one delay. If they set different `.room()` or `.size()` values, results are unpredictable. Fix: assign different `.orbit()` values.
+
+### Continuous modulation needs seg()
+`.lpf(sine.range(100, 5000))` does NOT sweep the filter continuously. The sine value is sampled only when a note triggers. To fake it:
+```javascript
+s("supersaw").seg(16).lpf(sine.slow(2).range(100, 5000))
+```
+
+### gain vs velocity
+`.gain()` sets overall volume for the pattern. `.velocity()` sets per-event volume — use it for drums where each hit needs its own level.
+
+## Tips
+
+- `_$:` mutes a pattern (prefix with underscore)
+- `?` after event = 50% chance of playing
+- `|` between events = random choice each cycle
+- `.off(1/8, x => x.add(12))` = echo + transpose — instant texture
+- `.layer()` is the most powerful tool for rich timbres
+- `.orbit()` every `$:` line in a complex track to avoid reverb/delay conflicts
+- `all(x => x.room(0.3))` applies an effect to all patterns at once
+
+## Key Concepts
+
+1. **Cycles**: patterns fit within cycles. More events compress; fewer events stretch.
+2. **Chaining**: methods chain left to right: `note("c").s("saw").lpf(400).gain(0.5)`
+3. **Parallel**: use `stack()` or `$:` to play multiple patterns simultaneously.
+4. **Everything patterns**: most parameters accept patterns: `.lpf("<400 800 1200>")`
+5. **Layer for richness**: `.layer()` sends one pattern through multiple effect chains.
+6. **Orbits for mixing**: separate your reverb/delay buses with `.orbit(n)`.
+
+## Resources
+
+- REPL: https://strudel.cc/
+- Docs: https://strudel.cc/learn/getting-started/
+- Song examples: ./docs/songs/ directory

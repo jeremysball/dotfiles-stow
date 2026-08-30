@@ -31,16 +31,11 @@ node_modules/
 agent/skills/
 agent/CLAUDE.md
 
-# skills-archive/ and extensions/auto-prd are each a directory full of
-# independent git checkouts (32 of them under skills-archive alone: ast-grep,
-# boxer, civitai, ... writing-clearly-and-concisely). `git add` turns those
-# into gitlinks with no submodule registration behind them, which clones as
-# empty directories and silently loses every file. They need registering as
-# real submodules, one `git submodule add` per repo, which is its own piece of
-# work rather than something to sneak into a tracking commit.
-skills-archive/
-extensions/auto-prd/
+# skills-archive/ and extensions/auto-prd were flattened into this repo
+# (nested .git dirs removed, history dropped) and are tracked as plain files.
+# Generated/cache dirs inside them (.venv, __pycache__, dist, node_modules)
+# are excluded by the rules above and below.
 
 # Dangling absolute symlink to /home/node/.pi/extensions/auto-prd, a path
-# that does not exist on this machine. See extensions/auto-prd above.
+# that does not exist on this machine.
 agent/extensions/auto-prd
