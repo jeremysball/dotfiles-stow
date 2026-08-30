@@ -1,192 +1,196 @@
-/**
- * Alibaba Cloud Model Studio "Token Plan" subscription provider (SG
- * endpoint, verified live with $ALIBABA_TKN_PLAN_API_KEY → 200 OK on
- * https://token-plan.ap-southeast-1.maas.aliyuncs.com/apps/anthropic/v1/messages).
- *
- * Pi's Anthropic SDK appends `/v1/messages` to whatever baseUrl is
- * configured (the built-in `anthropic` provider uses bare
- * `https://api.anthropic.com` with no `/v1`); baseUrl here stops at
- * `/apps/anthropic`. Appending `/v1` would 404 every request — same gotcha
- * already documented for the Xiaomi token-plan extension at
- * ~/.pi/agent/extensions/xiaomi-token-plan.js.
- *
- * Only the preview model carries an explicit thinkingLevelMap; the rest
- * rely on the provider default per user instruction (no per-model
- * budgetTokens override).
- *
- * Parity with opencode: this list mirrors
- * ~/.dotfiles/.config/opencode/opencode.jsonc provider.alibaba-tknplan.
- *
- * The id is deliberately "alibaba-tknplan", NOT "alibaba-token-plan": the
- * latter is a built-in models.dev provider in both opencode and kilo, and
- * taking that id makes the built-in definition win the config merge and
- * every call 404. Same collision-avoidance story as xiaomi-token-plan on
- * the opencode side. The contraction stays by design.
- *
- * deepseek-v4-pro-0813 is REQUEST-ONLY, which is not the same as the ban
- * being lifted. The 2026-08-21 choosing-a-model order ("pro is dog") was
- * superseded 2026-08-30 by "pro should stay but it is REQUEST ONLY no
- * dispatch": the model stays registered here so a request for it by name
- * resolves, and must never be picked as a default, a fallback, or a
- * dispatch target on the agent's own initiative. Registration is the
- * requirement, not an exemption from it — an unregistered model cannot be
- * requested at all, which is why this entry exists rather than being
- * deleted the way it was between 2026-08-22 and 2026-08-30.
- *
- * Keep the two in sync; verify-provider-parity.sh enforces both halves:
- * the id must be registered in every harness carrying the provider, and no
- * configured default in opencode.jsonc, kilo.jsonc or taskferry's
- * config.json may resolve to it.
- */
-export default function (pi) {
-  pi.registerProvider("alibaba-tknplan", {
-    name: "Alibaba Cloud Model Studio (Token Plan, SG)",
-    baseUrl: "https://token-plan.ap-southeast-1.maas.aliyuncs.com/apps/anthropic",
-    apiKey: process.env.ALIBABA_TOKEN_PLAN_API_KEY || process.env.ALIBABA_TKN_PLAN_API_KEY || "$ALIBABA_TOKEN_PLAN_API_KEY",
-    api: "anthropic-messages",
-    models: [
-      {
-        id: "qwen3.8-max-preview",
-        name: "Qwen3.8 Max Preview",
-        reasoning: true,
-        input: ["text"],
-        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-        contextWindow: 983616,
-        maxTokens: 131072,
-        thinkingLevelMap: {
-          off: null,
-          minimal: null,
-          low: null,
-          medium: null,
-          high: "high",
-        },
-      },
-      {
-        id: "qwen3.7-max",
-        name: "Qwen3.7 Max",
-        reasoning: true,
-        input: ["text"],
-        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-        contextWindow: 1048576,
-        maxTokens: 131072,
-      },
-      {
-        id: "qwen3.7-plus",
-        name: "Qwen3.7 Plus",
-        reasoning: true,
-        input: ["text", "image"],
-        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-        contextWindow: 1048576,
-        maxTokens: 131072,
-      },
-      {
-        id: "qwen3.6-plus",
-        name: "Qwen3.6 Plus",
-        reasoning: true,
-        input: ["text", "image"],
-        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-        contextWindow: 1048576,
-        maxTokens: 131072,
-      },
-      {
-        id: "qwen3.6-flash",
-        name: "Qwen3.6 Flash",
-        reasoning: true,
-        input: ["text", "image"],
-        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-        contextWindow: 1048576,
-        maxTokens: 131072,
-      },
-      {
-        id: "deepseek-v4-flash-0731",
-        name: "DeepSeek V4 Flash 0731",
-        reasoning: true,
-        input: ["text"],
-        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-        contextWindow: 400000,
-        maxTokens: 131072,
-      },
-      {
-        id: "deepseek-v4-pro-0813",
-        name: "DeepSeek V4 Pro 0813",
-        reasoning: true,
-        input: ["text"],
-        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-        contextWindow: 350000,
-        maxTokens: 131072,
-      },
-      {
-        id: "deepseek-v3.2",
-        name: "DeepSeek V3.2",
-        reasoning: true,
-        input: ["text"],
-        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-        contextWindow: 1048576,
-        maxTokens: 131072,
-      },
-      {
-        id: "kimi-k2.7-code",
-        name: "Kimi K2.7 Code",
-        reasoning: true,
-        input: ["text"],
-        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-        contextWindow: 1048576,
-        maxTokens: 131072,
-      },
-      {
-        id: "kimi-k2.6",
-        name: "Kimi K2.6",
-        reasoning: true,
-        input: ["text"],
-        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-        contextWindow: 1048576,
-        maxTokens: 131072,
-      },
-      {
-        id: "kimi-k2.5",
-        name: "Kimi K2.5",
-        reasoning: true,
-        input: ["text"],
-        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-        contextWindow: 1048576,
-        maxTokens: 131072,
-      },
-      {
-        id: "glm-5.2",
-        name: "GLM 5.2",
-        reasoning: true,
-        input: ["text"],
-        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-        contextWindow: 1048576,
-        maxTokens: 131072,
-      },
-      {
-        id: "glm-5.1",
-        name: "GLM 5.1",
-        reasoning: true,
-        input: ["text"],
-        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-        contextWindow: 1048576,
-        maxTokens: 131072,
-      },
-      {
-        id: "glm-5",
-        name: "GLM 5",
-        reasoning: true,
-        input: ["text"],
-        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-        contextWindow: 1048576,
-        maxTokens: 131072,
-      },
-      {
-        id: "MiniMax-M2.5",
-        name: "MiniMax M2.5",
-        reasoning: true,
-        input: ["text"],
-        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-        contextWindow: 1048576,
-        maxTokens: 131072,
-      },
-    ],
-  });
-}
+// DEAD 2026-08-30: alibaba token plan lapsed ("Access to model denied"
+// on every dispatch, task oc_mtfxgej4_a29b5fd1). Whole file commented
+// out, not deleted, so the provider shape survives for a future
+// re-enable.
+// /**
+//  * Alibaba Cloud Model Studio "Token Plan" subscription provider (SG
+//  * endpoint, verified live with $ALIBABA_TKN_PLAN_API_KEY → 200 OK on
+//  * https://token-plan.ap-southeast-1.maas.aliyuncs.com/apps/anthropic/v1/messages).
+//  *
+//  * Pi's Anthropic SDK appends `/v1/messages` to whatever baseUrl is
+//  * configured (the built-in `anthropic` provider uses bare
+//  * `https://api.anthropic.com` with no `/v1`); baseUrl here stops at
+//  * `/apps/anthropic`. Appending `/v1` would 404 every request — same gotcha
+//  * already documented for the Xiaomi token-plan extension at
+//  * ~/.pi/agent/extensions/xiaomi-token-plan.js.
+//  *
+//  * Only the preview model carries an explicit thinkingLevelMap; the rest
+//  * rely on the provider default per user instruction (no per-model
+//  * budgetTokens override).
+//  *
+//  * Parity with opencode: this list mirrors
+//  * ~/.dotfiles/.config/opencode/opencode.jsonc provider.alibaba-tknplan.
+//  *
+//  * The id is deliberately "alibaba-tknplan", NOT "alibaba-token-plan": the
+//  * latter is a built-in models.dev provider in both opencode and kilo, and
+//  * taking that id makes the built-in definition win the config merge and
+//  * every call 404. Same collision-avoidance story as xiaomi-token-plan on
+//  * the opencode side. The contraction stays by design.
+//  *
+//  * deepseek-v4-pro-0813 is REQUEST-ONLY, which is not the same as the ban
+//  * being lifted. The 2026-08-21 choosing-a-model order ("pro is dog") was
+//  * superseded 2026-08-30 by "pro should stay but it is REQUEST ONLY no
+//  * dispatch": the model stays registered here so a request for it by name
+//  * resolves, and must never be picked as a default, a fallback, or a
+//  * dispatch target on the agent's own initiative. Registration is the
+//  * requirement, not an exemption from it — an unregistered model cannot be
+//  * requested at all, which is why this entry exists rather than being
+//  * deleted the way it was between 2026-08-22 and 2026-08-30.
+//  *
+//  * Keep the two in sync; verify-provider-parity.sh enforces both halves:
+//  * the id must be registered in every harness carrying the provider, and no
+//  * configured default in opencode.jsonc, kilo.jsonc or taskferry's
+//  * config.json may resolve to it.
+//  */
+// export default function (pi) {
+//   pi.registerProvider("alibaba-tknplan", {
+//     name: "Alibaba Cloud Model Studio (Token Plan, SG)",
+//     baseUrl: "https://token-plan.ap-southeast-1.maas.aliyuncs.com/apps/anthropic",
+//     apiKey: process.env.ALIBABA_TOKEN_PLAN_API_KEY || process.env.ALIBABA_TKN_PLAN_API_KEY || "$ALIBABA_TOKEN_PLAN_API_KEY",
+//     api: "anthropic-messages",
+//     models: [
+//       {
+//         id: "qwen3.8-max-preview",
+//         name: "Qwen3.8 Max Preview",
+//         reasoning: true,
+//         input: ["text"],
+//         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+//         contextWindow: 983616,
+//         maxTokens: 131072,
+//         thinkingLevelMap: {
+//           off: null,
+//           minimal: null,
+//           low: null,
+//           medium: null,
+//           high: "high",
+//         },
+//       },
+//       {
+//         id: "qwen3.7-max",
+//         name: "Qwen3.7 Max",
+//         reasoning: true,
+//         input: ["text"],
+//         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+//         contextWindow: 1048576,
+//         maxTokens: 131072,
+//       },
+//       {
+//         id: "qwen3.7-plus",
+//         name: "Qwen3.7 Plus",
+//         reasoning: true,
+//         input: ["text", "image"],
+//         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+//         contextWindow: 1048576,
+//         maxTokens: 131072,
+//       },
+//       {
+//         id: "qwen3.6-plus",
+//         name: "Qwen3.6 Plus",
+//         reasoning: true,
+//         input: ["text", "image"],
+//         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+//         contextWindow: 1048576,
+//         maxTokens: 131072,
+//       },
+//       {
+//         id: "qwen3.6-flash",
+//         name: "Qwen3.6 Flash",
+//         reasoning: true,
+//         input: ["text", "image"],
+//         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+//         contextWindow: 1048576,
+//         maxTokens: 131072,
+//       },
+//       {
+//         id: "deepseek-v4-flash-0731",
+//         name: "DeepSeek V4 Flash 0731",
+//         reasoning: true,
+//         input: ["text"],
+//         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+//         contextWindow: 400000,
+//         maxTokens: 131072,
+//       },
+//       {
+//         id: "deepseek-v4-pro-0813",
+//         name: "DeepSeek V4 Pro 0813",
+//         reasoning: true,
+//         input: ["text"],
+//         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+//         contextWindow: 350000,
+//         maxTokens: 131072,
+//       },
+//       {
+//         id: "deepseek-v3.2",
+//         name: "DeepSeek V3.2",
+//         reasoning: true,
+//         input: ["text"],
+//         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+//         contextWindow: 1048576,
+//         maxTokens: 131072,
+//       },
+//       {
+//         id: "kimi-k2.7-code",
+//         name: "Kimi K2.7 Code",
+//         reasoning: true,
+//         input: ["text"],
+//         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+//         contextWindow: 1048576,
+//         maxTokens: 131072,
+//       },
+//       {
+//         id: "kimi-k2.6",
+//         name: "Kimi K2.6",
+//         reasoning: true,
+//         input: ["text"],
+//         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+//         contextWindow: 1048576,
+//         maxTokens: 131072,
+//       },
+//       {
+//         id: "kimi-k2.5",
+//         name: "Kimi K2.5",
+//         reasoning: true,
+//         input: ["text"],
+//         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+//         contextWindow: 1048576,
+//         maxTokens: 131072,
+//       },
+//       {
+//         id: "glm-5.2",
+//         name: "GLM 5.2",
+//         reasoning: true,
+//         input: ["text"],
+//         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+//         contextWindow: 1048576,
+//         maxTokens: 131072,
+//       },
+//       {
+//         id: "glm-5.1",
+//         name: "GLM 5.1",
+//         reasoning: true,
+//         input: ["text"],
+//         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+//         contextWindow: 1048576,
+//         maxTokens: 131072,
+//       },
+//       {
+//         id: "glm-5",
+//         name: "GLM 5",
+//         reasoning: true,
+//         input: ["text"],
+//         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+//         contextWindow: 1048576,
+//         maxTokens: 131072,
+//       },
+//       {
+//         id: "MiniMax-M2.5",
+//         name: "MiniMax M2.5",
+//         reasoning: true,
+//         input: ["text"],
+//         cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+//         contextWindow: 1048576,
+//         maxTokens: 131072,
+//       },
+//     ],
+//   });
+// }
