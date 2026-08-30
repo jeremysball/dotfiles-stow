@@ -20,10 +20,13 @@
 # Checks:
 #   1. Strict equality for custom providers where we control the full catalog
 #   2. Subset check for built-in providers where catalog is shared (opencode-go, minimax)
-#      — every non-banned model pi lists must exist in opencode and vice versa
+#      — every model pi lists must exist in opencode and vice versa
 #      for the dispatched fleet.
-#   3. Banned model check (deepseek-v4-pro family) — must not appear in
-#      strict providers; ignored for built-ins where catalog is unavoidable.
+#   3. Request-only check (deepseek-v4-pro family, nanogpt) — these MUST be
+#      registered in every harness that carries their provider, so a request
+#      for them resolves, and must never appear as a configured default or
+#      dispatch target. This is the one check that reads config rather than
+#      porcelain, because "what is the default model" has no porcelain.
 #   4. Dead provider check (openai/openai-codex) — skipped for parity, warned.
 #
 # Exit 0 on parity, 1 on drift. Human-readable diff on failure.
@@ -54,10 +57,34 @@ done
 # --- helpers ---
 die() { echo "ERROR: $*" >&2; exit 1; }
 
-# Banned pattern: any model id containing deepseek-v4-pro (pro is dog, per 2026-08-21)
-is_banned() {
-  local model="$1"
-  [[ "$model" == *"deepseek-v4-pro"* ]]
+# Repo root, derived from this script's own location so the check works from
+# a worktree or any clone rather than only from ~/.dotfiles.
+DOTFILES_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Request-only patterns. These are NOT banned and must NOT be filtered out of
+# parity: the 2026-08-21 "pro is dog" ban was superseded 2026-08-30 by "pro
+# should stay but it is REQUEST ONLY no dispatch". Request-only means the
+# model stays registered and reachable by name, and never gets chosen as a
+# default, a fallback, or a dispatch target on our own initiative. Removing
+# it from a catalog is the opposite of the requirement, not a stricter form
+# of it — an unregistered model cannot be requested.
+REQUEST_ONLY_PATTERNS=("deepseek-v4-pro" "nanogpt/")
+
+# Which harnesses must actually register each request-only pattern. nanogpt
+# is opencode+kilo only (pi carries no nanogpt provider, same "-" as in
+# PROVIDER_SPECS), so demanding it of pi would be a false alarm rather than
+# real drift.
+REQUEST_ONLY_REGISTRY=(
+  "deepseek-v4-pro|pi opencode kilo"
+  "nanogpt/|opencode kilo"
+)
+
+is_request_only() {
+  local model="$1" pat
+  for pat in "${REQUEST_ONLY_PATTERNS[@]}"; do
+    [[ "$model" == *"$pat"* ]] && return 0
+  done
+  return 1
 }
 
 # --- collect pi models via porcelain ---
@@ -125,7 +152,7 @@ DEAD_PROVIDERS=("openai" "openai-codex")
 FAILURES=()
 WARNINGS=()
 
-# models_for <harness_file> <provider_id> — normalized, banned-filtered model
+# models_for <harness_file> <provider_id> — normalized model
 # set for one provider in one harness, printed as bare model ids (provider
 # prefix stripped) so differently-named providers compare on equal footing.
 models_for() {
@@ -134,7 +161,6 @@ models_for() {
   grep -i "^${pid}/" "$file" 2>/dev/null \
     | sed "s|^[^/]*/||" \
     | normalize \
-    | grep -vi "deepseek-v4-pro" \
     | sort -u || true
 }
 
@@ -143,19 +169,12 @@ check_strict() {
   local canon pi_id op_id ki_id
   IFS='|' read -r canon pi_id op_id ki_id <<<"$spec"
 
-  # Banned check first, against the un-filtered sets
-  local h name pid file
-  for h in "pi:$pi_id:$PI_MODELS" "opencode:$op_id:$OPENCODE_MODELS" "kilo:$ki_id:$KILO_MODELS"; do
-    IFS=':' read -r name pid file <<<"$h"
-    [[ "$pid" == "-" ]] && continue
-    local banned
-    banned="$(grep -i "^${pid}/" "$file" 2>/dev/null | grep -i "deepseek-v4-pro" || true)"
-    if [[ -n "$banned" ]]; then
-      FAILURES+=("BANNED: $canon $name has banned pro models: $banned")
-    fi
-  done
+  # Request-only models are checked by check_request_only_defaults() against
+  # config, not here — for these, presence in a catalog is required rather
+  # than forbidden, so there is nothing to reject at this point.
 
   # Collect the harnesses that actually carry this provider
+  local h name pid file
   local present_names=() present_sets=() present_counts=()
   for h in "pi:$pi_id:$PI_MODELS" "opencode:$op_id:$OPENCODE_MODELS" "kilo:$ki_id:$KILO_MODELS"; do
     IFS=':' read -r name pid file <<<"$h"
@@ -217,8 +236,8 @@ $(comm -13 <(echo "$base_set") <(echo "${present_sets[$i]}") | head -20)")
 check_builtin_subset() {
   local provider="$1"
   local pi_set op_set
-  pi_set="$(grep -i "^${provider}/" "$PI_MODELS" | normalize | grep -vi "deepseek-v4-pro" | sort -u || true)"
-  op_set="$(grep -i "^${provider}/" "$OPENCODE_MODELS" | normalize | grep -vi "deepseek-v4-pro" | sort -u || true)"
+  pi_set="$(grep -i "^${provider}/" "$PI_MODELS" | normalize | sort -u || true)"
+  op_set="$(grep -i "^${provider}/" "$OPENCODE_MODELS" | normalize | sort -u || true)"
 
   if [[ -z "$pi_set" ]]; then
     WARNINGS+=("WARN: $provider pi has no models listed (may be catalog sync issue)")
@@ -252,6 +271,113 @@ $missing_in_opencode")
 # --- run checks ---
 for spec in "${PROVIDER_SPECS[@]}"; do
   check_strict "$spec"
+done
+
+# --- request-only enforcement ---
+# "Request-only" is a claim about *dispatch*, not about the catalog, so this
+# is the one check that reads config instead of harness porcelain: there is
+# no `opencode models`-style porcelain that answers "what is the default
+# model". Every field below is somewhere a model gets picked without the user
+# naming it in the moment, which is exactly what request-only forbids.
+check_request_only_defaults() {
+  local out
+  out="$(python3 - "$DOTFILES_ROOT" <<'PYEOF'
+import json, re, sys, os
+
+root = sys.argv[1]
+
+def load_jsonc(path):
+    """Strip // comments and trailing commas. String-aware: a naive regex eats
+    the // in "$schema": "https://..." and breaks the parse."""
+    with open(path) as fh:
+        src = fh.read()
+    out, i, n, in_str, esc = [], 0, len(src), False, False
+    while i < n:
+        c = src[i]
+        if in_str:
+            out.append(c)
+            if esc:
+                esc = False
+            elif c == "\\":
+                esc = True
+            elif c == '"':
+                in_str = False
+            i += 1
+            continue
+        if c == '"':
+            in_str = True
+            out.append(c)
+            i += 1
+            continue
+        if c == "/" and i + 1 < n and src[i + 1] == "/":
+            while i < n and src[i] != "\n":
+                i += 1
+            continue
+        out.append(c)
+        i += 1
+    return json.loads(re.sub(r",(\s*[}\]])", r"\1", "".join(out)))
+
+PATTERNS = ("deepseek-v4-pro", "nanogpt/")
+
+def is_request_only(model):
+    return any(p in model for p in PATTERNS)
+
+# (label, path, list of dotted paths to a model id)
+def walk(cfg, label, findings):
+    def visit(node, trail):
+        if isinstance(node, dict):
+            for k, v in node.items():
+                if isinstance(v, str) and k in (
+                    "model", "small_model", "summaryModel", "summarize"
+                ) and is_request_only(v):
+                    findings.append((label, ".".join(trail + [k]), v))
+                else:
+                    visit(v, trail + [k])
+        elif isinstance(node, list):
+            for idx, v in enumerate(node):
+                visit(v, trail + [str(idx)])
+    visit(cfg, [])
+
+findings = []
+targets = [
+    ("opencode", os.path.join(root, ".config/opencode/opencode.jsonc"), load_jsonc),
+    ("kilo", os.path.join(root, ".config/kilo/kilo.jsonc"), load_jsonc),
+    ("taskferry", os.path.join(root, ".config/taskferry/config.json"),
+     lambda p: json.load(open(p))),
+]
+for label, path, loader in targets:
+    if not os.path.exists(path):
+        continue
+    walk(loader(path), label, findings)
+
+for label, where, model in findings:
+    print(f"{label}|{where}|{model}")
+PYEOF
+)"
+  local line label where model
+  while IFS='|' read -r label where model; do
+    [[ -z "$label" ]] && continue
+    FAILURES+=("REQUEST-ONLY VIOLATION: $label sets $where = $model. That model is request-only — reachable when the user names it, never a configured default or dispatch target.")
+  done <<<"$out"
+}
+
+check_request_only_defaults
+
+# Request-only models must also actually BE registered, or a request for one
+# cannot resolve. Absence is the failure mode here, not presence.
+for entry in "${REQUEST_ONLY_REGISTRY[@]}"; do
+  IFS='|' read -r pat harnesses <<<"$entry"
+  for hname in $harnesses; do
+    case "$hname" in
+      pi) hfile="$PI_MODELS" ;;
+      opencode) hfile="$OPENCODE_MODELS" ;;
+      kilo) hfile="$KILO_MODELS" ;;
+      *) die "unknown harness in REQUEST_ONLY_REGISTRY: $hname" ;;
+    esac
+    if ! grep -qi "$pat" "$hfile"; then
+      FAILURES+=("REQUEST-ONLY MISSING: $hname registers no model matching '$pat'. Request-only means reachable-when-named; an unregistered model cannot be requested at all.")
+    fi
+  done
 done
 
 for p in "${BUILTIN_PROVIDERS[@]}"; do
@@ -310,6 +436,6 @@ else
     done
     echo "  builtin providers checked (subset): ${BUILTIN_PROVIDERS[*]}" >&2
     echo "  dead providers ignored: ${DEAD_PROVIDERS[*]}" >&2
-    echo "  banned pro excluded from parity (but checked for strict providers)" >&2
+    echo "  request-only ids included in parity, checked against configured defaults" >&2
   fi
 fi
