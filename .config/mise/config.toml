@@ -300,9 +300,52 @@ experimental = true
 "~/.config/opencode/agents/notools-sol.md" = {}
 "~/.config/opencode/agents/notools-terra.md" = {}
 "~/.config/opencode/plugins/herdr-agent-state.js" = {}
+# adhd theme. Tracked here (not in the designing-for-adhd skill repo) so
+# `mise bootstrap dotfiles apply` recreates the symlink on fresh machines
+# without needing ~/.claude/skills/designing-for-adhd to be cloned. Keep
+# in sync with ~/.claude/skills/designing-for-adhd/references/theme-adhd.json
+# (the canonical source). scripts/check-mise-env-and-themes.sh flags drift.
+"~/.config/opencode/themes/adhd.json" = {}
 
 # kilo -- its own kilo.jsonc exposes claude-code plugin skills via skills.paths
 "~/.config/kilo/kilo.jsonc" = {}
+# adhd theme (mirror of the opencode one above, same source/sync caveat).
+"~/.config/kilo/themes/adhd.json" = {}
+
+[tasks.check-mise-env-and-themes]
+# Validates two recurring dotfiles breakages: (1) mise auto-loads every
+# .env under $XDG_RUNTIME_DIR/secrets/ when [settings] experimental = true
+# (src/system/secrets.rs in jdx/mise), and one malformed line aborts the
+# whole file with a "failed to parse dotenv file: ..." error before any
+# tool on PATH runs; (2) the kilo + opencode adhd theme symlinks (managed
+# via this config's [dotfiles] table) are resolvable and point to valid
+# opencode theme JSON. The check is alerting only -- it doesn't auto-repair
+# the secrets file (live credentials) or re-fetch the theme source. Run
+# from any directory: `mise run check-mise-env-and-themes`. The script
+# itself lives at scripts/check-mise-env-and-themes.sh in the dotfiles
+# repo, which mise bootstrap dotfiles apply symlinks to ~/.local/bin/ via
+# the symlink-each `~/.local/bin` entry, so the script is also reachable
+# directly as `check-mise-env-and-themes` after apply.
+description = "Validate the mise secrets env file parses and the kilo/opencode adhd theme symlinks resolve. Alerts only (exits 1 on any failure with the broken file + line/path); does not auto-repair the secrets file (live credentials) or re-fetch the theme source. Run with --verbose for per-link resolution detail."
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+
+# This task is defined in a global [tasks] table (loaded everywhere via
+# the symlinked ~/.config/mise/config.toml), but the script it runs is a
+# tracked file in the dotfiles repo. Resolve the script from the dotfiles
+# root rather than from a mise-internal path so the task survives a
+# `mise bootstrap dotfiles unapply` followed by a fresh apply.
+DOTFILES_ROOT="${DOTFILES_ROOT:-$HOME/.dotfiles}"
+SCRIPT="$DOTFILES_ROOT/scripts/check-mise-env-and-themes.sh"
+
+if [ ! -f "$SCRIPT" ]; then
+    echo "check-mise-env-and-themes: $SCRIPT not found. Run \`mise bootstrap dotfiles apply\` first." >&2
+    exit 1
+fi
+
+exec "$SCRIPT" "$@"
+'''
 
 [tasks.install-worktree-githooks]
 description = "Install worktree-githooks template (post-checkout hook that symlinks node_modules / runs uv sync) to ~/.config/git/hooks and set global core.hooksPath. Globally available via `mise run install-worktree-githooks` from any directory. Idempotent: clones or pulls jeremysball/worktree-githooks, copies hook, sets hooksPath."
