@@ -51,6 +51,11 @@ delta   = "latest"
 
 # runtimes. Pin these per machine in ~/.config/mise/conf.d/ if they need to differ.
 node   = "latest"
+# bun: pinned because scripts/sync-fleet-skills.sh uses it to read the
+# kilo/opencode JSONC configs. Bun parses comments and trailing commas
+# natively (`require("x.jsonc")`), which jq and node cannot, and the
+# alternative was hand-rolling a JSONC parser inside a shell script.
+bun    = "latest"
 go     = "latest"
 python = "latest"
 uv     = "latest"
@@ -348,6 +353,53 @@ if [ ! -f "$SCRIPT" ]; then
 fi
 
 exec "$SCRIPT" "$@"
+'''
+
+[tasks.sync-fleet-skills]
+# The recurring breakage: plugin skills live behind a version directory
+# (~/.claude/plugins/cache/.../superpowers/6.3.0/skills), so every plugin
+# update silently dangles anything that named the old path. That is how
+# ~/.config/opencode/skills/ reached 25 dead links out of 29 and opencode
+# ended up loading 1 of 14 superpowers skills. This rewrites the stable
+# ~/.claude/fleet-skills/ directory (tracked in the dotclaude repo) from the
+# plugin manifest, using relative targets so the committed links carry no
+# username. Both tools then name only that stable path via skills.paths.
+description = "Rewrite ~/.claude/fleet-skills/ symlinks from ~/.claude/plugins/installed_plugins.json so opencode and kilo see current plugin skills. Repairs; run check-fleet-skills to only report."
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+
+DOTFILES_ROOT="${MISE_DOTFILES_ROOT:-${DOTFILES_ROOT:-$HOME/.dotfiles}}"
+SCRIPT="$DOTFILES_ROOT/scripts/sync-fleet-skills.sh"
+
+if [ ! -f "$SCRIPT" ]; then
+    echo "sync-fleet-skills: $SCRIPT not found. Run \`mise bootstrap dotfiles apply\` first." >&2
+    exit 1
+fi
+
+exec "$SCRIPT" "$@"
+'''
+
+[tasks.check-fleet-skills]
+# Alert-only half of sync-fleet-skills, same split as check-adhd-themes:
+# reports every drifted link with its path and exits 1, never writes. The
+# same script runs in --tracked-only mode from the global pre-commit hook,
+# so neither a dropped skills.paths entry nor an absolute or dangling
+# committed symlink can land in dotfiles or dotclaude.
+description = "Verify ~/.claude/fleet-skills/ matches the installed plugins and that kilo + opencode both declare skills.paths. Alerts only; exits 1 with the broken path. Repair with sync-fleet-skills."
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+
+DOTFILES_ROOT="${MISE_DOTFILES_ROOT:-${DOTFILES_ROOT:-$HOME/.dotfiles}}"
+SCRIPT="$DOTFILES_ROOT/scripts/sync-fleet-skills.sh"
+
+if [ ! -f "$SCRIPT" ]; then
+    echo "check-fleet-skills: $SCRIPT not found. Run \`mise bootstrap dotfiles apply\` first." >&2
+    exit 1
+fi
+
+exec "$SCRIPT" --check "$@"
 '''
 
 [tasks.check-mise-secrets]
