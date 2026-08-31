@@ -1,8 +1,24 @@
 {
   "$schema": "https://app.kilo.ai/config.json",
   "snapshot": false,
-  "model": "alibaba-token-plan/qwen3.8-max-preview",
-  "small_model": "alibaba-token-plan/qwen3.6-flash",
+  // Default model: ollama-cloud/deepseek-v4-flash:0731. Replaced
+  // alibaba-token-plan/qwen3.8-max-preview on 2026-08-30 when the Alibaba
+  // Token Plan lapsed ("Access to model denied" on every dispatch), see
+  // the opencode fleet's parallel retirement of alibaba-tknplan the same
+  // day (dotfiles d58dbc2). The alibaba-token-plan provider block below is
+  // commented out, not deleted, so the config shape survives a re-enable.
+  //
+  // small_model uses the kilo gateway's free tier instead (kilo has no bare
+  // "opencode" provider: `kilo models opencode` returns "Provider not
+  // found: opencode"; that free zen tier is an opencode-CLI-only thing.
+  // kilo's own free models live under its existing "kilo" gateway provider
+  // as `kilo/<vendor>/<model>:free`, per `kilo models | rg ':free'`.
+  // Confirmed live via a real dispatch, `kilo run --model
+  // kilo/nvidia/nemotron-3.5-lightning:free "reply with exactly: PONG"` ->
+  // "PONG"), so kilo's own housekeeping calls don't compete with the
+  // default model's ollama-cloud quota.
+  "model": "ollama-cloud/deepseek-v4-flash:0731",
+  "small_model": "kilo/nvidia/nemotron-3.5-lightning:free",
   "permission": {
     "*": {
       "*": "allow"
@@ -164,27 +180,30 @@
         "muse-spark-1.2-contributor": { "limit": { "context": 200000, "output": 200000 } }
       }
     },
-    "alibaba-token-plan": {
-      // Alibaba Cloud Model Studio Token Plan, capped to 200k context.
-      "models": {
-        "deepseek-v4-flash": { "limit": { "context": 200000, "output": 384000 } },
-        "deepseek-v4-flash-0731": { "limit": { "context": 200000, "output": 384000 } },
-        "deepseek-v4-pro": { "limit": { "context": 200000, "output": 384000 } },
-        "deepseek-v4-pro-0813": { "limit": { "context": 200000, "output": 384000 } },
-        "glm-5": { "limit": { "context": 200000, "output": 16384 } },
-        "glm-5.1": { "limit": { "context": 200000, "output": 128000 } },
-        "glm-5.2": { "limit": { "context": 200000, "output": 131072 } },
-        "kimi-k2.5": { "limit": { "context": 200000, "output": 98304 } },
-        "kimi-k2.6": { "limit": { "context": 200000, "output": 262144 } },
-        "kimi-k2.7-code": { "limit": { "context": 200000, "output": 262144 } },
-        "qwen3.6-flash": { "limit": { "context": 200000, "output": 65536 } },
-        "qwen3.6-plus": { "limit": { "context": 200000, "output": 65536 } },
-        "qwen3.7-max": { "limit": { "context": 200000, "output": 131072 } },
-        "qwen3.7-plus": { "limit": { "context": 200000, "output": 65536 } },
-        "qwen3.8-max": { "limit": { "context": 200000, "output": 131072 } },
-        "qwen3.8-max-preview": { "limit": { "context": 200000, "output": 131072 } },
-      }
-    }
+    // "alibaba-token-plan": {
+    //   // Alibaba Cloud Model Studio Token Plan, capped to 200k context.
+    //   // DEAD 2026-08-30: token plan lapsed, "Access to model denied" on
+    //   // every dispatch. See the opencode fleet's parallel retirement of
+    //   // alibaba-tknplan the same day (dotfiles d58dbc2).
+    //   "models": {
+    //     "deepseek-v4-flash": { "limit": { "context": 200000, "output": 384000 } },
+    //     "deepseek-v4-flash-0731": { "limit": { "context": 200000, "output": 384000 } },
+    //     "deepseek-v4-pro": { "limit": { "context": 200000, "output": 384000 } },
+    //     "deepseek-v4-pro-0813": { "limit": { "context": 200000, "output": 384000 } },
+    //     "glm-5": { "limit": { "context": 200000, "output": 16384 } },
+    //     "glm-5.1": { "limit": { "context": 200000, "output": 128000 } },
+    //     "glm-5.2": { "limit": { "context": 200000, "output": 131072 } },
+    //     "kimi-k2.5": { "limit": { "context": 200000, "output": 98304 } },
+    //     "kimi-k2.6": { "limit": { "context": 200000, "output": 262144 } },
+    //     "kimi-k2.7-code": { "limit": { "context": 200000, "output": 262144 } },
+    //     "qwen3.6-flash": { "limit": { "context": 200000, "output": 65536 } },
+    //     "qwen3.6-plus": { "limit": { "context": 200000, "output": 65536 } },
+    //     "qwen3.7-max": { "limit": { "context": 200000, "output": 131072 } },
+    //     "qwen3.7-plus": { "limit": { "context": 200000, "output": 65536 } },
+    //     "qwen3.8-max": { "limit": { "context": 200000, "output": 131072 } },
+    //     "qwen3.8-max-preview": { "limit": { "context": 200000, "output": 131072 } },
+    //   }
+    // }
   },
   "skills": {
     "paths": ["~/.claude/skills"]
