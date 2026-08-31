@@ -13,7 +13,11 @@
 #      scripts/check-adhd-themes.sh (i.e. this IS the dotfiles repo), run it
 #      in --tracked-only mode so kilo/opencode can't commit a theme that
 #      silently drops. No-op in every other repo.
-#   3. Chain to repo-local .githooks/pre-commit / hooks/pre-commit if present,
+#   3. fleet skill-registry guardrail: in dotfiles or dotclaude, run
+#      scripts/sync-fleet-skills.sh --tracked-only so a dropped skills.paths
+#      entry or an absolute/dangling fleet-skills symlink can't be committed.
+#      No-op in every other repo.
+#   4. Chain to repo-local .githooks/pre-commit / hooks/pre-commit if present,
 #      so per-repo hooks keep working alongside the global one.
 set -euo pipefail
 
@@ -43,7 +47,22 @@ if [ -f "$theme_check" ]; then
   "$theme_check" --tracked-only
 fi
 
-# --- 3. chain to repo-local pre-commit if present ---
+# --- 3. fleet skill-registry guardrail (dotfiles + dotclaude) ---
+# Two repos can break the fleet's skill wiring at commit time: dotfiles owns
+# the tracked kilo/opencode configs that declare skills.paths, and dotclaude
+# owns the generated ~/.claude/fleet-skills/ symlinks. Prefer the committing
+# repo's own copy of the script so a dotfiles worktree validates its own
+# configs rather than the primary checkout's; fall back to the deployed copy
+# when committing in dotclaude, which has no scripts/ of its own.
+fleet_check="$repo_root/scripts/sync-fleet-skills.sh"
+if [ ! -f "$fleet_check" ] && [ "$repo_root" = "$HOME/.claude" ]; then
+    fleet_check="${MISE_DOTFILES_ROOT:-${DOTFILES_ROOT:-$HOME/.dotfiles}}/scripts/sync-fleet-skills.sh"
+fi
+if [ -f "$fleet_check" ]; then
+    bash "$fleet_check" --tracked-only
+fi
+
+# --- 4. chain to repo-local pre-commit if present ---
 local_hook="$repo_root/.githooks/pre-commit"
 alt_hook="$repo_root/hooks/pre-commit"
 

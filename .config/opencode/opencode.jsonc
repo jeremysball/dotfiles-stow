@@ -594,6 +594,22 @@
     }
   },
 
+  // Skill registry, shared with kilo (same schema key, kilo is a fork).
+  // Two entries, and both are stable paths on purpose:
+  //   ~/.claude/skills       personal skills, already versionless
+  //   ~/.claude/fleet-skills generated symlinks to plugin skills, which
+  //                          otherwise live behind a version directory
+  //                          (superpowers/6.3.0/skills) that moves on every
+  //                          plugin update and silently dangles.
+  // This key replaces the old ~/.config/opencode/skills/ symlink farm, which
+  // had rotted to 25 dead links out of 29. That directory now holds only
+  // hand-written opencode-specific skills; opencode scans it natively.
+  // Regenerate with `mise run sync-fleet-skills`; `mise run check-fleet-skills`
+  // and the global pre-commit hook report drift.
+  "skills": {
+    "paths": ["~/.claude/skills", "~/.claude/fleet-skills"]
+  },
+
   "mcp": {
     "kagi": {
       "type": "local",
