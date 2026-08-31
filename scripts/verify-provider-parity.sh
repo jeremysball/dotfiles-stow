@@ -104,9 +104,18 @@ if ! opencode models > "$OPENCODE_RAW" 2>&1; then
   die "opencode models failed"
 fi
 
-if ! kilo models > "$KILO_RAW" 2>&1; then
-  cat "$KILO_RAW" >&2
-  die "kilo models failed"
+# kilo is not installed in CI (the workflow installs pi and opencode only), so
+# its absence is a skip, not a failure: kilo parity and kilo request-only
+# registration are checked when the CLI exists, warned otherwise.
+KILO_AVAILABLE=false
+if command -v kilo >/dev/null 2>&1; then
+  if ! kilo models > "$KILO_RAW" 2>&1; then
+    cat "$KILO_RAW" >&2
+    die "kilo models failed"
+  fi
+  KILO_AVAILABLE=true
+else
+  WARNINGS+=("kilo CLI not installed, kilo parity and kilo request-only registration skipped")
 fi
 
 # Parse pi: skip header line (NR>1), extract provider/model, normalize case for MiniMax
@@ -132,21 +141,17 @@ normalize() { tr '[:upper:]' '[:lower:]' ; }
 # excluded from the comparison rather than counted as drift. Canonical names
 # use the spelled-out "token" unless a built-in id already claims it.
 PROVIDER_SPECS=(
-  # alibaba-tknplan keeps the contraction on purpose: "alibaba-token-plan" is
-  # a built-in models.dev provider id in both opencode and kilo, and taking it
-  # makes the built-in win the config merge. kilo is "-" here because it rides
-  # that built-in deliberately (its block only caps context), so it is a
-  # different backend, not drift.
-  "alibaba-tknplan|alibaba-tknplan|alibaba-tknplan|-"
+  # xiaomi-token-plan keeps the spelled-out form; alibaba-tknplan is retired
+  # (dead 2026-08-30) and lives in DEAD_PROVIDERS, not here.
   "xiaomi-token-plan|xiaomi-token-plan|xiaomi-token-plan|-"
   "ollama|ollama|ollama|ollama-cloud"
   "cheapestinference|cheapestinference|cheapestinference|-"
   "meta|meta|meta|meta"
   "nanogpt|-|nanogpt|nanogpt"
 )
-BUILTIN_PROVIDERS=("opencode-go" "minimax")
+BUILTIN_PROVIDERS=()
 # Dead providers: skip parity, just warn if present
-DEAD_PROVIDERS=("openai" "openai-codex")
+DEAD_PROVIDERS=("openai" "openai-codex" "alibaba-tknplan" "opencode-go" "minimax")
 
 # Track failures
 FAILURES=()
@@ -364,14 +369,26 @@ PYEOF
 check_request_only_defaults
 
 # Request-only models must also actually BE registered, or a request for one
-# cannot resolve. Absence is the failure mode here, not presence.
+# cannot resolve. Absence is the failure mode here, not presence. In CI the
+# private pi extensions and kilo CLI are absent, so registration can only be
+# verified where the harness actually loaded: opencode (config copied) and
+# kilo (when installed). pi registration is skipped in CI for the same
+# reason the strict check skips empty sets there.
 for entry in "${REQUEST_ONLY_REGISTRY[@]}"; do
   IFS='|' read -r pat harnesses <<<"$entry"
   for hname in $harnesses; do
     case "$hname" in
-      pi) hfile="$PI_MODELS" ;;
+      pi)
+        if [[ "${GITHUB_ACTIONS:-}" == "true" || "${CI:-}" == "true" ]]; then
+          continue
+        fi
+        hfile="$PI_MODELS" ;;
       opencode) hfile="$OPENCODE_MODELS" ;;
-      kilo) hfile="$KILO_MODELS" ;;
+      kilo)
+        if [[ "$KILO_AVAILABLE" != true ]]; then
+          continue
+        fi
+        hfile="$KILO_MODELS" ;;
       *) die "unknown harness in REQUEST_ONLY_REGISTRY: $hname" ;;
     esac
     if ! grep -qi "$pat" "$hfile"; then
