@@ -587,6 +587,121 @@
         "tencent/hy3": { "limit": { "context": 200000, "output": 128000 } },
         "tencent/hy3-preview": { "limit": { "context": 200000, "output": 262144 } }
       }
+    },
+
+    "nanogpt": {
+      // NanoGPT — pay-per-request USD aggregator (nano-gpt.com), added
+      // 2026-08-30. REQUEST-ONLY per user directive: never a default
+      // route, never an ambient fallback. Dispatch here only when the
+      // user names it or names a model only this provider carries.
+      //
+      // Every model below verified live via a real PONG on 2026-08-30
+      // (bare HTTP POST {baseURL}/chat/completions, per probing-providers).
+      // Metadata (context/output/reasoning/tool_call/pricing) is read from
+      // the provider's own catalog at {baseURL}/models?detailed=true, not
+      // guessed. Prices in the trailing comments are USD per Mtok in/out
+      // as of that date; balance is a finite prepaid credit, so treat
+      // every dispatch as spending real money.
+      //
+      // Context is capped to the 200k fleet cap for compaction parity with
+      // the rest of this file; each model's native window is noted where it
+      // is larger. Output stays at the native value.
+      //
+      // Deliberately excluded: `deepclaude` (provider returns "Model is
+      // disabled"), and all `TEE/*` privacy-enclave mirrors (not wanted).
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "NanoGPT",
+      "options": {
+        "baseURL": "https://nano-gpt.com/api/v1",
+        "apiKey": "{env:NANO_GPT_API_KEY}"
+      },
+      "models": {
+        // --- Uncensored / abliterated: the reason this provider exists here.
+        // Replaces the self-hosted Colab A100 + Kaggle T4x2 qwen27b rigs,
+        // whose cloudflared/ngrok hostnames rotate every kernel run.
+        "qwen/qwen3.8-27b-uncensored": {
+          "name": "Qwen 3.8 27B Uncensored",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 32768 } // native ctx 262144 — $0.25/$1.50
+        },
+        "qwen/qwen3.8-27b-obliterated": {
+          "name": "Qwen 3.8 27B Obliterated",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 32768 } // native ctx 262144 — $0.25/$1.50
+        },
+        "qwen/qwen3.6-35b-a3b-uncensored": {
+          "name": "Qwen 3.6 35B A3B Uncensored",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 32768 } // native ctx 262144 — $0.15/$0.95
+        },
+        "z-ai/glm-5.3-flash-uncensored": {
+          "name": "GLM 5.3 Flash Uncensored",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 32768 } // native ctx 262144 — $0.35/$1.40
+        },
+        "gemma-4-26b-a4b-uncensored": {
+          "name": "Gemma 4 26B A4B Uncensored",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 32768 } // native ctx 262144 — cheapest uncensored, $0.12/$0.38
+        },
+
+        // --- Models the rest of the fleet cannot reach at all.
+        "anthropic/claude-opus-5": {
+          // Claude via a third party. Only reach for this when something
+          // genuinely needs Claude *outside* the Claude Code session —
+          // inside it, the Agent tool already runs Claude at no USD cost.
+          "name": "Claude Opus 5 (NanoGPT)",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 128000 } // native ctx 1000000 — $5/$25, priciest non-fugu route
+        },
+        "x-ai/grok-4.20-multi-agent": {
+          // Grok's multi-agent variant; 2M native window is the largest
+          // in the fleet.
+          "name": "Grok 4.20 Multi-Agent",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 131072 } // native ctx 2000000 — $2/$6
+        },
+        "sakana/fugu-ultra": {
+          // Most expensive route on the account by a wide margin. Verify
+          // the balance before pointing anything iterative at it.
+          "name": "Sakana Fugu Ultra",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 16384 } // native ctx 1000000 — $5.25/$31.50
+        },
+        "poolside/laguna-s-2.1": {
+          // Cheapest route in this provider, $0.10/$0.20, with reasoning and
+          // tools. Good default when a nanogpt dispatch is warranted.
+          "name": "Poolside Laguna S 2.1",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 131072 } // native ctx 1048576 — $0.10/$0.20
+        },
+        "nanogpt/coding-router": {
+          // NanoGPT's own routing model — picks a backend per request, so
+          // cost varies. Exposes low/medium/high/max as separate upstream
+          // ids; the bare id defaults to their standard tier.
+          "name": "NanoGPT Coding Router",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 128000 } // native ctx 1000000 — $1.10/$2.20
+        },
+
+        // --- Web-grounded research (no tool_call; they search internally).
+        "sonar-reasoning-pro": {
+          "name": "Perplexity Sonar Reasoning Pro",
+          "reasoning": true,
+          "tool_call": false,
+          "limit": { "context": 127000, "output": 128000 } // $2/$8
+        },
+      }
     }
   },
 
