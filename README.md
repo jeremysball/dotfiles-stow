@@ -154,6 +154,14 @@ commented blocks. The tag is the last commit before the retirement change,
 so `git show providers/pre-retirement-2026-08-30:.config/opencode/opencode.jsonc`
 has the full live config as it stood.
 
+`.config/kilo/kilo.jsonc` used a differently-named provider block
+(`alibaba-token-plan`, not `alibaba-tknplan`) for the same lapsed Alibaba
+Token Plan account, and was missed by the original 2026-08-30 retirement
+pass, so its default `model`/`small_model` kept pointing at the dead provider
+until this was caught and fixed. It's now commented out the same way, with
+`model`/`small_model` switched to `ollama-cloud/deepseek-v4-flash:0731` and
+`ollama-cloud/gpt-oss:20b`.
+
 `.config/rclone/rclone.conf`, `.config/msmtp/`, and `.config/protonmail/`
 hold credentials and stay out entirely. `himalaya` is here only because its
 config fetches the bridge password from `pass` at runtime rather than
