@@ -8,7 +8,7 @@
 #
 # Four jobs, in order:
 #   1. Dash gate: block staged em/en dashes and double-hyphen stand-ins.
-#      Override once: git commit --no-verify  or  SKIP_EMDASH_CHECK=1 git commit.
+#      Override once: git commit --no-verify  or  SKIP_DASH_CHECK=1 git commit.
 #   2. dotfiles adhd-theme guardrail: if the repo has
 #      scripts/check-adhd-themes.sh (i.e. this IS the dotfiles repo), run it
 #      in --tracked-only mode so kilo/opencode can't commit a theme that
@@ -45,7 +45,8 @@ set -euo pipefail
 # bash cannot encode the escape and emits its six literal characters instead,
 # which would both miss every real dash and block any line containing that
 # ASCII text.
-if [ "${SKIP_EMDASH_CHECK:-}" = "1" ] || [ "${SKIP_EMDASH:-}" = "1" ]; then
+if [ "${SKIP_DASH_CHECK:-}" = "1" ] || [ "${SKIP_EMDASH_CHECK:-}" = "1" ] \
+  || [ "${SKIP_EMDASH:-}" = "1" ]; then
   :
 else
   em_dash="$(printf '\xe2\x80\x94')"     # U+2014 em dash
@@ -71,12 +72,12 @@ else
     echo "pre-commit: dash blocked. Staged changes contain an em/en dash or a double-hyphen stand-in." >&2
     echo "" >&2
     echo "Fix it, then stage again:" >&2
-    echo "  sed -E 's/ *[$em_dash$en_dash$bar_dash] */, /g; s/[[:space:]]--[[:space:]]/, /g'" >&2
+    echo "  sed -E \"s/ *[$em_dash$en_dash$bar_dash] */, /g; s/[[:space:]]--[[:space:]]/, /g; s/([[:alnum:]])--([[:alnum:]])/\\1, \\2/g\"" >&2
     echo "" >&2
     printf '%s\n' "$added" | LC_ALL=C grep -E "$dash_re" | head -n 20 | sed 's/^/  /' >&2 || true
     echo "" >&2
     echo "Replace it with a comma, period, or colon. Keep related words together." >&2
-    echo "Bypass once: git commit --no-verify  or  SKIP_EMDASH_CHECK=1 git commit" >&2
+    echo "Bypass once: git commit --no-verify  or  SKIP_DASH_CHECK=1 git commit" >&2
     exit 1
   fi
 fi

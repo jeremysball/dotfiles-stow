@@ -71,6 +71,73 @@ def stage_and_run(line, locale):
         shutil.rmtree(work, ignore_errors=True)
 
 
+
+def scratch_repo(lines, locale):
+    """Return (work_dir, env) with `lines` staged. Caller removes the dir."""
+    work = tempfile.mkdtemp()
+    env = dict(
+        os.environ,
+        LC_ALL=locale,
+        LANG=locale,
+        GIT_AUTHOR_NAME="dash-gate-test",
+        GIT_AUTHOR_EMAIL="dash-gate-test@invalid",
+        GIT_COMMITTER_NAME="dash-gate-test",
+        GIT_COMMITTER_EMAIL="dash-gate-test@invalid",
+    )
+    subprocess.run(["git", "init", "-q", work], env=env, check=True)
+    with open(os.path.join(work, "f.txt"), "w", encoding="utf-8") as fh:
+        fh.write("\n".join(lines) + "\n")
+    subprocess.run(["git", "-C", work, "add", "f.txt"], env=env, check=True)
+    return work, env
+
+
+def check_fix_hint():
+    """The sed the hook prints has to be runnable as written, and has to repair
+    every shape the gate blocks. A hint that leaves the offending text alone
+    puts the user in a loop."""
+    offenders = ["a " + EM + " b", "foo" + DD + "bar", "x " + DD + " y"]
+    work, env = scratch_repo(offenders, "en_US.UTF-8")
+    try:
+        blocked = subprocess.run(["bash", HOOK], cwd=work, env=env,
+                                 capture_output=True, text=True)
+        if blocked.returncode == 0:
+            return "hook did not block the offending lines"
+        printed = blocked.stdout.splitlines() + blocked.stderr.splitlines()
+        hint = next((ln.strip() for ln in printed
+                     if ln.strip().startswith("sed -E")), None)
+        if hint is None:
+            return "hook printed no sed hint"
+        fixed = subprocess.run("%s f.txt" % hint, cwd=work, env=env,
+                               shell=True, capture_output=True, text=True)
+        if fixed.returncode != 0:
+            return "printed sed failed: %s" % fixed.stderr.strip()
+        with open(os.path.join(work, "f.txt"), "w", encoding="utf-8") as fh:
+            fh.write(fixed.stdout)
+        subprocess.run(["git", "-C", work, "add", "f.txt"], env=env, check=True)
+        again = subprocess.run(["bash", HOOK], cwd=work, env=env,
+                               capture_output=True, text=True)
+        if again.returncode != 0:
+            return "gate still blocks after running its own hint"
+        return None
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+
+def check_bypass():
+    """Each documented override has to actually let the commit through."""
+    work, env = scratch_repo(["prose " + EM + " more"], "en_US.UTF-8")
+    try:
+        for knob in ("SKIP_DASH_CHECK", "SKIP_EMDASH_CHECK", "SKIP_EMDASH"):
+            done = subprocess.run(["bash", HOOK], cwd=work,
+                                  env=dict(env, **{knob: "1"}),
+                                  capture_output=True, text=True)
+            if done.returncode != 0:
+                return "%s=1 did not bypass the gate" % knob
+        return None
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+
 def main():
     if not os.path.isfile(HOOK):
         print("check-dash-gate: no hook at %s" % HOOK, file=sys.stderr)
@@ -84,11 +151,17 @@ def main():
             failures += not ok
             print("  %-4s got=%-5s want=%-5s %s"
                   % ("ok" if ok else "FAIL", got, want, name))
+    for name, check in (("printed fix hint", check_fix_hint),
+                        ("bypass knobs", check_bypass)):
+        problem = check()
+        failures += problem is not None
+        print("%-4s %s%s" % ("ok" if problem is None else "FAIL", name,
+                             "" if problem is None else ": " + problem))
     if failures:
         print("\ncheck-dash-gate: %d mismatch(es)" % failures, file=sys.stderr)
         return 1
-    print("\ncheck-dash-gate: %d cases pass in %d locales"
-          % (len(CASES), len(LOCALES)))
+    print("\ncheck-dash-gate: %d cases pass in %d locales, plus the "
+          "fix hint and every bypass knob" % (len(CASES), len(LOCALES)))
     return 0
 
 
