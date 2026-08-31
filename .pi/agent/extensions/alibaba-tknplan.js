@@ -27,15 +27,13 @@
 //  * every call 404. Same collision-avoidance story as xiaomi-token-plan on
 //  * the opencode side. The contraction stays by design.
 //  *
-//  * deepseek-v4-pro-0813 is REQUEST-ONLY, which is not the same as the ban
-//  * being lifted. The 2026-08-21 choosing-a-model order ("pro is dog") was
-//  * superseded 2026-08-30 by "pro should stay but it is REQUEST ONLY no
-//  * dispatch": the model stays registered here so a request for it by name
-//  * resolves, and must never be picked as a default, a fallback, or a
-//  * dispatch target on the agent's own initiative. Registration is the
-//  * requirement, not an exemption from it — an unregistered model cannot be
-//  * requested at all, which is why this entry exists rather than being
-//  * deleted the way it was between 2026-08-22 and 2026-08-30.
+//  * deepseek-v4-pro-0813 is REQUEST-ONLY: the model stays registered here
+//  * so a request for it by name resolves, and must never be picked as a
+//  * default, a fallback, or a dispatch target on the agent's own initiative.
+//  * Registration is the requirement, not an exemption from it: an
+//  * unregistered model cannot be requested at all, which is why this entry
+//  * exists rather than being deleted the way it was between 2026-08-22 and
+//  * 2026-08-30. The 2026-08-21 "pro is dog" ban was lifted 2026-08-31.
 //  *
 //  * Keep the two in sync; verify-provider-parity.sh enforces both halves:
 //  * the id must be registered in every harness carrying the provider, and no
