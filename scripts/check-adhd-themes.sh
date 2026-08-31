@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# check-adhd-themes.sh — guardrail for the recurring kilo/opencode theme
+# check-adhd-themes.sh: guardrail for the recurring kilo/opencode theme
 # breakage (the adhd theme keeps falling back to the default palette).
 #
 # Beliefs enforced (each must hold or this script exits non-zero):
@@ -10,11 +10,16 @@
 #      notices they're not on adhd anymore.
 #   2. The TUI config for BOTH tools selects adhd:
 #      ~/.config/{kilo,opencode}/tui.json has "theme": "adhd". A valid
-#      theme file that isn't selected does nothing — this is the second
+#      theme file that isn't selected does nothing: this is the second
 #      half of the breakage (e.g. tui.json pointing at "one-light", or
 #      kilo's tui.json missing entirely so kilo uses the default).
+#   3. Every foreground/background pair in the theme clears WCAG AAA (7:1
+#      text, 3:1 non-text). A theme that parses and is selected can still
+#      ship colors that fail the legibility target the adhd theme exists to
+#      meet. Delegated to scripts/check-theme-contrast.py, which enumerates
+#      the role pairs and runs the WCAG relative-luminance math.
 #
-# Exit 0 = both beliefs hold for both tools. Exit 1 = at least one broken;
+# Exit 0 = all beliefs hold for both tools. Exit 1 = at least one broken;
 # every broken location is printed with path + reason before exit.
 #
 # --tracked-only mode (used by the global pre-commit hook and CI):
@@ -93,6 +98,11 @@ if [ "$TRACKED_ONLY" = true ]; then
     log "dotfiles root: $DOTFILES_ROOT"
 fi
 
+# The contrast script lives next to this one, so resolve it relative to this
+# script's own location regardless of mode (runtime mode has no DOTFILES_ROOT).
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+CONTRAST_SCRIPT="$SCRIPT_DIR/check-theme-contrast.py"
+
 # --- resolve paths for each tool ---
 # In tracked mode, read the repo's copies (source of truth for what ships).
 # In runtime mode, read the live ~/.config paths (what kilo/opencode see).
@@ -170,6 +180,21 @@ for tool in kilo opencode; do
         FAILURES=$((FAILURES + 1))
     else
         log "  $tui_path (selects adhd)"
+    fi
+
+    # --- belief 3: every pair clears WCAG AAA ---
+    # Only run when the theme file is valid (belief 1 passed); a broken JSON
+    # is already reported above and the contrast check would just error.
+    if [ -e "$theme_path" ] && jq empty "$theme_path" 2>/dev/null; then
+        if [ ! -f "$CONTRAST_SCRIPT" ]; then
+            echo "  $CONTRAST_SCRIPT: missing (contrast check skipped)" >&2
+            FAILURES=$((FAILURES + 1))
+        elif ! python3 "$CONTRAST_SCRIPT" --aaa "$theme_path" >/dev/null 2>&1; then
+            echo "  $theme_path: fails WCAG AAA contrast (run \`python3 $CONTRAST_SCRIPT --aaa $theme_path\` for the failing pairs)" >&2
+            FAILURES=$((FAILURES + 1))
+        else
+            log "  $theme_path (clears AAA)"
+        fi
     fi
 done
 
