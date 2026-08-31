@@ -55,6 +55,29 @@ log() { [ "$VERBOSE" = true ] && echo "  $*" >&2 || true; }
 
 FAILURES=0
 
+# Every key opencode's renderer reads out of a theme. Extracted from the
+# built-in themes compiled into the binary, which is the only place the list
+# exists (https://opencode.ai/theme.json 404s):
+#   strings -n 6 /usr/bin/opencode \
+#     | rg -o 'theme:\{primary:\{dark.{0,3000}' | head -1 \
+#     | rg -o '[a-zA-Z]+:\{dark' | sed 's/:{dark//' | sort -u
+# Re-run that after an opencode/kilo upgrade adds a theme key.
+REQUIRED_THEME_KEYS="
+primary secondary accent error warning success info
+text textMuted background backgroundPanel backgroundElement
+border borderActive borderSubtle
+diffAdded diffRemoved diffContext diffHunkHeader
+diffHighlightAdded diffHighlightRemoved
+diffAddedBg diffRemovedBg diffContextBg
+diffLineNumber diffAddedLineNumberBg diffRemovedLineNumberBg
+markdownText markdownHeading markdownLink markdownLinkText markdownCode
+markdownBlockQuote markdownEmph markdownStrong markdownHorizontalRule
+markdownListItem markdownListEnumeration markdownImage markdownImageText
+markdownCodeBlock
+syntaxComment syntaxKeyword syntaxFunction syntaxVariable syntaxString
+syntaxNumber syntaxType syntaxOperator syntaxPunctuation
+"
+
 # --- locate the dotfiles repo root (for --tracked-only) ---
 DOTFILES_ROOT=""
 if [ "$TRACKED_ONLY" = true ]; then
@@ -101,6 +124,39 @@ for tool in kilo opencode; do
             FAILURES=$((FAILURES + 1))
         else
             log "  $theme_path (valid)"
+
+            # --- belief 3: every key the TUI reads is defined ---
+            # A theme that parses but omits a key the renderer reads is worse
+            # than a missing file: there is no fallback, the lookup returns
+            # undefined, and the whole TUI dies at startup with a minified
+            # "undefined is not an object (evaluating 'e.r')". That is what
+            # took out both opencode 1.18.23 and kilo 7.5.6 at once when this
+            # theme shipped with 23 of the 50 keys.
+            missing_keys="$(comm -23 <(printf '%s\n' "$REQUIRED_THEME_KEYS" | tr ' ' '\n' | sed '/^$/d' | sort -u) \
+                                     <(jq -r '.theme | keys[]' "$theme_path" | sort -u) | tr '\n' ' ')"
+            if [ -n "${missing_keys// /}" ]; then
+                echo "  $theme_path: theme is missing key(s) the TUI reads: ${missing_keys% }" >&2
+                echo "    (a missing key is undefined at render time and crashes the TUI at startup, it does not fall back)" >&2
+                FAILURES=$((FAILURES + 1))
+            fi
+
+            # Same crash class, one level down: a key that names a def which
+            # does not exist resolves to undefined exactly like a missing key.
+            bad_refs="$(jq -r '
+                .defs as $d
+                | .theme
+                | to_entries[]
+                | .key as $k
+                | (.value | if type == "object" then [.dark, .light] else [.] end)[]
+                | select(type == "string")
+                | select(startswith("#") | not)
+                | select($d[.] == null)
+                | "\($k)=\(.)"
+            ' "$theme_path" | sort -u | tr '\n' ' ')"
+            if [ -n "${bad_refs// /}" ]; then
+                echo "  $theme_path: theme key(s) reference an undefined def: ${bad_refs% }" >&2
+                FAILURES=$((FAILURES + 1))
+            fi
         fi
     fi
 
