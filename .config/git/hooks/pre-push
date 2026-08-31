@@ -1,0 +1,119 @@
+#!/usr/bin/env bash
+# ~/.config/git/hooks/pre-push: global pre-push, deployed by dotfiles.
+#
+# Wired automatically: [core] hooksPath = ~/.config/git/hooks lives in the
+# tracked .gitconfig, and this file ships via the [dotfiles] table, so every
+# machine that runs `mise bootstrap dotfiles apply` gets both with zero
+# manual setup. Because it lives in git rather than in an agent harness, it
+# fires identically for Claude Code, opencode, kilo, pi, a taskferry worker
+# in a bwrap sandbox, and a plain interactive shell.
+#
+# Two jobs, in order:
+#   1. Worktree budget: refuse the push while this repo holds more than the
+#      allowed number of worktrees beyond the primary checkout and the one
+#      being pushed from. Enforces CLAUDE.md's "A dangling worktree is
+#      illegal". Drain the debt, don't bypass the gate.
+#   2. Chain to repo-local .githooks/pre-push / hooks/pre-push if present,
+#      so per-repo hooks keep working alongside the global one.
+#
+# Cap resolution (flag/env/config triplet, highest precedence first):
+#   GIT_MAX_WORKTREES=<n>          env var
+#   git config worktree.maxOpen    config key
+#   DEFAULT_MAX_WORKTREES          built-in default, below
+#
+# Bypass once: git push --no-verify  or  SKIP_WORKTREE_BUDGET=1 git push
+set -euo pipefail
+
+DEFAULT_MAX_WORKTREES=3
+
+# --- 1. worktree budget ---
+check_worktree_budget() {
+  [ "${SKIP_WORKTREE_BUDGET:-}" = "1" ] && return 0
+
+  # Not a worktree-capable context (bare repo, submodule push, etc.).
+  git rev-parse --show-toplevel >/dev/null 2>&1 || return 0
+
+  local max
+  max="${GIT_MAX_WORKTREES:-$(git config --get worktree.maxOpen 2>/dev/null || true)}"
+  [ -n "$max" ] || max="$DEFAULT_MAX_WORKTREES"
+  case "$max" in
+    ''|*[!0-9]*) max="$DEFAULT_MAX_WORKTREES" ;;
+  esac
+
+  local here primary
+  here="$(git rev-parse --show-toplevel)"
+  # The primary checkout is the first entry `git worktree list` prints.
+  primary="$(git worktree list --porcelain | awk '/^worktree /{print substr($0,10); exit}')"
+
+  # Collect every worktree that is neither the primary checkout nor the one
+  # this push is running from. Those are the ones with no live claim.
+  local -a idle=()
+  local wt
+  while IFS= read -r wt; do
+    [ -n "$wt" ] || continue
+    [ "$wt" = "$primary" ] && continue
+    [ "$wt" = "$here" ] && continue
+    idle+=("$wt")
+  done < <(git worktree list --porcelain | awk '/^worktree /{print substr($0,10)}')
+
+  local count=${#idle[@]}
+  [ "$count" -le "$max" ] && return 0
+
+  local default_branch
+  default_branch="$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null || true)"
+  [ -n "$default_branch" ] || default_branch="origin/main"
+
+  {
+    echo "pre-push: worktree budget exceeded"
+    echo ""
+    echo "  repo:      $primary"
+    echo "  idle:      $count worktrees (cap $max, excluding the primary checkout"
+    echo "             and the one you are pushing from)"
+    echo ""
+    echo "A worktree on disk claims work is live there. Finished branches must"
+    echo "give their directory back. Drain these before pushing more:"
+    echo ""
+    for wt in "${idle[@]}"; do
+      local br landed
+      br="$(git -C "$wt" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '?')"
+      landed=""
+      if git merge-base --is-ancestor "$br" "$default_branch" 2>/dev/null; then
+        landed="   [already in $default_branch]"
+      fi
+      printf '  %-58s %s%s\n' "$wt" "$br" "$landed"
+    done
+    echo ""
+    echo "Drain one:"
+    echo "  git -C \"$primary\" worktree remove <path>"
+    echo "  git -C \"$primary\" worktree prune"
+    echo "  git -C \"$primary\" branch -d <branch>   # merged branches only"
+    echo ""
+    echo "Entries marked [already in $default_branch] are provably finished."
+    echo "The rest need their PR merged, closed, or the branch discarded first."
+    echo "A squash-merged branch will not show that marker; check"
+    echo "'gh-axi pr list --state merged' before assuming it is unfinished."
+    echo ""
+    echo "Raise the cap deliberately if this repo really runs wide:"
+    echo "  git config worktree.maxOpen <n>        # persistent, this repo"
+    echo "  GIT_MAX_WORKTREES=<n> git push         # one push"
+    echo ""
+    echo "Bypass once: git push --no-verify  or  SKIP_WORKTREE_BUDGET=1 git push"
+    echo "Bypassing leaves the debt. Draining is the point."
+  } >&2
+  return 1
+}
+
+# git feeds pre-push the ref updates on stdin. Capture them once so chained
+# repo-local hooks still receive them; this hook itself does not use them.
+REF_UPDATES="$(cat)"
+
+check_worktree_budget || exit 1
+
+# --- 2. chain to repo-local hooks ---
+for repo_hook in .githooks/pre-push hooks/pre-push; do
+  if [ -x "$repo_hook" ]; then
+    printf '%s' "$REF_UPDATES" | "$repo_hook" "$@"
+  fi
+done
+
+exit 0

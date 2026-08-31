@@ -16,9 +16,11 @@
 	required = true
 [core]
 	# Global hooks dir, deployed by the [dotfiles] table (pre-commit,
-	# post-checkout). Tracked here so every machine that runs `mise
-	# bootstrap dotfiles apply` gets hooks wired with zero manual setup.
-	# Git expands ~/ in config path values. The pre-commit runs the
+	# pre-push, post-checkout). Tracked here so every machine that runs
+	# `mise bootstrap dotfiles apply` gets hooks wired with zero manual
+	# setup. Git expands ~/ in config path values. The pre-commit runs the
 	# adhd-theme guardrail in the dotfiles repo and the dash gate, which
-	# blocks em and en dashes plus double-hyphen stand-ins.
+	# blocks em and en dashes plus double-hyphen stand-ins; the pre-push
+	# enforces the drainable-worktree budget (cap via worktree.maxOpen or
+	# GIT_MAX_WORKTREES, classifier via worktree.auditBin).
 	hooksPath = ~/.config/git/hooks
