@@ -352,7 +352,8 @@
 //         // 2026-08-22: deepseek-v4-pro-0813 removed per standing ban
 //         // (choosing-a-model 2026-08-21: pro is dog, ollama+alibaba flash-only);
 //         // parity with pi's alibaba-tknplan.js which also excludes it.
-//         // Do not re-add without explicit user go-ahead.
+//         // Ban lifted 2026-08-31 ("pro is back on the table"); re-add if
+//         // alibaba's token plan is re-enabled.
 //         "deepseek-v4-flash-0731": {
 //           "name": "DeepSeek V4 Flash 0731 (Token Plan, SG)",
 //           "limit": { "context": 200000, "output": 131072 },
@@ -503,8 +504,7 @@
     // },
     // "opencode-go": {
     //   // Parity with pi --list-models opencode-go (2026-08-22): pi lists 16
-    //   // including banned deepseek-v4-pro; this file keeps the 15 non-banned
-    //   // (pro excluded per standing order). Keep in sync with pi's catalog.
+    //   // models. Keep in sync with pi's catalog.
     //   "models": {
     //     "deepseek-v4-flash": { "limit": { "context": 200000, "output": 384000 } },
     //     "glm-5.1": { "limit": { "context": 200000, "output": 32768 } },
@@ -525,14 +525,10 @@
     // },
 
     "ollama": {
-      // Ollama Cloud — OpenAI-compatible endpoint. Standing order
-      // 2026-08-21 (and 2026-08-19): ollama is ONLY flash, pro is banned
-      // account-wide ("that's for anywhere that has DeepSeek pro. it's a
-      // dog and I don't want it"). deepseek-v4-pro re-added below 2026-08-30
-      // as a ONE-TIME explicit override for this session only ("Use
-      // deepseek-v4-pro anyway" + "configure pro") — this does NOT lift the
-      // standing ban; a future session should still default to flash-only
-      // and re-remove this entry absent a fresh explicit go-ahead.
+      // Ollama Cloud: OpenAI-compatible endpoint. deepseek-v4-pro was
+      // banned 2026-08-21 ("pro is dog") and re-added 2026-08-30 as a
+      // one-time override; the ban was lifted 2026-08-31, so pro is back on
+      // the table alongside flash. Both are kept in sync with pi.
       // Verified live via GET https://ollama.com/v1/models 2026-08-30:
       // catalog lists the model id as "deepseek-v4-pro:0813" (dated
       // snapshot, same shape as flash's "deepseek-v4-flash:0731"), not a
@@ -548,8 +544,8 @@
         "deepseek-v4-flash:0731": {
           // Plan-included, confirmed live via a real PONG (2026-08-07).
           // Standing default for ollama/* per user directive 2026-08-07.
-          // Pi parity: this is the only ollama model pi lists; keep in
-          // sync. Thinking ON by default; max variant is explicit per
+          // Pi parity: keep in sync with pi's ollama model list.
+          // Thinking ON by default; max variant is explicit per
           // 2026-08-09 standing order (harmless even if endpoint ignores it).
           "name": "DeepSeek V4 Flash 0731 (Ollama Cloud)",
           "reasoning": true,
@@ -561,8 +557,8 @@
           }
         },
         "deepseek-v4-pro:0813": {
-          // One-time explicit override, 2026-08-30 — see block comment
-          // above. Mirrors the flash entry's shape exactly.
+          // Re-added 2026-08-30, ban lifted 2026-08-31. Mirrors the flash
+          // entry's shape exactly.
           "name": "DeepSeek V4 Pro 0813 (Ollama Cloud)",
           "reasoning": true,
           "tool_call": true,

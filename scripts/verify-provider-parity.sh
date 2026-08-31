@@ -9,9 +9,7 @@
 # Checks:
 #   1. Strict equality for custom providers where we control the full catalog
 #      (ollama, cheapestinference, xiaomi-token-plan, meta)
-#   2. Banned model check (deepseek-v4-pro family) — must not appear in
-#      strict providers; ignored for built-ins where catalog is unavoidable.
-#   3. Dead provider check (openai/openai-codex, alibaba-tknplan, opencode-go,
+#   2. Dead provider check (openai/openai-codex, alibaba-tknplan, opencode-go,
 #      minimax) — skipped for parity, warned.
 #
 # Exit 0 on parity, 1 on drift. Human-readable diff on failure.
@@ -41,12 +39,6 @@ done
 
 # --- helpers ---
 die() { echo "ERROR: $*" >&2; exit 1; }
-
-# Banned pattern: any model id containing deepseek-v4-pro (pro is dog, per 2026-08-21)
-is_banned() {
-  local model="$1"
-  [[ "$model" == *"deepseek-v4-pro"* ]]
-}
 
 # --- collect pi models via porcelain ---
 # pi --list-models outputs header + table; provider is $1, model is $2
@@ -90,24 +82,10 @@ WARNINGS=()
 
 check_strict() {
   local provider="$1"
-  # Extract models for this provider from both harnesses, normalize, exclude banned for strict check
+  # Extract models for this provider from both harnesses, normalize.
   local pi_set op_set
   pi_set="$(grep -i "^${provider}/" "$PI_MODELS" | normalize | sort -u || true)"
   op_set="$(grep -i "^${provider}/" "$OPENCODE_MODELS" | normalize | sort -u || true)"
-
-  # Filter banned for strict providers: they must not appear at all
-  local pi_banned op_banned
-  pi_banned="$(echo "$pi_set" | grep -i "deepseek-v4-pro" || true)"
-  op_banned="$(echo "$op_set" | grep -i "deepseek-v4-pro" || true)"
-  if [[ -n "$pi_banned" ]]; then
-    FAILURES+=("BANNED: $provider pi has banned pro models: $pi_banned")
-  fi
-  if [[ -n "$op_banned" ]]; then
-    FAILURES+=("BANNED: $provider opencode has banned pro models: $op_banned")
-  fi
-  # For parity, exclude banned from comparison (so strict providers after removing banned should be equal)
-  pi_set="$(echo "$pi_set" | grep -vi "deepseek-v4-pro" || true)"
-  op_set="$(echo "$op_set" | grep -vi "deepseek-v4-pro" || true)"
 
   # Strict providers must have at least 1 model (ensures custom config was loaded, not just default catalog)
   local pi_count op_count
@@ -153,8 +131,8 @@ $(comm -13 <(echo "$pi_set") <(echo "$op_set") | head -20)")
 check_builtin_subset() {
   local provider="$1"
   local pi_set op_set
-  pi_set="$(grep -i "^${provider}/" "$PI_MODELS" | normalize | grep -vi "deepseek-v4-pro" | sort -u || true)"
-  op_set="$(grep -i "^${provider}/" "$OPENCODE_MODELS" | normalize | grep -vi "deepseek-v4-pro" | sort -u || true)"
+  pi_set="$(grep -i "^${provider}/" "$PI_MODELS" | normalize | sort -u || true)"
+  op_set="$(grep -i "^${provider}/" "$OPENCODE_MODELS" | normalize | sort -u || true)"
 
   if [[ -z "$pi_set" ]]; then
     WARNINGS+=("WARN: $provider pi has no models listed (may be catalog sync issue)")
@@ -240,6 +218,5 @@ else
     echo "  strict providers checked: ${STRICT_PROVIDERS[*]}" >&2
     echo "  builtin providers checked (subset): ${BUILTIN_PROVIDERS[*]}" >&2
     echo "  dead providers ignored: ${DEAD_PROVIDERS[*]}" >&2
-    echo "  banned pro excluded from parity (but checked for strict providers)" >&2
   fi
 fi
