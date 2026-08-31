@@ -22,43 +22,58 @@
 set -euo pipefail
 
 # --- 1. dash gate ---
-# An em dash is only the most obvious form. The same prose shape arrives as an
-# en dash, a horizontal bar, or a double hyphen standing in for one, and a
-# model that knows the gate exists reaches for those next. Every variant below
-# was observed passing the old em-dash-only pattern.
+# The em dash is only the most obvious form. The same prose shape arrives as an
+# en dash, a horizontal bar, or a double hyphen standing in for one, and a model
+# that knows the gate exists reaches for those next.
 #
-# Deliberately NOT matched, because these are real syntax rather than prose:
-#   --flag          a long option (hyphens followed directly by a letter)
-#   ---             frontmatter, a markdown rule, a table separator, any run of
-#                   three or more hyphens
+# Blocked, because these are prose:
+#   two hyphens with whitespace on both sides, the plain em-dash stand-in
+#   two hyphens tight between two alphanumerics, the typewriter em dash
+#   the em dash, en dash, and horizontal bar characters themselves
+#
+# Not blocked, because these are real syntax:
+#   --flag          a long option
+#   word --word     space on the left only, reads as an option
+#   word--          nothing on the right, reads as a decrement
+#   ---             frontmatter, a markdown rule, a table separator row
 #   <!-- -->        an HTML/markdown comment
-# What the two matched forms do cost: a shell end-of-options separator, and a
-# tight double hyphen joining two identifiers in code. Both are rare enough in
-# staged prose to be worth the bypass on the occasions they come up.
+#
+# The whole match runs under LC_ALL=C so it behaves identically on every
+# machine: the dash characters are compared as raw bytes, and [[:space:]] and
+# [[:alnum:]] stay ASCII-only. Building the dash bytes with printf '\xNN'
+# rather than bash's $'\uXXXX' matters for the same reason. Under a C locale
+# bash cannot encode the escape and emits its six literal characters instead,
+# which would both miss every real dash and block any line containing that
+# ASCII text.
 if [ "${SKIP_EMDASH_CHECK:-}" = "1" ] || [ "${SKIP_EMDASH:-}" = "1" ]; then
   :
 else
-  # NBSP flanking a double hyphen reads identically and defeats [[:space:]] in
-  # a C locale, so fold it to a plain space before matching.
-  nbsp=$'\u00a0'
-  dash_re="$(printf '%s' \
-    $'\u2014' '|' \
-    $'\u2013' '|' \
-    $'\u2015' '|' \
-    '[[:space:]]--([[:space:]]|$)' '|' \
-    '[[:alnum:]]--[[:alnum:]]')"
+  em_dash="$(printf '\xe2\x80\x94')"     # U+2014 em dash
+  en_dash="$(printf '\xe2\x80\x93')"     # U+2013 en dash
+  bar_dash="$(printf '\xe2\x80\x95')"    # U+2015 horizontal bar
 
+  # Characters that render as a space but are not one. Folded to a plain space
+  # before matching, so padding a double hyphen with them is not an escape.
+  nbsp="$(printf '\xc2\xa0')"            # U+00A0 no-break space
+  nnbsp="$(printf '\xe2\x80\xaf')"       # U+202F narrow no-break space
+  figsp="$(printf '\xe2\x80\x87')"       # U+2007 figure space
+
+  dash_re="$em_dash|$en_dash|$bar_dash|[[:space:]]--[[:space:]]|[[:alnum:]]--[[:alnum:]]"
+
+  # Added lines only. Drop the "+++ b/path" file header, but keep every other
+  # line starting with '+' so a markdown "+ " bullet is still inspected.
   added="$(git diff --cached --unified=0 --no-color 2>/dev/null \
-    | grep -E '^\+([^+]|$)' \
-    | sed -e 's/^+//' -e "s/$nbsp/ /g" || true)"
+    | LC_ALL=C grep -E '^\+' \
+    | LC_ALL=C grep -v '^+++ ' \
+    | sed -e 's/^+//' -e "s/$nbsp/ /g" -e "s/$nnbsp/ /g" -e "s/$figsp/ /g" || true)"
 
-  if printf '%s\n' "$added" | grep -Eq "$dash_re"; then
+  if printf '%s\n' "$added" | LC_ALL=C grep -Eq "$dash_re"; then
     echo "pre-commit: dash blocked. Staged changes contain an em/en dash or a double-hyphen stand-in." >&2
     echo "" >&2
     echo "Fix it, then stage again:" >&2
-    echo "  sed -E 's/ *[$(printf '%s' $'\u2014\u2013\u2015')] */, /g; s/[[:space:]]+--[[:space:]]+/, /g'" >&2
+    echo "  sed -E 's/ *[$em_dash$en_dash$bar_dash] */, /g; s/[[:space:]]--[[:space:]]/, /g'" >&2
     echo "" >&2
-    printf '%s\n' "$added" | grep -E "$dash_re" | head -n 20 | sed 's/^/  /' >&2 || true
+    printf '%s\n' "$added" | LC_ALL=C grep -E "$dash_re" | head -n 20 | sed 's/^/  /' >&2 || true
     echo "" >&2
     echo "Replace it with a comma, period, or colon. Keep related words together." >&2
     echo "Bypass once: git commit --no-verify  or  SKIP_EMDASH_CHECK=1 git commit" >&2
