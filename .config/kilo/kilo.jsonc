@@ -8,17 +8,29 @@
   // day (dotfiles d58dbc2). The alibaba-token-plan provider block below is
   // commented out, not deleted, so the config shape survives a re-enable.
   //
-  // small_model uses the kilo gateway's free tier instead (kilo has no bare
-  // "opencode" provider: `kilo models opencode` returns "Provider not
-  // found: opencode"; that free zen tier is an opencode-CLI-only thing.
-  // kilo's own free models live under its existing "kilo" gateway provider
-  // as `kilo/<vendor>/<model>:free`, per `kilo models | rg ':free'`.
-  // Confirmed live via a real dispatch, `kilo run --model
-  // kilo/nvidia/nemotron-3.5-lightning:free "reply with exactly: PONG"` ->
-  // "PONG"), so kilo's own housekeeping calls don't compete with the
-  // default model's ollama-cloud quota.
+  // small_model is the model kilo uses for its own housekeeping calls:
+  // title generation, summarization, and compaction. It must be strong
+  // enough to summarize a long context without dropping load-bearing
+  // detail, because a bad compaction summary is what a resumed session
+  // reads instead of the real transcript.
+  //
+  // It uses the kilo gateway's free tier (kilo has no bare "opencode"
+  // provider: `kilo models opencode` returns "Provider not found: opencode";
+  // that free zen tier is an opencode-CLI-only thing). kilo's own free
+  // models live under its existing "kilo" gateway provider as
+  // `kilo/<vendor>/<model>:free`, per `kilo models | rg ':free'`.
+  //
+  // minimax-m3:free, not nemotron-3.5-lightning:free. The lightning model
+  // was picked for raw speed, but compaction is the one housekeeping call
+  // where quality matters more than latency: a weak summarizer silently
+  // drops detail and the resumed session has no way to know. minimax-m3 is
+  // the account's standard-tier workhorse (Reasoning 74.5 vs lightning's
+  // tiny fast model) and is still free, so it costs nothing extra and
+  // keeps housekeeping off the default model's ollama-cloud quota.
+  // Confirmed live: `kilo run --model kilo/minimax/minimax-m3:free` returns
+  // a correct summary.
   "model": "ollama-cloud/deepseek-v4-flash:0731",
-  "small_model": "kilo/nvidia/nemotron-3.5-lightning:free",
+  "small_model": "kilo/minimax/minimax-m3:free",
   "permission": {
     "*": {
       "*": "allow"
