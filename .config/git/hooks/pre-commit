@@ -63,6 +63,14 @@ if [ -f "$fleet_check" ]; then
 fi
 
 # --- 4. chain to repo-local pre-commit if present ---
+# Skipped when a repo shim already invoked us (GIT_HOOKS_CHAINED=1). That
+# shim dispatches to .githooks/pre-commit.local itself once we return, so
+# chaining here would re-enter the shim and run the gates above twice.
+# See scripts/install-githooks.sh.
+if [ -n "${GIT_HOOKS_CHAINED:-}" ]; then
+  exit 0
+fi
+
 local_hook="$repo_root/.githooks/pre-commit"
 alt_hook="$repo_root/hooks/pre-commit"
 
