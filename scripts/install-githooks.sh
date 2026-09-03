@@ -74,10 +74,17 @@ for candidate in "$local_hook" "$alt_hook"; do
   [ -f "$candidate" ] || continue
   candidate_real="$(realpath "$candidate" 2>/dev/null || echo "")"
   [ -n "$candidate_real" ] && [ "$candidate_real" != "$self_path" ] || continue
+  # GIT_HOOKS_CHAINED propagates down, matching pre-commit:138-144 and
+  # pre-push:198. Not a bug fix: measured 2026-09-03, a .local that is itself
+  # a shim copy already runs the global gates once either way, because
+  # re-entry changes the basename to pre-commit.local and the global lookup
+  # misses. That is the same accident the realpath check above refuses to
+  # rely on, so state the invariant instead: once the gates have run, nothing
+  # downstream runs them again.
   if [ -x "$candidate" ]; then
-    exec "$candidate" "$@"
+    exec env GIT_HOOKS_CHAINED=1 "$candidate" "$@"
   else
-    exec bash "$candidate" "$@"
+    exec env GIT_HOOKS_CHAINED=1 bash "$candidate" "$@"
   fi
 done
 SHIMEOF
