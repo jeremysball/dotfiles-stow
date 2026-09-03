@@ -716,7 +716,7 @@
           "reasoning": true,
           "tool_call": false,
           "limit": { "context": 127000, "output": 128000 } // $2/$8
-        },
+        }
       }
     }
   },
