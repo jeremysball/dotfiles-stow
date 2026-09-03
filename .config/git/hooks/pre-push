@@ -10,21 +10,39 @@
 #
 # Two jobs, in order:
 #   1. Worktree budget: refuse the push while this repo holds more than the
-#      allowed number of worktrees beyond the primary checkout and the one
-#      being pushed from. Enforces CLAUDE.md's "A dangling worktree is
-#      illegal". Drain the debt, don't bypass the gate.
+#      allowed number of *drainable* worktrees. Enforces CLAUDE.md's "A
+#      dangling worktree is illegal". Drain the debt, don't bypass the gate.
 #   2. Chain to repo-local .githooks/pre-push / hooks/pre-push if present,
 #      so per-repo hooks keep working alongside the global one.
+#
+# What counts as drainable is not decided here. The auditing-worktrees skill
+# already owns that classification (merged, clean, not in flight, no live
+# lock), so this hook shells out to its bin/audit-worktrees.sh and counts
+# only the entries it files under safe-to-clean. One source of truth, at the
+# cost of the gate going quiet on a machine where the skill isn't installed:
+# a missing auditor means the push proceeds, never that it is refused.
 #
 # Cap resolution (flag/env/config triplet, highest precedence first):
 #   GIT_MAX_WORKTREES=<n>          env var
 #   git config worktree.maxOpen    config key
 #   DEFAULT_MAX_WORKTREES          built-in default, below
 #
+# Auditor resolution, same shape:
+#   GIT_WORKTREE_AUDIT_BIN=<path>  env var
+#   git config worktree.auditBin   config key
+#   DEFAULT_AUDIT_BIN              built-in default, below
+#
 # Bypass once: git push --no-verify  or  SKIP_WORKTREE_BUDGET=1 git push
 set -euo pipefail
 
 DEFAULT_MAX_WORKTREES=3
+DEFAULT_AUDIT_BIN="$HOME/.claude/skills/auditing-worktrees/bin/audit-worktrees.sh"
+
+# git exports GIT_DIR (and friends) into a hook, absolute when the push runs
+# from a linked worktree. An absolute GIT_DIR outranks `git -C <path>`, so
+# every `git -C "$wt"` below would silently answer about the pushing worktree
+# instead of $wt. Strip them once, here, rather than prefixing every call.
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_OBJECT_DIRECTORY
 
 # --- 1. worktree budget ---
 check_worktree_budget() {
@@ -45,16 +63,51 @@ check_worktree_budget() {
   # The primary checkout is the first entry `git worktree list` prints.
   primary="$(git worktree list --porcelain | awk '/^worktree /{print substr($0,10); exit}')"
 
-  # Collect every worktree that is neither the primary checkout nor the one
-  # this push is running from. Those are the ones with no live claim.
+  local auditor
+  auditor="${GIT_WORKTREE_AUDIT_BIN:-$(git config --get worktree.auditBin 2>/dev/null || true)}"
+  [ -n "$auditor" ] || auditor="$DEFAULT_AUDIT_BIN"
+
+  # No auditor, no opinion. The classification lives in auditing-worktrees;
+  # without it this hook has no defensible definition of "drainable" and
+  # guessing one (every registered worktree, say) refuses pushes over work
+  # that is genuinely live. Fail open and say why, once.
+  if [ ! -f "$auditor" ]; then
+    echo "pre-push: worktree budget skipped (no auditor at $auditor)" >&2
+    echo "          set worktree.auditBin or GIT_WORKTREE_AUDIT_BIN to enable it" >&2
+    return 0
+  fi
+
+  # --no-content skips the expensive content-coverage pass; a pre-push hook
+  # is not the place to score every unmerged branch against base.
+  local report
+  report="$(bash "$auditor" --no-content "$primary" 2>/dev/null || true)"
+
+  # audit-worktrees.sh prints prose, bucketed by heading. Take the lines under
+  # safe-to-clean, and only those carrying a "(worktree: <path>)" annotation:
+  # the bucket also holds merged branches with no worktree at all, which cost
+  # no directory and are not what this cap is about.
   local -a idle=()
-  local wt
+  local wt pruned=0
   while IFS= read -r wt; do
     [ -n "$wt" ] || continue
     [ "$wt" = "$primary" ] && continue
     [ "$wt" = "$here" ] && continue
+    # git keeps listing a worktree until somebody prunes it, and the auditor
+    # reads that same list. A directory already gone from disk is debt that is
+    # already paid; counting it refuses the push over nothing and prints it
+    # with no branch.
+    [ -d "$wt" ] || { pruned=$(( pruned + 1 )); continue; }
     idle+=("$wt")
-  done < <(git worktree list --porcelain | awk '/^worktree /{print substr($0,10)}')
+  done < <(printf '%s\n' "$report" | awk '
+    /^  safe-to-clean/       { in_bucket = 1; next }
+    /^  [a-z(]/              { in_bucket = 0 }
+    in_bucket && /\(worktree: / {
+      i = index($0, "(worktree: ")
+      rest = substr($0, i + 11)
+      j = index(rest, ")")
+      if (j > 0) print substr(rest, 1, j - 1)
+    }
+  ')
 
   local count=${#idle[@]}
   [ "$count" -le "$max" ] && return 0
@@ -67,8 +120,9 @@ check_worktree_budget() {
     echo "pre-push: worktree budget exceeded"
     echo ""
     echo "  repo:      $primary"
-    echo "  idle:      $count worktrees (cap $max, excluding the primary checkout"
-    echo "             and the one you are pushing from)"
+    echo "  drainable: $count worktrees (cap $max) -- merged, clean, and idle"
+    echo "             per auditing-worktrees, excluding the primary checkout"
+    echo "             and the one you are pushing from"
     echo ""
     echo "A worktree on disk claims work is live there. Finished branches must"
     echo "give their directory back. Drain these before pushing more:"
@@ -77,7 +131,12 @@ check_worktree_budget() {
       local br landed
       br="$(git -C "$wt" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '?')"
       landed=""
-      if git merge-base --is-ancestor "$br" "$default_branch" 2>/dev/null; then
+      # Ask about $wt's own commit, not the branch name: a detached worktree
+      # reports the literal string "HEAD", which would resolve against
+      # whichever checkout this hook happens to be running in.
+      local sha
+      sha="$(git -C "$wt" rev-parse HEAD 2>/dev/null || true)"
+      if [ -n "$sha" ] && git merge-base --is-ancestor "$sha" "$default_branch" 2>/dev/null; then
         landed="   [already in $default_branch]"
       fi
       printf '  %-58s %s%s\n' "$wt" "$br" "$landed"
@@ -98,10 +157,25 @@ check_worktree_budget() {
     echo "  GIT_MAX_WORKTREES=<n> git push         # one push"
     echo ""
     echo "Bypass once: git push --no-verify  or  SKIP_WORKTREE_BUDGET=1 git push"
+    if [ "$pruned" -gt 0 ]; then
+      echo "($pruned registered worktree(s) are already gone from disk;"
+      echo " 'git worktree prune' clears the registrations, but they were"
+      echo " not counted above.)"
+      echo ""
+    fi
     echo "Bypassing leaves the debt. Draining is the point."
   } >&2
   return 1
 }
+
+# Invoked by a repo-local shim that dispatches to the repo's own hooks itself.
+# Do the budget check and get out of the way: leave stdin untouched for the
+# shim to hand on, and skip the chaining block below so the repo's hook does
+# not run twice.
+if [ -n "${GIT_HOOKS_CHAINED:-}" ]; then
+  check_worktree_budget || exit 1
+  exit 0
+fi
 
 # git feeds pre-push the ref updates on stdin. Capture them once so chained
 # repo-local hooks still receive them; this hook itself does not use them.
@@ -110,9 +184,20 @@ REF_UPDATES="$(cat)"
 check_worktree_budget || exit 1
 
 # --- 2. chain to repo-local hooks ---
-for repo_hook in .githooks/pre-push hooks/pre-push; do
+# Absolute paths and a realpath self-check, matching the pre-commit sibling.
+# A repo whose .githooks/pre-push symlinks back to this file would otherwise
+# recurse until it hits process limits.
+repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+self_path="$(realpath "$0" 2>/dev/null || echo "$0")"
+
+for repo_hook in "$repo_root/.githooks/pre-push" "$repo_root/hooks/pre-push"; do
+  [ -f "$repo_hook" ] || continue
+  hook_real="$(realpath "$repo_hook" 2>/dev/null || echo "")"
+  [ -n "$hook_real" ] && [ "$hook_real" != "$self_path" ] || continue
   if [ -x "$repo_hook" ]; then
-    printf '%s' "$REF_UPDATES" | "$repo_hook" "$@"
+    printf '%s' "$REF_UPDATES" | GIT_HOOKS_CHAINED=1 "$repo_hook" "$@"
+  else
+    printf '%s' "$REF_UPDATES" | GIT_HOOKS_CHAINED=1 bash "$repo_hook" "$@"
   fi
 done
 
