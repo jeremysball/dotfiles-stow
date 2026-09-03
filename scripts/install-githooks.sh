@@ -25,7 +25,7 @@
 
 set -euo pipefail
 
-HOOKS="pre-commit pre-push"
+HOOKS="pre-commit pre-push post-checkout"
 GLOBAL_HOOKS="${XDG_CONFIG_HOME:-$HOME/.config}/git/hooks"
 
 die() { echo "install-githooks: $*" >&2; exit 1; }
@@ -68,9 +68,44 @@ SHIMEOF
 }
 
 install_one() {
-  local repo="$1" root
+  local repo="$1" root prev
   root="$(git -C "$repo" rev-parse --show-toplevel 2>/dev/null)" \
     || die "$repo is not a git repository"
+
+  # Refuse to clobber a hooksPath pointing somewhere this script does not
+  # own. Rewriting it to .githooks orphans every hook in the old directory
+  # whose name is not in $HOOKS: not moved aside to .local, not shimmed,
+  # just silently stops running. Verified 2026-09-03 on a scratch repo with
+  # `core.hooksPath = hooks` holding pre-commit and commit-msg: after the
+  # install, commit-msg produced no output and no error. The three values
+  # below are the ones this script can safely replace, because .githooks
+  # ends up dispatching everything they held.
+  # --local, not --get: the global config on this machine already sets
+  # core.hooksPath to the global directory, and a plain --get would report
+  # that inherited value for every repo that records nothing of its own.
+  # Only a repo-local override is this script's business. Read from $root
+  # rather than $repo so a linked worktree reads the shared repo config.
+  if prev="$(git -C "$root" config --local --get core.hooksPath)"; then
+    case "${prev/#\~\//$HOME/}" in
+      .githooks|*/.githooks|"$GLOBAL_HOOKS") ;;
+      *) die "$root records core.hooksPath=$prev, which this script does not own; resolve by hand" ;;
+    esac
+  fi
+
+  # $HOOKS has to cover every hook the global directory ships, or pointing a
+  # repo at .githooks drops the ones it misses. post-checkout is exactly how
+  # that bites: it was absent from $HOOKS while ~/.config/git/hooks has had
+  # it since 2026-08-23, so any repo whose hooksPath was the global
+  # directory lost it on install. Fail loudly on the next such drift rather
+  # than silently disabling a gate.
+  local g
+  for g in "$GLOBAL_HOOKS"/*; do
+    [ -x "$g" ] || continue
+    case " $HOOKS " in
+      *" $(basename "$g") "*) ;;
+      *) die "$GLOBAL_HOOKS/$(basename "$g") is executable but not in HOOKS; add it" ;;
+    esac
+  done
 
   mkdir -p "$root/.githooks"
 
@@ -102,15 +137,29 @@ install_one() {
     fi
   done
 
-  if prev="$(git -C "$root" config --get core.hooksPath)"; then
-    case "$prev" in
-      /*) hooks_path="$root/.githooks" ;;
-      *)  hooks_path=".githooks" ;;
-    esac
-  else
-    hooks_path=".githooks"
-  fi
-  git -C "$root" config core.hooksPath "$hooks_path"
+  # Always relative, even where the repo previously recorded an absolute
+  # path. Git resolves a relative hooksPath per-worktree, so each worktree
+  # runs its own .githooks; an absolute one pins every worktree to the
+  # primary checkout's files. That difference is not cosmetic here. All work
+  # in this setup happens in linked worktrees, so under an absolute path a
+  # worktree that has the shim still commits through the primary checkout's
+  # unshimmed hook, and the global gates never fire where the commits are
+  # actually made. Verified 2026-09-03 on a scratch repo: identical shims,
+  # em dash blocked under `.githooks`, committed clean under the absolute
+  # form.
+  #
+  # $root, not the primary checkout. core.hooksPath is repo-wide config, and
+  # `git -C <linked worktree> config` already writes to the shared config
+  # file every worktree reads (verified: the write from a worktree lands in
+  # <primary>/.git/config). Since the value is now the constant .githooks
+  # rather than a path, there is no worktree path left to record wrongly.
+  # Resolving the primary checkout as dirname(--git-common-dir) instead was
+  # actively wrong: for a submodule it yields <super>/.git/modules, so the
+  # write lands in the superproject's config and the submodule never gets
+  # one; for --separate-git-dir and bare-repo worktrees it yields a
+  # non-repository and the script dies under set -e after the shims are
+  # already written. All three reproduced on scratch repos 2026-09-03.
+  git -C "$root" config core.hooksPath .githooks
 
   echo "install-githooks: $root ($installed shim(s), $kept repo hook(s) preserved as .local)"
 }
