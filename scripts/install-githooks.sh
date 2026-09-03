@@ -68,9 +68,19 @@ SHIMEOF
 }
 
 install_one() {
-  local repo="$1" root
+  local repo="$1" root primary
   root="$(git -C "$repo" rev-parse --show-toplevel 2>/dev/null)" \
     || die "$repo is not a git repository"
+
+  # core.hooksPath is repo-wide config, not per-worktree: a `git config` run
+  # from a linked worktree writes to the shared config every worktree reads.
+  # $root is the worktree we are installing shims into, which is the right
+  # place for the files but the wrong path to record: writing it would
+  # point the primary checkout (and every sibling worktree) at a directory
+  # that disappears when this worktree is removed. Record the primary
+  # checkout instead. Same value whether this runs from the primary checkout
+  # or a worktree of it.
+  primary="$(dirname "$(git -C "$repo" rev-parse --path-format=absolute --git-common-dir)")"
 
   mkdir -p "$root/.githooks"
 
@@ -102,15 +112,18 @@ install_one() {
     fi
   done
 
-  if prev="$(git -C "$root" config --get core.hooksPath)"; then
-    case "$prev" in
-      /*) hooks_path="$root/.githooks" ;;
-      *)  hooks_path=".githooks" ;;
-    esac
-  else
-    hooks_path=".githooks"
-  fi
-  git -C "$root" config core.hooksPath "$hooks_path"
+  # Always relative, even where the repo previously recorded an absolute
+  # path. Git resolves a relative hooksPath per-worktree, so each worktree
+  # runs its own .githooks; an absolute one pins every worktree to the
+  # primary checkout's files. That difference is not cosmetic here. All work
+  # in this setup happens in linked worktrees, so under an absolute path a
+  # worktree that has the shim still commits through the primary checkout's
+  # unshimmed hook, and the global gates never fire where the commits are
+  # actually made. Verified 2026-09-03 on a scratch repo: identical shims,
+  # em dash blocked under `.githooks`, committed clean under the absolute
+  # form. The value is untracked local config, so rewriting it strands
+  # nothing.
+  git -C "$primary" config core.hooksPath .githooks
 
   echo "install-githooks: $root ($installed shim(s), $kept repo hook(s) preserved as .local)"
 }
