@@ -72,11 +72,19 @@ else
     echo "pre-commit: dash blocked. Staged changes contain an em/en dash or a double-hyphen stand-in." >&2
     echo "" >&2
     echo "Fix it, then stage again:" >&2
-    echo "  sed -E \"s/ *[$em_dash$en_dash$bar_dash] */, /g; s/[[:space:]]--[[:space:]]/, /g; s/([[:alnum:]])--([[:alnum:]])/\\1, \\2/g\"" >&2
+    # The fold has to lead. The gate normalises no-break spaces to a plain
+    # space before matching, so a hint that skips that step leaves an
+    # NBSP-padded double hyphen looking repaired and still blocked.
+    printf '  LC_ALL=C sed -E "s/%s/ /g; s/%s/ /g; s/%s/ /g; s/ *[%s%s%s] */, /g; s/[[:space:]]--[[:space:]]/, /g; s/([[:alnum:]])--([[:alnum:]])/\\1, \\2/g"\n' \
+      "$nbsp" "$nnbsp" "$figsp" "$em_dash" "$en_dash" "$bar_dash" >&2
     echo "" >&2
     printf '%s\n' "$added" | LC_ALL=C grep -E "$dash_re" | head -n 20 | sed 's/^/  /' >&2 || true
     echo "" >&2
     echo "Replace it with a comma, period, or colon. Keep related words together." >&2
+    echo "" >&2
+    echo "The double-hyphen rules also match some legitimate code: a BEM class" >&2
+    echo "name (block--modifier) and a markdown table separator padded with" >&2
+    echo "spaces (| -- |) both look like a dash stand-in. Bypass those." >&2
     echo "Bypass once: git commit --no-verify  or  SKIP_DASH_CHECK=1 git commit" >&2
     exit 1
   fi
