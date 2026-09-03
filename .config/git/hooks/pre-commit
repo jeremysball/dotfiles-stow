@@ -128,14 +128,20 @@ self_path="$(realpath "$0" 2>/dev/null || echo "$0")"
 local_real="$(realpath "$local_hook" 2>/dev/null || echo "")"
 alt_real="$(realpath "$alt_hook" 2>/dev/null || echo "")"
 
+# GIT_HOOKS_CHAINED goes on every exec here, matching pre-push:198. Without
+# it, a repo that carries the tracked shim but whose core.hooksPath still
+# points at this directory (a fresh clone on a dotfiles machine that has not
+# run install-githooks) gets both gates twice: this hook runs sections 1-3,
+# execs .githooks/pre-commit, and the shim, seeing no flag, invokes this
+# hook again from the top.
 if [ -n "$local_real" ] && [ "$local_real" != "$self_path" ] && [ -x "$local_hook" ]; then
-  exec "$local_hook" "$@"
+  exec env GIT_HOOKS_CHAINED=1 "$local_hook" "$@"
 elif [ -n "$local_real" ] && [ "$local_real" != "$self_path" ] && [ -f "$local_hook" ]; then
-  exec bash "$local_hook" "$@"
+  exec env GIT_HOOKS_CHAINED=1 bash "$local_hook" "$@"
 elif [ -n "$alt_real" ] && [ "$alt_real" != "$self_path" ] && [ -x "$alt_hook" ]; then
-  exec "$alt_hook" "$@"
+  exec env GIT_HOOKS_CHAINED=1 "$alt_hook" "$@"
 elif [ -n "$alt_real" ] && [ "$alt_real" != "$self_path" ] && [ -f "$alt_hook" ]; then
-  exec bash "$alt_hook" "$@"
+  exec env GIT_HOOKS_CHAINED=1 bash "$alt_hook" "$@"
 fi
 
 exit 0
