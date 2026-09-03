@@ -30,11 +30,13 @@ GLOBAL_HOOKS="${XDG_CONFIG_HOME:-$HOME/.config}/git/hooks"
 
 die() { echo "install-githooks: $*" >&2; exit 1; }
 
-is_shim() { [ -f "$1" ] && grep -q 'GIT_HOOKS_CHAINED' "$1" 2>/dev/null; }
+SHIM_MARKER="# install-githooks-shim: v1"
+is_shim() { [ -f "$1" ] && grep -qxF "$SHIM_MARKER" "$1" 2>/dev/null; }
 
 write_shim() {
   cat > "$1" <<'SHIMEOF'
 #!/usr/bin/env bash
+# install-githooks-shim: v1
 # Managed by `mise run install-githooks`. Do not edit.
 # Repo-specific checks belong in the .local file this dispatches to.
 set -euo pipefail
@@ -51,10 +53,15 @@ fi
 
 # 2. this repo's own checks, if it has any.
 local_hook="$repo_root/.githooks/$hook_name.local"
+alt_hook="$repo_root/hooks/$hook_name"
 if [ -x "$local_hook" ]; then
   exec "$local_hook" "$@"
 elif [ -f "$local_hook" ]; then
   exec bash "$local_hook" "$@"
+elif [ -x "$alt_hook" ]; then
+  exec "$alt_hook" "$@"
+elif [ -f "$alt_hook" ]; then
+  exec bash "$alt_hook" "$@"
 fi
 SHIMEOF
   chmod +x "$1"
@@ -77,7 +84,12 @@ install_one() {
       if [ -e "$target.local" ]; then
         die "$root/.githooks/$hook.local already exists; resolve by hand"
       fi
-      mv "$target" "$target.local"
+      rel="${target#"$root"/}"
+      if git -C "$root" ls-files --error-unmatch "$rel" >/dev/null 2>&1; then
+        git -C "$root" mv "$rel" "$rel.local"
+      else
+        mv "$target" "$target.local"
+      fi
       chmod +x "$target.local"
       kept=$((kept + 1))
     fi
@@ -90,7 +102,15 @@ install_one() {
     fi
   done
 
-  git -C "$root" config core.hooksPath .githooks
+  if prev="$(git -C "$root" config --get core.hooksPath)"; then
+    case "$prev" in
+      /*) hooks_path="$root/.githooks" ;;
+      *)  hooks_path=".githooks" ;;
+    esac
+  else
+    hooks_path=".githooks"
+  fi
+  git -C "$root" config core.hooksPath "$hooks_path"
 
   echo "install-githooks: $root ($installed shim(s), $kept repo hook(s) preserved as .local)"
 }
