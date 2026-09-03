@@ -461,3 +461,26 @@ echo "install-worktree-githooks: installed $GLOBAL_HOOKS/post-checkout and set g
 echo "install-worktree-githooks: per-repo override still works: cp $REPO_DIR/$HOOK_SRC .githooks/post-checkout && git config core.hooksPath .githooks"
 '''
 
+
+[tasks.install-githooks]
+# core.hooksPath is single-valued and repo-local beats global, with no
+# merging, so a repo that sets `core.hooksPath = .githooks` for contributor
+# portability silently disables every global hook on this machine. Measured
+# 2026-09-01: sixteen repos set the override, none carried the global
+# em-dash gate, so that gate had never fired on a commit in any of them.
+# This installs a shim that runs the global hook first, then the repo's own.
+description = "Wire a repo's .githooks/ to chain the global hooks in ~/.config/git/hooks, so a repo-local core.hooksPath stops shadowing them. Preserves an existing repo hook as <hook>.local. Idempotent. Usage: mise run install-githooks [repo-path...] (defaults to cwd)."
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+
+DOTFILES_ROOT="${MISE_DOTFILES_ROOT:-${DOTFILES_ROOT:-$HOME/.dotfiles}}"
+SCRIPT="$DOTFILES_ROOT/scripts/install-githooks.sh"
+
+if [ ! -f "$SCRIPT" ]; then
+    echo "install-githooks: $SCRIPT not found. Run \`mise bootstrap dotfiles apply\` first." >&2
+    exit 1
+fi
+
+exec "$SCRIPT" "$@"
+'''
