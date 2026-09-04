@@ -520,3 +520,24 @@ link_one() {
 
 link_one git-mainsync
 '''
+
+[tasks.check-claude-md]
+# Alert-only half of the Tier 1 mechanization: the "Maintaining this file"
+# cap (50 rules, 600 lines) as a runnable gate instead of a paragraph. The
+# repair is the Tier 1 trim itself; this task only reports. Run it before
+# adding a rule: a new rule must fit the budget or displace something else.
+description = "Verify a CLAUDE.md is within budget (<=50 ## rules, <=600 lines). Alerts only; exits 1 with the offending numbers. Usage: mise run check-claude-md [path] (default ~/.claude/CLAUDE.md)."
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+
+DOTFILES_ROOT="${MISE_DOTFILES_ROOT:-${DOTFILES_ROOT:-$HOME/.dotfiles}}"
+SCRIPT="$DOTFILES_ROOT/scripts/check-claude-md.sh"
+
+if [ ! -f "$SCRIPT" ]; then
+    echo "check-claude-md: $SCRIPT not found. Run \`mise bootstrap dotfiles apply\` first." >&2
+    exit 1
+fi
+
+exec "$SCRIPT" "$@"
+'''
