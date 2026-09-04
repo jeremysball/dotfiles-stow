@@ -492,21 +492,22 @@ exec "$SCRIPT" "$@"
 
 [tasks.sync-git-bin]
 # git only finds subcommands on PATH, but the git-* helpers live as scripts
-# in the dotclaude repo (~/.claude/scripts/). Measured 2026-09-03:
-# git-mainsync existed for weeks with nothing linking it into ~/.local/bin,
-# so every `git mainsync main` failed with "not a git command" and the
-# CLAUDE.md rule silently fell through to its manual fallback. This links
-# them. Idempotent: repoints a stale link, refuses to overwrite a real file.
-description = "Symlink git-* helper scripts from ~/.claude/scripts/ into ~/.local/bin so git subcommands resolve. Idempotent; refuses to overwrite real files."
+# in the dotclaude repo (~/.claude/scripts/) and in this repo's scripts/.
+# Measured 2026-09-03: git-mainsync existed for weeks with nothing linking it
+# into ~/.local/bin, so every `git mainsync main` failed with "not a git
+# command" and the CLAUDE.md rule silently fell through to its manual
+# fallback. This links them. Idempotent: repoints a stale link, refuses to
+# overwrite a real file.
+description = "Symlink git-* helper scripts into ~/.local/bin so git subcommands resolve. Idempotent; refuses to overwrite real files."
 run = '''
 #!/usr/bin/env bash
 set -euo pipefail
 
-SRC_DIR="$HOME/.claude/scripts"
 DST_DIR="$HOME/.local/bin"
+DOTFILES_ROOT="${MISE_DOTFILES_ROOT:-${DOTFILES_ROOT:-$HOME/.dotfiles}}"
 
 link_one() {
-    local src="$SRC_DIR/$1" dst="$DST_DIR/$1"
+    local src="$1" dst="$DST_DIR/$2"
     if [ ! -e "$src" ]; then
         echo "sync-git-bin: source $src not found" >&2
         return 1
@@ -520,7 +521,8 @@ link_one() {
     echo "sync-git-bin: $dst -> $src"
 }
 
-link_one git-mainsync
+link_one "$HOME/.claude/scripts/git-mainsync" git-mainsync
+link_one "$DOTFILES_ROOT/scripts/git-lane" git-lane
 '''
 
 [tasks.check-claude-md]
