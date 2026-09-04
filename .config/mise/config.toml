@@ -297,9 +297,11 @@ experimental = true
 # git -- global hooks, wired via [core] hooksPath in .gitconfig. Tracked
 # here so every machine that runs `mise bootstrap dotfiles apply` gets the
 # pre-commit (adhd-theme guardrail + dash gate: em and en dashes plus
-# double-hyphen stand-ins) and the pre-push (drainable-worktree budget)
+# double-hyphen stand-ins), the commit-msg (AI-credit refusal + Conventional
+# Commits subject), and the pre-push (drainable-worktree budget)
 # with zero manual setup.
 "~/.config/git/hooks/pre-commit" = {}
+"~/.config/git/hooks/commit-msg" = {}
 "~/.config/git/hooks/pre-push" = {}
 
 # opencode -- config only. meta-api-key is a live credential; node_modules,

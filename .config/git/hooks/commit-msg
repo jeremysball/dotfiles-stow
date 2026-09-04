@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# ~/.config/git/hooks/commit-msg: global commit-msg hook, deployed by dotfiles.
+#
+# Wired automatically: [core] hooksPath = ~/.config/git/hooks lives in the
+# tracked .gitconfig, and this file ships via the [dotfiles] table, so every
+# machine that runs `mise bootstrap dotfiles apply` gets it with zero manual
+# setup. Repos with their own core.hooksPath get it through the
+# install-githooks shim (commit-msg is in HOOKS), once re-run there.
+#
+# Two jobs, in order:
+#   1. Refuse AI-credit trailers and session links (ACT HUMAN): nothing under
+#      the user's name may carry a Claude-Session trailer, a session URL, a
+#      Co-Authored-By: Claude trailer, or a Generated-with footer.
+#   2. Require a Conventional Commits subject line.
+# Bypass once: git commit --no-verify
+set -euo pipefail
+
+msg_file="${1:?commit-msg: no message file given}"
+subject="$(sed -n '1p' "$msg_file")"
+
+# Merge and revert commits keep git's own generated subjects.
+case "$subject" in
+  "Merge "*|"Revert "*) exit 0 ;;
+esac
+
+fail() { echo "commit-msg: blocked. $1" >&2; exit 1; }
+
+for banned in "Claude-Session:" "claude.ai/code/session_" "Co-Authored-By: Claude" "Generated with [Claude"; do
+  if grep -qF "$banned" "$msg_file"; then
+    fail "message contains '$banned'. Strip AI-credit trailers and session links, then commit again (bypass once: git commit --no-verify)."
+  fi
+done
+
+if ! printf '%s' "$subject" | grep -qE '^(feat|fix|chore|docs|refactor|test|style|perf|build|ci)(\(.+\))?(!)?: .+'; then
+  fail "subject '$subject' is not Conventional Commits (type(scope): description). Use feat, fix, chore, docs, refactor, test, style, perf, build, or ci (bypass once: git commit --no-verify)."
+fi

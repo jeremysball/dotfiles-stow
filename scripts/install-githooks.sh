@@ -25,7 +25,7 @@
 
 set -euo pipefail
 
-HOOKS="pre-commit pre-push post-checkout"
+HOOKS="pre-commit commit-msg pre-push post-checkout"
 GLOBAL_HOOKS="${XDG_CONFIG_HOME:-$HOME/.config}/git/hooks"
 
 die() { echo "install-githooks: $*" >&2; exit 1; }
