@@ -25,18 +25,18 @@
 
 set -euo pipefail
 
-HOOKS="pre-commit pre-push post-checkout"
+HOOKS="pre-commit commit-msg pre-push post-checkout"
 GLOBAL_HOOKS="${XDG_CONFIG_HOME:-$HOME/.config}/git/hooks"
 
 die() { echo "install-githooks: $*" >&2; exit 1; }
 
-SHIM_MARKER="# install-githooks-shim: v1"
-is_shim() { [ -f "$1" ] && grep -qxF "$SHIM_MARKER" "$1" 2>/dev/null; }
+SHIM_MARKER_RE='^# install-githooks-shim: v[0-9]+$'
+is_shim() { [ -f "$1" ] && grep -qE "$SHIM_MARKER_RE" "$1" 2>/dev/null; }
 
 write_shim() {
   cat > "$1" <<'SHIMEOF'
 #!/usr/bin/env bash
-# install-githooks-shim: v1
+# install-githooks-shim: v2
 # Managed by `mise run install-githooks`. Do not edit.
 # Repo-specific checks belong in the .local file this dispatches to.
 set -euo pipefail
