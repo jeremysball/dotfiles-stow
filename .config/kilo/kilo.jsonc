@@ -232,6 +232,12 @@
           "tool_call": true,
           "limit": { "context": 200000, "output": 32768 } // native ctx 262144 — cheapest uncensored, $0.12/$0.38
         },
+        "alibaba/qwen3.8-flash": {
+          "name": "Qwen3.8 Flash",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 900000, "output": 131072 } // native ctx 991808, $0.16/$0.47, added 2026-09-03 for review speed
+        },
 
         // --- Models the rest of the fleet cannot reach at all.
         "anthropic/claude-opus-5": {
@@ -275,6 +281,79 @@
           "reasoning": true,
           "tool_call": true,
           "limit": { "context": 200000, "output": 128000 } // native ctx 1000000 — $1.10/$2.20
+        },
+
+        // --- Newest since 2026-08-31 sync (added 2026-09-04 from
+        // {baseURL}/models?detailed=true; REQUEST-ONLY, no PONG per user).
+        // Pi full-syncs the same endpoint (now 641 models); synth-2.5-*
+        // previews (no reasoning/tools) and TEE/* mirrors stay pi-only per
+        // the curated reasoning:true policy and TEE exclusion above.
+        "alibaba/qwen3.8-max-0902": {
+          // Alibaba's Sep-02 flagship checkpoint; dated snapshot per the
+          // pin-exact-versions convention.
+          "name": "Qwen3.8 Max 0902",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 131072 } // native ctx 991808, $2/$6
+        },
+        "anthropic/claude-fable-5.1": {
+          // Top-of-market price: confirm with the user before dispatching.
+          "name": "Claude Fable 5.1",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 128000 } // native ctx 1000000, $10/$50
+        },
+        "google/gemini-3.8-flash": {
+          "name": "Gemini 3.8 Flash",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 65536 } // native ctx 1048576, $0.75/$3.75
+        },
+        "ibm-granite/granite-4.2-8b": {
+          // Apache 2.0 dense 8B, agentic-trained; endpoint reports no
+          // max_output_tokens so output uses the 32768 fallback.
+          "name": "Granite 4.2 8B",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 131072, "output": 32768 } // native ctx 131072, $0.10/$0.15
+        },
+        "inception/mercury-2.5-preview": {
+          // Diffusion LM, cheapest frontier route here; good for
+          // latency-sensitive coding subagents.
+          "name": "Mercury 2.5 Preview",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 65536 } // native ctx 260000, $0.04/$0.15
+        },
+        "meta/muse-spark-1.3": {
+          // Also reachable via the meta provider; nanogpt route is the
+          // pay-per-request alternative. Endpoint reports no
+          // max_output_tokens so output matches the meta fleet value.
+          "name": "Muse Spark 1.3",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 131072 } // native ctx 1048576, $1.25/$4.25
+        },
+        "meta/muse-spark-1.3-contributor": {
+          // Contributor tier, same note as above; cheapest Muse route.
+          "name": "Muse Spark 1.3 Contributor",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 131072 } // native ctx 1048576, $0.10/$0.20
+        },
+        "openai/gpt-6-astra": {
+          // Top-of-market price: confirm with the user before dispatching.
+          "name": "GPT 6 Astra",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 128000 } // native ctx 1050000, $10/$50
+        },
+        "openai/gpt-6-astra-pro": {
+          // Top-of-market price: confirm with the user before dispatching.
+          "name": "GPT 6 Astra Pro",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 200000, "output": 128000 } // native ctx 1050000, $10/$50
         },
 
         // --- Web-grounded research (no tool_call; they search internally).
