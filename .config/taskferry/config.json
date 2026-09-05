@@ -16,7 +16,7 @@
       "maxConcurrentTasks": 3
     },
     "nanogpt": {
-      "maxConcurrentTasks": 2
+      "maxConcurrentTasks": 6
     }
   }
 }
