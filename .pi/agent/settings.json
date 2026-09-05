@@ -1,12 +1,12 @@
 {
   "lastChangelogVersion": "0.83.0",
   "defaultProvider": "nanogpt",
-  "defaultModel": "qwen/qwen3.8-27b-uncensored:thinking",
+  "defaultModel": "z-ai/glm-5.3-flash-uncensored",
   "defaultThinkingLevel": "high",
   "treeFilterMode": "default",
   "doubleEscapeAction": "tree",
   "collapseChangelog": true,
-  "hideThinkingBlock": false,
+  "hideThinkingBlock": true,
   "compaction": {
     "enabled": true,
     "reserveTokens": 25000,
