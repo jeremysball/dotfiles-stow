@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# git-lane: print the merge lane for the current branch: `doc` or `review`.
+#
+# Mechanical form of the Two merge lanes rule. Doc lane iff every path in
+#   git diff --name-only "$(git merge-base origin/main HEAD)"..HEAD
+# is a *.md file, .gitmodules, or a submodule gitlink bump. Anything else,
+# including unfamiliar paths and extensionless files, is review lane.
+# Prints the lane plus the path that decided it. Linked onto PATH by
+# `mise run sync-git-bin`. Usage: git lane
+set -euo pipefail
+
+base="$(git merge-base origin/main HEAD)"
+decider=""
+
+while IFS= read -r path; do
+    [ -n "$path" ] || continue
+    case "$path" in
+        *.md|.gitmodules) continue ;;
+    esac
+    if [ "$(git ls-tree HEAD -- "$path" | awk '{print $2}')" = "commit" ]; then
+        continue
+    fi
+    decider="$path"
+    break
+done < <(git diff --name-only "$base"..HEAD --)
+
+if [ -n "$decider" ]; then
+    echo "review ($decider)"
+else
+    echo "doc"
+fi

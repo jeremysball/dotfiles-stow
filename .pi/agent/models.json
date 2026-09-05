@@ -111,196 +111,6 @@
       "apiKey": "$NANO_GPT_API_KEY",
       "models": [
         {
-          "id": "anthropic/claude-opus-5",
-          "name": "Claude Opus 5 (NanoGPT)",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "contextWindow": 200000,
-          "maxTokens": 128000
-        },
-        {
-          "id": "anthropic/claude-sonnet-5",
-          "name": "Claude Sonnet 5 (NanoGPT)",
-          "reasoning": false,
-          "input": [
-            "text"
-          ],
-          "contextWindow": 200000,
-          "maxTokens": 128000
-        },
-        {
-          "id": "gemma-4-26b-a4b-uncensored",
-          "name": "Gemma 4 26B A4B Uncensored (NanoGPT)",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "contextWindow": 200000,
-          "maxTokens": 32768
-        },
-        {
-          "id": "huihui-ai/Llama-3.3-70B-Instruct-abliterated",
-          "name": "Llama 3.3 70B Abliterated (NanoGPT)",
-          "reasoning": false,
-          "input": [
-            "text"
-          ],
-          "contextWindow": 16384,
-          "maxTokens": 16384
-        },
-        {
-          "id": "kwaipilot/kat-coder-pro-v2.5",
-          "name": "KAT Coder Pro v2.5 (NanoGPT)",
-          "reasoning": false,
-          "input": [
-            "text"
-          ],
-          "contextWindow": 200000,
-          "maxTokens": 80000
-        },
-        {
-          "id": "longcat-2.0",
-          "name": "LongCat 2.0 (NanoGPT)",
-          "reasoning": false,
-          "input": [
-            "text"
-          ],
-          "contextWindow": 200000,
-          "maxTokens": 262144
-        },
-        {
-          "id": "moonshotai/kimi-k3",
-          "name": "Kimi K3 (NanoGPT)",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "contextWindow": 200000,
-          "maxTokens": 200000
-        },
-        {
-          "id": "nanogpt/coding-router",
-          "name": "NanoGPT Coding Router",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "contextWindow": 200000,
-          "maxTokens": 128000
-        },
-        {
-          "id": "nousresearch/hermes-4-405b",
-          "name": "Hermes 4 405B (NanoGPT)",
-          "reasoning": false,
-          "input": [
-            "text"
-          ],
-          "contextWindow": 128000,
-          "maxTokens": 8192
-        },
-        {
-          "id": "poolside/laguna-s-2.1",
-          "name": "Poolside Laguna S 2.1 (NanoGPT)",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "contextWindow": 200000,
-          "maxTokens": 131072
-        },
-        {
-          "id": "qwen/qwen3.6-35b-a3b-uncensored",
-          "name": "Qwen 3.6 35B A3B Uncensored (NanoGPT)",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "contextWindow": 200000,
-          "maxTokens": 32768
-        },
-        {
-          "id": "qwen/qwen3.8-27b-obliterated",
-          "name": "Qwen 3.8 27B Obliterated (NanoGPT)",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "contextWindow": 200000,
-          "maxTokens": 32768
-        },
-        {
-          "id": "qwen/qwen3.8-27b-uncensored",
-          "name": "Qwen 3.8 27B Uncensored (NanoGPT)",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "contextWindow": 200000,
-          "maxTokens": 32768
-        },
-        {
-          "id": "sakana/fugu-ultra",
-          "name": "Sakana Fugu Ultra (NanoGPT)",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "contextWindow": 200000,
-          "maxTokens": 16384
-        },
-        {
-          "id": "sonar-deep-research",
-          "name": "Perplexity Sonar Deep Research (NanoGPT)",
-          "reasoning": false,
-          "input": [
-            "text"
-          ],
-          "contextWindow": 60000,
-          "maxTokens": 128000
-        },
-        {
-          "id": "sonar-reasoning-pro",
-          "name": "Perplexity Sonar Reasoning Pro (NanoGPT)",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "contextWindow": 127000,
-          "maxTokens": 128000
-        },
-        {
-          "id": "venice-uncensored",
-          "name": "Venice Uncensored (NanoGPT)",
-          "reasoning": false,
-          "input": [
-            "text"
-          ],
-          "contextWindow": 128000,
-          "maxTokens": 8192
-        },
-        {
-          "id": "x-ai/grok-4.20-multi-agent",
-          "name": "Grok 4.20 Multi-Agent (NanoGPT)",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "contextWindow": 200000,
-          "maxTokens": 131072
-        },
-        {
-          "id": "z-ai/glm-5.3-flash-uncensored",
-          "name": "GLM 5.3 Flash Uncensored (NanoGPT)",
-          "reasoning": true,
-          "input": [
-            "text"
-          ],
-          "contextWindow": 200000,
-          "maxTokens": 32768
-        },
-        {
           "id": "abacusai/Dracarys-72B-Instruct",
           "name": "Qwen2 72B Dracarys (NanoGPT)",
           "reasoning": false,
@@ -782,6 +592,16 @@
           }
         },
         {
+          "id": "anthropic/claude-opus-5",
+          "name": "Claude Opus 5 (NanoGPT)",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 200000,
+          "maxTokens": 128000
+        },
+        {
           "id": "anthropic/claude-opus-latest",
           "name": "Claude Opus Latest (NanoGPT)",
           "reasoning": true,
@@ -831,6 +651,16 @@
             "cacheRead": 0.3,
             "cacheWrite": 0.0
           }
+        },
+        {
+          "id": "anthropic/claude-sonnet-5",
+          "name": "Claude Sonnet 5 (NanoGPT)",
+          "reasoning": false,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 200000,
+          "maxTokens": 128000
         },
         {
           "id": "anthropic/claude-sonnet-5:thinking",
@@ -3217,6 +3047,16 @@
           }
         },
         {
+          "id": "gemma-4-26b-a4b-uncensored",
+          "name": "Gemma 4 26B A4B Uncensored (NanoGPT)",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 200000,
+          "maxTokens": 32768
+        },
+        {
           "id": "gemma-4-26b-a4b-uncensored:thinking",
           "name": "Gemma 4 26B A4B Uncensored Thinking (NanoGPT)",
           "reasoning": true,
@@ -4327,6 +4167,16 @@
           }
         },
         {
+          "id": "huihui-ai/Llama-3.3-70B-Instruct-abliterated",
+          "name": "Llama 3.3 70B Abliterated (NanoGPT)",
+          "reasoning": false,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 16384,
+          "maxTokens": 16384
+        },
+        {
           "id": "huihui-ai/Qwen2.5-32B-Instruct-abliterated",
           "name": "Qwen 2.5 32B Abliterated (NanoGPT)",
           "reasoning": false,
@@ -4455,6 +4305,16 @@
           }
         },
         {
+          "id": "kwaipilot/kat-coder-pro-v2.5",
+          "name": "KAT Coder Pro v2.5 (NanoGPT)",
+          "reasoning": false,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 200000,
+          "maxTokens": 80000
+        },
+        {
           "id": "LatitudeGames/Wayfarer-Large-70B-Llama-3.3",
           "name": "Llama 3.3 70B Wayfarer (NanoGPT)",
           "reasoning": false,
@@ -4565,6 +4425,16 @@
             "cacheRead": 0.085,
             "cacheWrite": 0.0
           }
+        },
+        {
+          "id": "longcat-2.0",
+          "name": "LongCat 2.0 (NanoGPT)",
+          "reasoning": false,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 200000,
+          "maxTokens": 262144
         },
         {
           "id": "longcat-2.0:thinking",
@@ -5582,6 +5452,16 @@
           }
         },
         {
+          "id": "moonshotai/kimi-k3",
+          "name": "Kimi K3 (NanoGPT)",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 200000,
+          "maxTokens": 200000
+        },
+        {
           "id": "moonshotai/kimi-latest",
           "name": "Kimi Latest (NanoGPT)",
           "reasoning": true,
@@ -5613,6 +5493,16 @@
             "cacheRead": 0.0,
             "cacheWrite": 0.0
           }
+        },
+        {
+          "id": "nanogpt/coding-router",
+          "name": "NanoGPT Coding Router",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 200000,
+          "maxTokens": 128000
         },
         {
           "id": "nanogpt/coding-router:high",
@@ -5759,6 +5649,16 @@
             "cacheRead": 0.204,
             "cacheWrite": 0.0
           }
+        },
+        {
+          "id": "nousresearch/hermes-4-405b",
+          "name": "Hermes 4 405B (NanoGPT)",
+          "reasoning": false,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 128000,
+          "maxTokens": 8192
         },
         {
           "id": "nousresearch/hermes-4-405b:thinking",
@@ -7000,6 +6900,16 @@
           }
         },
         {
+          "id": "poolside/laguna-s-2.1",
+          "name": "Poolside Laguna S 2.1 (NanoGPT)",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 200000,
+          "maxTokens": 131072
+        },
+        {
           "id": "poolside/laguna-s-2.1:thinking",
           "name": "Laguna S 2.1 Thinking (NanoGPT)",
           "reasoning": true,
@@ -7489,6 +7399,16 @@
           }
         },
         {
+          "id": "qwen/qwen3.6-35b-a3b-uncensored",
+          "name": "Qwen 3.6 35B A3B Uncensored (NanoGPT)",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 200000,
+          "maxTokens": 32768
+        },
+        {
           "id": "qwen/qwen3.6-35b-a3b-uncensored:thinking",
           "name": "Qwen 3.6 35B A3B Uncensored Thinking (NanoGPT)",
           "reasoning": true,
@@ -7557,6 +7477,16 @@
           }
         },
         {
+          "id": "qwen/qwen3.8-27b-obliterated",
+          "name": "Qwen 3.8 27B Obliterated (NanoGPT)",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 200000,
+          "maxTokens": 32768
+        },
+        {
           "id": "qwen/qwen3.8-27b-obliterated:thinking",
           "name": "Qwen 3.8 27B Obliterated Thinking (NanoGPT)",
           "reasoning": true,
@@ -7572,6 +7502,16 @@
             "cacheRead": 0.125,
             "cacheWrite": 0.0
           }
+        },
+        {
+          "id": "qwen/qwen3.8-27b-uncensored",
+          "name": "Qwen 3.8 27B Uncensored (NanoGPT)",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 200000,
+          "maxTokens": 32768
         },
         {
           "id": "qwen/qwen3.8-27b-uncensored:thinking",
@@ -8194,6 +8134,16 @@
           }
         },
         {
+          "id": "sakana/fugu-ultra",
+          "name": "Sakana Fugu Ultra (NanoGPT)",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 200000,
+          "maxTokens": 16384
+        },
+        {
           "id": "sakana/fugu-ultra-v1.1",
           "name": "Fugu Ultra v1.1 (NanoGPT)",
           "reasoning": true,
@@ -8387,6 +8337,16 @@
           }
         },
         {
+          "id": "sonar-deep-research",
+          "name": "Perplexity Sonar Deep Research (NanoGPT)",
+          "reasoning": false,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 60000,
+          "maxTokens": 128000
+        },
+        {
           "id": "sonar-pro",
           "name": "Perplexity Pro (NanoGPT)",
           "reasoning": false,
@@ -8401,6 +8361,16 @@
             "cacheRead": 1.5,
             "cacheWrite": 0.0
           }
+        },
+        {
+          "id": "sonar-reasoning-pro",
+          "name": "Perplexity Sonar Reasoning Pro (NanoGPT)",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 127000,
+          "maxTokens": 128000
         },
         {
           "id": "soob3123/amoral-gemma3-27B-v2",
@@ -9492,6 +9462,16 @@
           }
         },
         {
+          "id": "venice-uncensored",
+          "name": "Venice Uncensored (NanoGPT)",
+          "reasoning": false,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 128000,
+          "maxTokens": 8192
+        },
+        {
           "id": "VongolaChouko/Starcannon-Unleashed-12B-v1.0",
           "name": "Mistral Nemo Starcannon 12b v1 (NanoGPT)",
           "reasoning": false,
@@ -9523,6 +9503,16 @@
             "cacheRead": 1.0,
             "cacheWrite": 0.0
           }
+        },
+        {
+          "id": "x-ai/grok-4.20-multi-agent",
+          "name": "Grok 4.20 Multi-Agent (NanoGPT)",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 200000,
+          "maxTokens": 131072
         },
         {
           "id": "x-ai/grok-4.3",
@@ -10258,6 +10248,16 @@
           }
         },
         {
+          "id": "z-ai/glm-5.3-flash-uncensored",
+          "name": "GLM 5.3 Flash Uncensored (NanoGPT)",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 200000,
+          "maxTokens": 32768
+        },
+        {
           "id": "z-ai/glm-5.3:thinking",
           "name": "GLM 5.3 Thinking (NanoGPT)",
           "reasoning": true,
@@ -10336,6 +10336,205 @@
             "input": 1.0,
             "output": 3.2,
             "cacheRead": 0.2,
+            "cacheWrite": 0.0
+          }
+        },
+        {
+          "id": "alibaba/qwen3.8-max-0902",
+          "name": "Qwen3.8 Max 0902 (NanoGPT)",
+          "reasoning": true,
+          "input": [
+            "text",
+            "image"
+          ],
+          "contextWindow": 200000,
+          "maxTokens": 131072,
+          "cost": {
+            "input": 2.0,
+            "output": 6.0,
+            "cacheRead": 0.17,
+            "cacheWrite": 2.5
+          }
+        },
+        {
+          "id": "anthropic/claude-fable-5.1",
+          "name": "Claude Fable 5.1 (NanoGPT)",
+          "reasoning": true,
+          "input": [
+            "text",
+            "image"
+          ],
+          "contextWindow": 200000,
+          "maxTokens": 128000,
+          "cost": {
+            "input": 10.0,
+            "output": 50.0,
+            "cacheRead": 0.25,
+            "cacheWrite": 12.5
+          }
+        },
+        {
+          "id": "google/gemini-3.8-flash",
+          "name": "Gemini 3.8 Flash (NanoGPT)",
+          "reasoning": true,
+          "input": [
+            "text",
+            "image"
+          ],
+          "contextWindow": 200000,
+          "maxTokens": 65536,
+          "cost": {
+            "input": 0.75,
+            "output": 3.75,
+            "cacheRead": 0.075,
+            "cacheWrite": 0.075
+          }
+        },
+        {
+          "id": "ibm-granite/granite-4.2-8b",
+          "name": "Granite 4.2 8B (NanoGPT)",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 131072,
+          "maxTokens": 32768,
+          "cost": {
+            "input": 0.1,
+            "output": 0.15,
+            "cacheRead": 0.05,
+            "cacheWrite": 0.0
+          }
+        },
+        {
+          "id": "inception/mercury-2.5-preview",
+          "name": "Mercury 2.5 Preview (NanoGPT)",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 200000,
+          "maxTokens": 65536,
+          "cost": {
+            "input": 0.04,
+            "output": 0.15,
+            "cacheRead": 0.004,
+            "cacheWrite": 0.0
+          }
+        },
+        {
+          "id": "meta/muse-spark-1.3",
+          "name": "Muse Spark 1.3 (NanoGPT)",
+          "reasoning": true,
+          "input": [
+            "text",
+            "image"
+          ],
+          "contextWindow": 200000,
+          "maxTokens": 32768,
+          "cost": {
+            "input": 1.25,
+            "output": 4.25,
+            "cacheRead": 0.15,
+            "cacheWrite": 0.0
+          }
+        },
+        {
+          "id": "meta/muse-spark-1.3-contributor",
+          "name": "Muse Spark 1.3 Contributor (NanoGPT)",
+          "reasoning": true,
+          "input": [
+            "text",
+            "image"
+          ],
+          "contextWindow": 200000,
+          "maxTokens": 32768,
+          "cost": {
+            "input": 0.1,
+            "output": 0.2,
+            "cacheRead": 0.002,
+            "cacheWrite": 0.0
+          }
+        },
+        {
+          "id": "openai/gpt-6-astra",
+          "name": "GPT 6 Astra (NanoGPT)",
+          "reasoning": true,
+          "input": [
+            "text",
+            "image"
+          ],
+          "contextWindow": 200000,
+          "maxTokens": 128000,
+          "cost": {
+            "input": 10.0,
+            "output": 50.0,
+            "cacheRead": 1.0,
+            "cacheWrite": 12.5
+          }
+        },
+        {
+          "id": "openai/gpt-6-astra-pro",
+          "name": "GPT 6 Astra Pro (NanoGPT)",
+          "reasoning": true,
+          "input": [
+            "text",
+            "image"
+          ],
+          "contextWindow": 200000,
+          "maxTokens": 128000,
+          "cost": {
+            "input": 10.0,
+            "output": 50.0,
+            "cacheRead": 1.0,
+            "cacheWrite": 12.5
+          }
+        },
+        {
+          "id": "synth-2.5-flash",
+          "name": "Synth 2.5 Flash Preview (NanoGPT)",
+          "reasoning": false,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 30000,
+          "maxTokens": 32768,
+          "cost": {
+            "input": 0.030000000000000002,
+            "output": 0.1,
+            "cacheRead": 0.015,
+            "cacheWrite": 0.0
+          }
+        },
+        {
+          "id": "synth-2.5-pro",
+          "name": "Synth 2.5 Pro Preview (NanoGPT)",
+          "reasoning": false,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 30000,
+          "maxTokens": 32768,
+          "cost": {
+            "input": 0.1,
+            "output": 0.2,
+            "cacheRead": 0.05,
+            "cacheWrite": 0.0
+          }
+        },
+        {
+          "id": "TEE/qwen3-8b",
+          "name": "Qwen3 8B TEE (NanoGPT)",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 40960,
+          "maxTokens": 8192,
+          "cost": {
+            "input": 0.11,
+            "output": 0.45,
+            "cacheRead": 0.11,
             "cacheWrite": 0.0
           }
         }

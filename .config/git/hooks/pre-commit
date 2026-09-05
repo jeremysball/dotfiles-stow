@@ -6,7 +6,7 @@
 # machine that runs `mise bootstrap dotfiles apply` gets both with zero
 # manual setup.
 #
-# Four jobs, in order:
+# Five jobs, in order:
 #   1. Dash gate: block staged em/en dashes and double-hyphen stand-ins.
 #      Override once: git commit --no-verify  or  SKIP_DASH_CHECK=1 git commit.
 #   2. dotfiles adhd-theme guardrail: if the repo has
@@ -17,7 +17,11 @@
 #      scripts/sync-fleet-skills.sh --tracked-only so a dropped skills.paths
 #      entry or an absolute/dangling fleet-skills symlink can't be committed.
 #      No-op in every other repo.
-#   4. Chain to repo-local .githooks/pre-commit / hooks/pre-commit if present,
+#   4. Primary-checkout gate: refuse to commit from a repo's primary
+#      checkout. Every change belongs in a linked worktree, so the primary
+#      stays a stable merge base for concurrent workers.
+#      Override once: git commit --no-verify  or  SKIP_PRIMARY_CHECK=1 git commit.
+#   5. Chain to repo-local .githooks/pre-commit / hooks/pre-commit if present,
 #      so per-repo hooks keep working alongside the global one.
 set -euo pipefail
 
@@ -112,7 +116,24 @@ if [ -f "$fleet_check" ]; then
     bash "$fleet_check" --tracked-only
 fi
 
-# --- 4. chain to repo-local pre-commit if present ---
+# --- 4. primary-checkout gate ---
+# The primary checkout is the merge base every concurrent worker reads
+# against. A commit landed there forces all of them onto a moved base, so
+# every change, regardless of size, belongs in a linked worktree. Compares
+# `git rev-parse --show-toplevel` against the first `git worktree list`
+# entry (the primary). Fail open outside a work tree: an empty lookup is a
+# skip, never a block.
+if [ -z "${SKIP_PRIMARY_CHECK:-}" ]; then
+  commit_top="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+  commit_primary="$(git worktree list --porcelain 2>/dev/null | awk '/^worktree /{print $2; exit}' || true)"
+  if [ -n "$commit_top" ] && [ -n "$commit_primary" ] && [ "$commit_top" = "$commit_primary" ]; then
+    echo "pre-commit: blocked. Committing from the primary checkout ($commit_primary)." >&2
+    echo "pre-commit: make the change in a linked worktree instead (bypass once: git commit --no-verify or SKIP_PRIMARY_CHECK=1 git commit)." >&2
+    exit 1
+  fi
+fi
+
+# --- 5. chain to repo-local pre-commit if present ---
 # Skipped when a repo shim already invoked us (GIT_HOOKS_CHAINED=1). That
 # shim dispatches to .githooks/pre-commit.local itself once we return, so
 # chaining here would re-enter the shim and run the gates above twice.
@@ -128,14 +149,20 @@ self_path="$(realpath "$0" 2>/dev/null || echo "$0")"
 local_real="$(realpath "$local_hook" 2>/dev/null || echo "")"
 alt_real="$(realpath "$alt_hook" 2>/dev/null || echo "")"
 
+# GIT_HOOKS_CHAINED goes on every exec here, matching pre-push:198. Without
+# it, a repo that carries the tracked shim but whose core.hooksPath still
+# points at this directory (a fresh clone on a dotfiles machine that has not
+# run install-githooks) gets both gates twice: this hook runs sections 1-3,
+# execs .githooks/pre-commit, and the shim, seeing no flag, invokes this
+# hook again from the top.
 if [ -n "$local_real" ] && [ "$local_real" != "$self_path" ] && [ -x "$local_hook" ]; then
-  exec "$local_hook" "$@"
+  exec env GIT_HOOKS_CHAINED=1 "$local_hook" "$@"
 elif [ -n "$local_real" ] && [ "$local_real" != "$self_path" ] && [ -f "$local_hook" ]; then
-  exec bash "$local_hook" "$@"
+  exec env GIT_HOOKS_CHAINED=1 bash "$local_hook" "$@"
 elif [ -n "$alt_real" ] && [ "$alt_real" != "$self_path" ] && [ -x "$alt_hook" ]; then
-  exec "$alt_hook" "$@"
+  exec env GIT_HOOKS_CHAINED=1 "$alt_hook" "$@"
 elif [ -n "$alt_real" ] && [ "$alt_real" != "$self_path" ] && [ -f "$alt_hook" ]; then
-  exec bash "$alt_hook" "$@"
+  exec env GIT_HOOKS_CHAINED=1 bash "$alt_hook" "$@"
 fi
 
 exit 0

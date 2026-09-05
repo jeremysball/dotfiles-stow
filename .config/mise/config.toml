@@ -297,9 +297,11 @@ experimental = true
 # git -- global hooks, wired via [core] hooksPath in .gitconfig. Tracked
 # here so every machine that runs `mise bootstrap dotfiles apply` gets the
 # pre-commit (adhd-theme guardrail + dash gate: em and en dashes plus
-# double-hyphen stand-ins) and the pre-push (drainable-worktree budget)
+# double-hyphen stand-ins), the commit-msg (AI-credit refusal + Conventional
+# Commits subject), and the pre-push (drainable-worktree budget)
 # with zero manual setup.
 "~/.config/git/hooks/pre-commit" = {}
+"~/.config/git/hooks/commit-msg" = {}
 "~/.config/git/hooks/pre-push" = {}
 
 # opencode -- config only. meta-api-key is a live credential; node_modules,
@@ -482,6 +484,62 @@ SCRIPT="$DOTFILES_ROOT/scripts/install-githooks.sh"
 
 if [ ! -f "$SCRIPT" ]; then
     echo "install-githooks: $SCRIPT not found. Run \`mise bootstrap dotfiles apply\` first." >&2
+    exit 1
+fi
+
+exec "$SCRIPT" "$@"
+'''
+
+[tasks.sync-git-bin]
+# git only finds subcommands on PATH, but the git-* helpers live as scripts
+# in the dotclaude repo (~/.claude/scripts/) and in this repo's scripts/.
+# Measured 2026-09-03: git-mainsync existed for weeks with nothing linking it
+# into ~/.local/bin, so every `git mainsync main` failed with "not a git
+# command" and the CLAUDE.md rule silently fell through to its manual
+# fallback. This links them. Idempotent: repoints a stale link, refuses to
+# overwrite a real file.
+description = "Symlink git-* helper scripts into ~/.local/bin so git subcommands resolve. Idempotent; refuses to overwrite real files."
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+
+DST_DIR="$HOME/.local/bin"
+DOTFILES_ROOT="${MISE_DOTFILES_ROOT:-${DOTFILES_ROOT:-$HOME/.dotfiles}}"
+
+link_one() {
+    local src="$1" dst="$DST_DIR/$2"
+    if [ ! -e "$src" ]; then
+        echo "sync-git-bin: source $src not found" >&2
+        return 1
+    fi
+    if [ -e "$dst" ] && [ ! -L "$dst" ]; then
+        echo "sync-git-bin: $dst exists and is not a symlink, refusing to overwrite" >&2
+        return 1
+    fi
+    mkdir -p "$DST_DIR"
+    ln -sfn "$src" "$dst"
+    echo "sync-git-bin: $dst -> $src"
+}
+
+link_one "$HOME/.claude/scripts/git-mainsync" git-mainsync
+link_one "$DOTFILES_ROOT/scripts/git-lane" git-lane
+'''
+
+[tasks.check-claude-md]
+# Alert-only half of the Tier 1 mechanization: the "Maintaining this file"
+# cap (50 rules, 600 lines) as a runnable gate instead of a paragraph. The
+# repair is the Tier 1 trim itself; this task only reports. Run it before
+# adding a rule: a new rule must fit the budget or displace something else.
+description = "Verify a CLAUDE.md is within budget (<=50 ## rules, <=600 lines). Alerts only; exits 1 with the offending numbers. Usage: mise run check-claude-md [path] (default ~/.claude/CLAUDE.md)."
+run = '''
+#!/usr/bin/env bash
+set -euo pipefail
+
+DOTFILES_ROOT="${MISE_DOTFILES_ROOT:-${DOTFILES_ROOT:-$HOME/.dotfiles}}"
+SCRIPT="$DOTFILES_ROOT/scripts/check-claude-md.sh"
+
+if [ ! -f "$SCRIPT" ]; then
+    echo "check-claude-md: $SCRIPT not found. Run \`mise bootstrap dotfiles apply\` first." >&2
     exit 1
 fi
 
