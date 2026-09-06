@@ -2,6 +2,7 @@
   "summaryModel": "opencode/mimo-v2.5-free",
   "defaultExecutor": "opencode",
   "maxConcurrentTasks": 32,
+  "taskRetentionDays": 14,
   "postOutputNoOutputTimeoutMs": 900000,
   "envFile": "/run/user/1000/secrets/global.env",
   "profilingEnabled": true,
